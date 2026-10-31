@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script>try { const t = localStorage.getItem("bt_theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
 <title>__TITLE__</title>
 <style>
 :root{
@@ -192,7 +193,7 @@ $("#kv").innerHTML = kvRows.map(r => `<div><span>${r[0]}</span><span><b>${r[1]}<
 // ---------- theme + charts
 let charts = [];
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-function setTheme(t){ if (t) document.documentElement.setAttribute("data-theme", t); drawCharts(); drawHeat(); }
+function setTheme(t){ if (t) { document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("bt_theme", t); } catch (e) {} } drawCharts(); drawHeat(); }
 $("#theme").onclick = () => {
   const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light");
   setTheme(cur === "dark" ? "light" : "dark");

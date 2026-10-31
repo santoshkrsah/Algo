@@ -125,14 +125,15 @@ class Limiter:
 limiter = Limiter(MIN_INTERVAL)
 
 
-def fetch_chunk(symbol: str, a: date, b: date, retries: int = 5):
+def fetch_chunk(symbol: str, a: date, b: date, retries: int = 5, cont: str = "1"):
+    """cont="1": continuous near-month series (rolls at expiry); cont="0": this one contract only."""
     for attempt in range(retries):
         limiter.wait()
         try:
             r = requests.get("https://api-t1.fyers.in/data/history", headers=auth_header(),
                              params=dict(symbol=symbol, resolution="1", date_format="1",
                                          range_from=a.isoformat(), range_to=b.isoformat(),
-                                         cont_flag="1"), timeout=60)
+                                         cont_flag=cont), timeout=60)
             if r.status_code == 429:
                 time.sleep(10 * (attempt + 1))
                 continue

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script>try { const t = localStorage.getItem("bt_theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
 <title>VMU Equity V2 report</title>
 __CSS__
 <style>
@@ -84,7 +85,7 @@ $("#seg").innerHTML = KEYS.map(k => `<button data-k="${k}">Slippage ${k}</button
 $("#seg").onclick = e => { const k = e.target.dataset.k; if (k) { K = k; render(); } };
 $("#cmp").innerHTML = "<thead><tr><th class='l'>Slippage</th><th>Trades</th><th>Win %</th><th>Net</th><th>Return</th><th>Profit factor</th><th>Max DD</th><th>Worst trade</th></tr></thead><tbody>"
   + KEYS.map(k => { const t = D.runs[k].totals; return `<tr><td class="l">${k}</td><td>${t.trades}</td><td>${pct(t.win_pct)}</td><td class="${sgn(t.net)}">${rs(t.net, true)}</td><td class="${sgn(t.ret_pct)}">${pct(t.ret_pct)}</td><td>${f2(t.profit_factor)}</td><td>${rs(t.max_dd)}</td><td>${rs(t.worst_trade)}</td></tr>`; }).join("") + "</tbody>";
-$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark"); drawCharts(); };
+$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); const t = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("bt_theme", t); } catch (e) {} drawCharts(); };
 
 let charts = [];
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script>try { const t = localStorage.getItem("bt_theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
 <title>VMU ORB V4 report</title>
 __CSS__
 <style>
@@ -91,7 +92,7 @@ $("#segp").onclick = e => { const p = e.target.dataset.p; if (p) { P = p; render
 $("#segs").onclick = e => { const k = e.target.dataset.k; if (k) { K = k; render(); } };
 $("#cmp").innerHTML = "<thead><tr><th class='l'>Period</th><th>Slippage</th><th>Trades</th><th>Win %</th><th>Net</th><th>Return</th><th>Avg month</th><th>Profit factor</th><th>Max DD</th></tr></thead><tbody>"
   + PER.flatMap(p => SL.map(k => { const t = D.runs[p][k].totals; return `<tr><td class="l">${p}</td><td>${k}</td><td>${t.trades}</td><td>${pct(t.win_pct)}</td><td class="${sgn(t.net)}">${rs(t.net, true)}</td><td class="${sgn(t.ret_pct)}">${pct(t.ret_pct)}</td><td class="${sgn(t.avg_month)}">${rs(t.avg_month, true)}</td><td>${f2(t.profit_factor)}</td><td>${rs(t.max_dd)}</td></tr>`; })).join("") + "</tbody>";
-$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark"); drawCharts(); };
+$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); const t = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("bt_theme", t); } catch (e) {} drawCharts(); };
 
 let charts = [];
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();

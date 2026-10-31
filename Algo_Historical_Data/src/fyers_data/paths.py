@@ -10,6 +10,8 @@ ENV_FILE = ROOT / ".env"                            # secrets; never committed (
 
 DATA = ROOT / "data"
 FNO = DATA / "fno"                                  # fno/<1m|5m|15m|30m|60m>/<futures|options>/<SYMBOL>.csv
+FNO_CONTRACTS = FNO / "1m" / "contracts"            # one live contract each, NOT continuous (cont_flag=0)
+FNO_BHAV = FNO / "bhavcopy"                         # bhavcopy/<YYYY-MM-DD>.csv  NSE F&O daily, futures rows only
 EQUITY = DATA / "equity"                            # equity/<YYYY-MM-DD>.csv  (all stocks, all timeframes)
 REFERENCE = DATA / "reference"                      # lists that define what is downloaded
 REPORTS = DATA / "reports"                          # generated PDFs, statistics, per-contract / per-stock tables

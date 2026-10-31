@@ -50,6 +50,8 @@ Run from the project folder with the virtual environment active.
 | Download F&O data (resumable) | `python -m fyers_data.download_fno` |
 | Build the equity list (needs the AMFI PDF in `data/reference/amfi/`) | `python -m fyers_data.universe` |
 | Download equity data (resumable, then merges to daily files) | `python -m fyers_data.download_equity` |
+| NSE F&O bhavcopy, futures rows (expired contracts too, one row per day) | `python -m fyers_data.download_calendar bhav --start 2026-08-26 --end 2026-10-30` |
+| 1m candles of single live contracts (not continuous) | `python -m fyers_data.download_calendar contract NSE:WIPRO26NOVFUT --start 2026-08-26` |
 | F&O summary PDF | `python -m fyers_data.reports.fno_stats` then `python -m fyers_data.reports.fno_pdf` |
 | Equity summary PDF | `python -m fyers_data.reports.equity_stats --final` then `python -m fyers_data.reports.equity_pdf` |
 

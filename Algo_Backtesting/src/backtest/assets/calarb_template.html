@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>try { const t = localStorage.getItem("bt_theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<title>Calendar Arbitrage Gap</title>
+__CSS__
+<style>
+:root{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a}
+:root[data-theme="dark"]{--s1:#3987e5;--s2:#d95926;--s3:#199e70}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--s1:#3987e5;--s2:#d95926;--s3:#199e70}}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.seg button{background:var(--card);border:0;border-right:1px solid var(--line);padding:7px 14px;cursor:pointer;font-size:13px;color:var(--muted)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--soft);color:var(--ink);font-weight:650}
+.chk td.l{white-space:normal;max-width:420px}
+.card.cp{position:relative}
+.card.cp h3{padding-right:120px}
+.copy{position:absolute;top:14px;right:14px}
+.kpi .v{font-size:23px}
+td.hit{font-weight:650}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:2px 0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>Calendar arbitrage - near FUT buy / next FUT sell ka gap</h1><div class="sub" id="subtitle"></div></div>
+  <div class="tools"><button class="btn" id="theme">Dark / Light</button></div>
+</header>
+<div class="verdict" id="verdict"></div>
+<div class="seg" id="seg"></div>
+<div class="kpis" id="kpis"></div>
+<div class="tabs" id="tabs">
+  <button class="tab on" data-p="sum">Saransh</button>
+  <button class="tab" data-p="days">Din ke hisaab se</button>
+  <button class="tab" data-p="stocks">Har stock</button>
+  <button class="tab" data-p="every">Har mauka</button>
+  <button class="tab" data-p="rules">Rules</button>
+</div>
+
+<section class="panel on" id="sum">
+  <div class="card"><h3>Jawab: har stock me kitni baar</h3><div class="hint" id="ahint"></div><div class="scroll" style="max-height:none"><table id="answer"></table></div></div>
+  <div class="card"><h3>Gap ka graph</h3><div class="hint" id="ghint"></div>
+    <div class="bar"><select id="gs"></select><span class="note">Gap = <span id="gform"></span>. Dotted line = +0.50, 0 aur -0.50.</span></div>
+    <div class="ch tall"><canvas id="c_gap"></canvas></div></div>
+  <div class="card"><h3>Kitne % samay kaunsa haal raha</h3><div class="hint" id="bhint"></div><div class="legend" id="blegend"></div><div class="ch"><canvas id="c_bar"></canvas></div></div>
+</section>
+
+<section class="panel" id="days">
+  <div class="card mo"><h3>Har din kitni baar - sab stocks ek saath</h3><div class="hint" id="dphint"></div><div id="t_dpiv"></div></div>
+  <div class="card mo"><h3>Har din kitni baar - graph</h3><div class="hint">Ek stock chuno. Har din kitni alag-alag baar same rate aaya aur kitni baar 0.50+ gap bana (dono taraf).</div>
+    <div class="bar"><select id="ds"></select></div><div class="legend" id="dlegend"></div><div class="ch"><canvas id="c_dbar"></canvas></div></div>
+  <div class="card"><h3>Din ke hisaab se</h3><div class="hint" id="dhint"></div><div id="t_day"></div></div>
+</section>
+
+<section class="panel" id="stocks">
+  <div class="card"><h3>Har stock - saare numbers</h3><div class="hint">Gap rupaye me. "0.50 x lot" = ek lot pe 50 paise ke gap ki keemat.</div><div id="t_stock"></div></div>
+</section>
+
+<section class="panel" id="every">
+  <div class="card"><h3 id="etitle"></h3><div class="hint" id="ehint"></div><div id="t_every"></div></div>
+</section>
+
+<section class="panel" id="rules">
+  <div class="card cp"><button class="btn copy" data-copy="rules">Copy karo</button><h3>Rules</h3><ul class="rules" id="rulelist"></ul></div>
+  <div class="card"><h3>Jo baat clear nahi thi, wahan hamne kya maana (aur kya kami hai)</h3><ul class="rules" id="notelist"></ul></div>
+  <div class="card"><h3>Data sahi hai? (Fyers 1 minute vs NSE bhavcopy)</h3><div class="hint" id="chint"></div><div class="scroll" style="max-height:none"><table id="chk" class="chk"></table></div></div>
+  <div class="card cp"><button class="btn copy" data-copy="formulas">Copy karo</button><h3>Formulas</h3><div class="hint">Is study ka har number in formulas se nikla hai. Near = paas wala mahina (buy), Far = agla mahina (sell).</div>
+    <div class="scroll" style="max-height:none"><table id="fml" class="chk"></table></div></div>
+</section>
+<footer id="foot"></footer>
+</div>
+<script>__CHARTJS__</script>
+<script>
+const D = __DATA__;
+const $ = s => document.querySelector(s);
+const sgn = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
+const f2 = v => v === null || v === undefined ? "n/a" : Number(v).toFixed(2);
+const sg2 = v => v === null || v === undefined ? "n/a" : (v > 0 ? "+" : "") + Number(v).toFixed(2);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]);
+const FMT = {
+  "": v => esc(v ?? ""), int: v => v === null ? "n/a" : Number(v).toLocaleString("en-IN"), n2: f2, pct: v => f2(v) + "%",
+  rs: v => "Rs " + Math.round(v).toLocaleString("en-IN"), gap: sg2,
+};
+const isHit = v => v !== null && (Math.abs(v) < 0.005 || Math.abs(v) >= D.step - 0.005);
+const KEYS = Object.keys(D.views);
+let K = KEYS[0], V = D.views[K];
+$("#subtitle").textContent = D.period + " | report bana: " + D.generated;
+$("#foot").textContent = "Ye sirf purana data hai (LTP / close pe). Asli trade bid-ask pe hota hai, aur kharcha alag lagta hai.";
+const li = (sel, arr) => arr.forEach(r => { const e = document.createElement("li"); e.textContent = r; $(sel).appendChild(e); });
+li("#rulelist", D.rules); li("#notelist", D.notes);
+$("#fml").innerHTML = "<thead><tr><th class='l'>Kya</th><th class='l'>Formula</th></tr></thead><tbody>"
+  + D.formulas.map(f => `<tr><td class="l">${esc(f[0])}</td><td class="l" style="white-space:normal"><code>${esc(f[1])}</code></td></tr>`).join("") + "</tbody>";
+$("#chint").textContent = D.check.hint;
+$("#chk").innerHTML = "<thead><tr>" + D.check.h.map((h, i) => `<th class="${i < 2 ? "l" : ""}">${esc(h)}</th>`).join("") + "</tr></thead><tbody>"
+  + D.check.rows.map(r => "<tr>" + r.map((v, i) => `<td class="${i < 2 ? "l" : ""}">${i < 2 ? esc(v) : i === 2 ? v : f2(v) + "%"}</td>`).join("") + "</tr>").join("") + "</tbody>";
+const copyText = {
+  rules: () => "Rules - " + $("h1").textContent + "\n" + D.rules.map((r, i) => (i + 1) + ". " + r).join("\n"),
+  formulas: () => "Formulas - " + $("h1").textContent + " (Near = paas wala mahina, Far = agla mahina)\n" + D.formulas.map(f => f[0] + ": " + f[1]).join("\n"),
+};
+function copyOld(txt){ const ta = document.createElement("textarea"); ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; }
+document.querySelectorAll(".copy").forEach(b => b.onclick = async () => {
+  const txt = copyText[b.dataset.copy]();
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) { ok = copyOld(txt); }
+  b.textContent = ok ? "Copy ho gaya ✓" : "Copy nahi hua"; setTimeout(() => b.textContent = "Copy karo", 1500);
+});
+$("#seg").innerHTML = KEYS.map(k => `<button data-k="${k}">${esc(D.views[k].label)}</button>`).join("");
+$("#seg").onclick = e => { const k = e.target.dataset.k; if (k) { K = k; render(); } };
+$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); const t = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("bt_theme", t); } catch (e) {} drawCharts(); };
+
+let charts = [];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const tip = (title, label) => ({backgroundColor: css("--ink"), titleColor: css("--card"), bodyColor: css("--card"), padding: 10, displayColors: false, callbacks: {title, label}});
+function drawCharts(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const s = $("#gs").value, g = V.gaps[s] || [];
+  const ref = (y, dash) => ({data: g.map(() => y), borderColor: css("--muted"), borderWidth: 1, borderDash: dash, pointRadius: 0, pointHoverRadius: 0, pointHitRadius: 0});
+  charts.push(new Chart($("#c_gap"), {type: "line", data: {labels: g.map(r => r[0]), datasets: [
+      {data: g.map(r => r[1]), borderColor: css("--s1"), borderWidth: V.minute ? 1.5 : 2, pointRadius: V.minute ? 0 : 4, pointHoverRadius: 5,
+       pointBackgroundColor: g.map(r => isHit(r[1]) ? css("--s2") : css("--s1")), pointBorderColor: css("--card"), pointBorderWidth: 2},
+      ref(D.step, [4, 4]), ref(0, [1, 3]), ref(-D.step, [4, 4])]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false},
+      plugins: {legend: {display: false}, tooltip: {...tip(i => i[0].label, c => `Gap ${sg2(c.parsed.y)}  |  ${V.near} ${f2(g[c.dataIndex][2])}  |  ${V.far} ${f2(g[c.dataIndex][3])}`), filter: i => i.datasetIndex === 0}},
+      scales: {x: {grid: {display: false}, ticks: {color: css("--muted"), maxTicksLimit: innerWidth < 640 ? 3 : 7, maxRotation: 0}},
+               y: {grid: {color: css("--line")}, border: {display: false}, ticks: {color: css("--muted"), callback: v => sg2(v)}}}}}));
+  const cols = ["--s1", "--s2", "--s3"];
+  $("#blegend").innerHTML = V.bars.series.map((x, i) => `<span><span class="dot" style="background:${css(cols[i])}"></span>${esc(x[0])}</span>`).join("");
+  charts.push(new Chart($("#c_bar"), {type: "bar", data: {labels: V.bars.labels, datasets: V.bars.series.map((x, i) => ({label: x[0], data: x[1], raw: x[2],
+      backgroundColor: css(cols[i]), borderColor: css("--card"), borderWidth: 2, borderRadius: 4, maxBarThickness: 36}))},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false},
+      tooltip: tip(i => i[0].label, c => `${c.dataset.label}: ${f2(c.parsed.y)}% (${c.dataset.raw[c.dataIndex].toLocaleString("en-IN")} ${V.minute ? "minute" : "din"})`)},
+      scales: {x: {grid: {display: false}, ticks: {color: css("--muted")}}, y: {grid: {color: css("--line")}, border: {display: false}, max: 100, ticks: {color: css("--muted"), callback: v => v + "%"}}}}}));
+  if (!V.minute) return;
+  const db = V.daybars[$("#ds").value];
+  $("#dlegend").innerHTML = $("#blegend").innerHTML;
+  charts.push(new Chart($("#c_dbar"), {type: "bar", data: {labels: db.labels, datasets: db.series.map((x, i) => ({label: x[0], data: x[1],
+      backgroundColor: css(cols[i]), borderColor: css("--card"), borderWidth: 2, borderRadius: 4, maxBarThickness: 18}))},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false},
+      plugins: {legend: {display: false}, tooltip: tip(i => i[0].label, c => `${c.dataset.label}: ${c.parsed.y} baar`)},
+      scales: {x: {grid: {display: false}, ticks: {color: css("--muted"), maxRotation: 0}}, y: {grid: {color: css("--line")}, border: {display: false}, beginAtZero: true, ticks: {color: css("--muted"), precision: 0}}}}}));
+}
+
+function table(box, o, file){
+  const id = box.slice(1);
+  $(box).innerHTML = `<div class="bar">${o.q !== null ? `<input id="${id}_q" placeholder="Stock khojo">` : ""}${o.filt !== null && o.filt !== undefined ? `<select id="${id}_f"></select>` : ""}`
+    + `<button class="btn" id="${id}_dl">Download CSV</button><span class="note" id="${id}_n"></span></div>`
+    + `<div class="scroll"><table><thead></thead><tbody></tbody></table></div><div class="pager" id="${id}_p"></div>`;
+  const rows = o.rows, thead = $(box + " thead"), tbody = $(box + " tbody");
+  let sortCol = o.sort[0], dir = o.sort[1], page = 0, view = rows;
+  if (o.filt !== null && o.filt !== undefined) {
+    const sel = $(box + "_f"); sel.innerHTML = `<option value="">Sab (${esc(o.h[o.filt])})</option>`;
+    [...new Set(rows.map(r => r[o.filt]))].sort().forEach(v => { const op = document.createElement("option"); op.value = op.textContent = v; sel.appendChild(op); });
+  }
+  thead.innerHTML = "<tr>" + o.h.map((c, i) => `<th class="s ${i === 0 ? "l" : ""}" data-i="${i}">${esc(c)}</th>`).join("") + "</tr>";
+  function apply(){
+    const q = o.q !== null ? $(box + "_q").value.trim().toLowerCase() : "";
+    const fv = o.filt !== null && o.filt !== undefined ? $(box + "_f").value : "";
+    view = rows.filter(r => (!q || String(r[o.q]).toLowerCase().includes(q)) && (!fv || String(r[o.filt]) === fv));
+    view.sort((a, b) => { const x = a[sortCol], y = b[sortCol]; return (x < y ? -1 : x > y ? 1 : 0) * dir; });
+    thead.querySelectorAll("th").forEach((th, i) => th.className = "s" + (i === 0 ? " l" : "") + (i === sortCol ? (dir > 0 ? " asc" : " desc") : ""));
+    page = Math.min(page, Math.max(0, Math.ceil(view.length / 50) - 1)); draw();
+  }
+  function draw(){
+    tbody.innerHTML = view.slice(page * 50, page * 50 + 50).map(r => "<tr>" + o.f.map((f, i) => {
+      const v = r[i], hit = o.hl && f === "gap" && isHit(v);
+      return `<td class="${i === 0 ? "l " : ""}${f === "gap" ? sgn(v) : ""}${hit ? " hit" : ""}">${FMT[f](v)}</td>`; }).join("") + "</tr>").join("");
+    const pages = Math.max(1, Math.ceil(view.length / 50));
+    $(box + "_n").textContent = view.length.toLocaleString("en-IN") + " line";
+    $(box + "_p").innerHTML = `<button class="btn" ${page ? "" : "disabled"} data-d="-1">Pichhla</button> Page ${page + 1} / ${pages} <button class="btn" ${page < pages - 1 ? "" : "disabled"} data-d="1">Agla</button>`;
+  }
+  thead.onclick = e => { const th = e.target.closest("th"); if (!th) return; const i = +th.dataset.i; dir = i === sortCol ? -dir : (typeof rows[0][i] === "number" ? -1 : 1); sortCol = i; page = 0; apply(); };
+  $(box + "_p").onclick = e => { const d = e.target.dataset.d; if (d) { page += +d; draw(); } };
+  [box + "_q", box + "_f"].forEach(s => { const el = $(s); if (el) el.oninput = () => { page = 0; apply(); }; });
+  $(box + "_dl").onclick = () => { const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"'; const csv = [o.k.map(q).join(",")].concat(view.map(r => r.map(q).join(","))).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = file; a.click(); };
+  apply();
+}
+
+function render(){
+  V = D.views[K];
+  document.querySelectorAll("#seg button").forEach(b => b.classList.toggle("on", b.dataset.k === K));
+  $("#verdict").className = "verdict good";
+  $("#verdict").innerHTML = V.verdict;
+  $("#kpis").innerHTML = V.kpis.map(c => `<div class="kpi"><div class="l">${esc(c[0])}</div><div class="v">${esc(c[1])}</div><div class="n">${esc(c[2])}</div></div>`).join("");
+  const u = V.minute ? "Minute (dono me trade)" : "Din";
+  $("#ahint").textContent = V.period + ". Gap = " + V.far + " - " + V.near + ". " + (V.minute
+    ? "min = kitne minute, baar = kitni alag-alag baar (lagatar minute = 1 baar), din = kitne din me hua."
+    : "Har din NSE ka official closing price (aakhri 30 minute ka average). % = kitne din me se.");
+  $("#answer").innerHTML = `<thead><tr><th class="l">Stock</th><th>Lot</th><th>${u}</th><th>Same rate (gap 0.00)</th><th>${esc(V.far)} >= ${esc(V.near)} + 0.50</th><th>${esc(V.near)} >= ${esc(V.far)} + 0.50</th><th>Average gap</th><th>Sabse kam</th><th>Sabse zyada</th></tr></thead><tbody>`
+    + V.answer.map(r => `<tr><td class="l"><b>${esc(r[0])}</b></td><td>${FMT.int(r[1])}</td><td>${FMT.int(r[2])}</td><td>${esc(r[3])}</td><td>${esc(r[4])}</td><td>${esc(r[5])}</td>`
+      + `<td class="${sgn(r[6])}">${sg2(r[6])}</td><td class="${sgn(r[7])}">${sg2(r[7])}</td><td class="${sgn(r[8])}">${sg2(r[8])}</td></tr>`).join("") + "</tbody>";
+  $("#gform").textContent = V.far + " price - " + V.near + " price";
+  $("#ghint").textContent = V.minute ? "Har woh minute jisme dono contracts me trade hua (us minute ka aakhri price). Mouse le jao to dono price dikhenge."
+    : "Har din ka closing gap. Orange point = same rate ya 0.50+ wala din.";
+  $("#bhint").textContent = V.minute ? "Kul dekhe gaye minutes me se kitne % minute. Mouse le jao to ginti dikhegi." : "20 din me se kitne % din.";
+  const gs = $("#gs"), keep = gs.value; gs.innerHTML = Object.keys(V.gaps).map(s => `<option>${esc(s)}</option>`).join(""); if (V.gaps[keep]) gs.value = keep;
+  gs.onchange = drawCharts;
+  $("#dhint").textContent = V.day_hint;
+  document.querySelectorAll(".mo").forEach(c => c.style.display = V.minute ? "" : "none");
+  if (V.minute) {
+    $("#dphint").textContent = `Har khaane me: same rate baar · ${V.far} 0.50+ upar baar · ${V.near} 0.50+ upar baar. "-" = us din ek bhi minute dono me saath trade nahi hua.`;
+    table("#t_dpiv", V.daypiv, "har_din_baar_" + K + ".csv");
+    const ds = $("#ds"), dk = ds.value; ds.innerHTML = Object.keys(V.daybars).map(s => `<option>${esc(s)}</option>`).join(""); if (V.daybars[dk]) ds.value = dk;
+    ds.onchange = drawCharts;
+  }
+  $("#etitle").textContent = V.every_title; $("#ehint").textContent = V.every_hint;
+  table("#t_day", V.day, "din_" + K + ".csv");
+  table("#t_stock", V.stocks, "stocks_" + K + ".csv");
+  table("#t_every", V.every, "har_mauka_" + K + ".csv");
+  drawCharts();
+}
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => { document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.p)); charts.forEach(c => c.resize()); });
+const [hv, ht] = location.hash.slice(1).split("/");   // e.g. report.html#octnov/every opens that view and tab
+if (D.views[hv]) K = hv;
+render();
+if (ht) { const b = document.querySelector(`.tab[data-p="${ht}"]`); if (b) b.click(); }
+</script>
+</body>
+</html>
