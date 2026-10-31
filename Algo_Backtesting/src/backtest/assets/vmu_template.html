@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VMU Equity V3 report</title>
+__CSS__
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>VMU Equity V3 - backtest and parameter study</h1><div class="sub" id="subtitle"></div></div>
+  <div class="tools"><button class="btn" id="theme">Dark / Light</button><button class="btn" onclick="window.print()">Print / PDF</button></div>
+</header>
+<div class="verdict" id="verdict"></div>
+<div class="kpis" id="kpis"></div>
+<div class="tabs" id="tabs">
+  <button class="tab on" data-p="sum">Summary</button>
+  <button class="tab" data-p="months">Month by month</button>
+  <button class="tab" data-p="combos">All combinations</button>
+  <button class="tab" data-p="trades">All trades</button>
+  <button class="tab" data-p="rules">Rules</button>
+</div>
+
+<section class="panel on" id="sum">
+  <div class="card"><h3>Match check against the expected result</h3><div class="hint">The combination that came closest to the expected numbers, shown next to them.</div><div class="scroll" style="max-height:none"><table id="match"></table></div></div>
+  <div class="card"><h3>Equity curve</h3><div class="hint">Cumulative net profit in Rs for the highlighted combination, after costs and slippage.</div><div class="ch tall"><canvas id="c_eq"></canvas></div></div>
+  <div class="card"><h3>Profit or loss per day</h3><div class="ch"><canvas id="c_day"></canvas></div></div>
+  <div class="card"><h3>All numbers</h3><div class="kv" id="kv"></div></div>
+</section>
+
+<section class="panel" id="months">
+  <div class="card"><h3>Net profit per month</h3><div class="ch"><canvas id="c_m"></canvas></div></div>
+  <div class="card"><h3>Month table</h3><div class="scroll" style="max-height:none"><table id="mtable"></table></div></div>
+</section>
+
+<section class="panel" id="combos">
+  <div class="card"><h3>Every parameter combination</h3>
+    <div class="hint">3 volume multiples x 3 stop-loss types x 3 breakeven triggers x 3 trailing gaps x 3 slippage levels = 243 runs. The closest match to the expected result is highlighted. Click a heading to sort.</div>
+    <div class="bar"><select id="gs"><option value="">All slippage</option></select><select id="gv"><option value="">All volume multiples</option></select><select id="gl"><option value="">All stop-loss types</option></select>
+      <button class="btn" id="gdl">Download CSV</button><span class="note" id="gcount"></span></div>
+    <div class="scroll"><table id="gtable"><thead></thead><tbody></tbody></table></div><div class="pager" id="gpager"></div></div>
+</section>
+
+<section class="panel" id="trades">
+  <div class="card"><h3>Every trade (highlighted combination)</h3>
+    <div class="bar"><input id="tq" placeholder="Search stock"><select id="te"><option value="">All exits</option></select><select id="td"><option value="">Buy and sell</option></select>
+      <button class="btn" id="tdl">Download CSV</button><span class="note" id="tcount"></span></div>
+    <div class="scroll"><table id="ttable"><thead></thead><tbody></tbody></table></div><div class="pager" id="tpager"></div></div>
+</section>
+
+<section class="panel" id="rules"><div class="card"><h3>Rules used</h3><ul class="rules" id="rulelist"></ul>
+  <p class="note">Assumptions where the rules were open: slippage is charged on each side (entry and exit); the 0.10% cost is on the trade value; trailing starts at +2% profit; the F&amp;O list is estimated from when each stock's futures data begins (only current contracts are stored); turnover = sum of typical price x volume for 9:15 to 9:25; stops are only moved after a candle closes and apply from the next candle.</p></div></section>
+<footer id="foot"></footer>
+</div>
+<script>__CHARTJS__</script>
+<script>
+const D = __DATA__;
+const $ = s => document.querySelector(s);
+const sgn = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
+const rs = (v, plus) => v === null || v === undefined ? "n/a" : (v < 0 ? "-" : plus && v > 0 ? "+" : "") + "Rs " + Math.round(Math.abs(v)).toLocaleString("en-IN");
+const f2 = v => v === null || v === undefined ? "n/a" : Number(v).toFixed(2);
+const T = D.totals, B = D.best, E = D.expected;
+$("#subtitle").textContent = D.period + " | NSE equity, 1-minute candles | capital Rs " + D.capital.toLocaleString("en-IN") + ", 2 trades a day, 5x leverage | generated " + D.generated;
+$("#foot").textContent = "Past results do not guarantee future results. Prices are not adjusted for corporate actions.";
+D.rules.forEach(r => { const li = document.createElement("li"); li.textContent = r; $("#rulelist").appendChild(li); });
+const label = `volume ${B.vol_mult}x, stop-loss ${B.sl_mode}, breakeven ${B.be * 100}%, trailing gap ${B.trail * 100}%, slippage ${B.slip * 100}%`;
+const close = Math.abs(T.trades - E.trades) / E.trades < .15 && Math.abs(T.win_pct - E.win_pct) < 5 && Math.abs(T.net - E.net) / E.net < .25;
+$("#verdict").className = "verdict " + (close ? "good" : "bad");
+$("#verdict").innerHTML = (close ? "The result is <b>close to the expected result</b>. " : "The result <b>does not match the expected result</b>. ")
+  + `Closest of 243 combinations (${label}): <b>${T.trades}</b> trades, <b>${f2(T.win_pct)}%</b> won, net <b class="${sgn(T.net)}">${rs(T.net, true)}</b>. `
+  + `Expected was about ${E.trades} trades, ${E.win_pct}% won and ${rs(E.net)}. Most combinations lose money, especially with slippage.`;
+const cards = [
+  ["Net profit", rs(T.net, true), sgn(T.net), f2(T.ret_pct) + "% on Rs " + D.capital.toLocaleString("en-IN")],
+  ["Win rate", f2(T.win_pct) + "%", "", T.trades + " trades on " + T.trade_days + " days"],
+  ["Profit factor", f2(T.profit_factor), T.profit_factor >= 1 ? "pos" : "neg", "above 1.00 is profitable"],
+  ["Max drawdown", rs(T.max_dd), "neg", "net / max DD = " + f2(T.net_over_dd)],
+];
+$("#kpis").innerHTML = cards.map(c => `<div class="kpi"><div class="l">${c[0]}</div><div class="v ${c[2]}">${c[1]}</div><div class="n">${c[3]}</div></div>`).join("");
+const kv = [["Net profit", rs(T.net, true)], ["Return", f2(T.ret_pct) + "%"], ["Average month", rs(T.avg_month, true)], ["Profitable months", T.plus_months],
+  ["Trades", T.trades], ["Win rate", f2(T.win_pct) + "%"], ["Average per trade", rs(T.avg_trade, true)], ["Average win", rs(T.avg_win)],
+  ["Average loss", rs(T.avg_loss)], ["Average win / average loss", f2(T.win_loss_ratio)], ["Profit factor", f2(T.profit_factor)], ["Payoff ratio", f2(T.win_loss_ratio)],
+  ["Max drawdown", rs(T.max_dd)], ["Best trade", rs(T.best_trade)], ["Worst trade", rs(T.worst_trade)], ["Best day", rs(T.best_day)], ["Worst day", rs(T.worst_day)],
+  ["Longest winning streak (trades)", T.win_streak], ["Longest losing streak (trades)", T.loss_streak], ["Initial stop-loss hit", f2(T.sl_pct) + "%"],
+  ["Any stop-loss hit", f2(T.any_sl_pct) + "%"], ["Median hold time", f2(T.median_hold) + " hours"], ["Days with trades", T.trade_days], ["Net profit / max drawdown", f2(T.net_over_dd)]];
+$("#kv").innerHTML = kv.map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+const mrow = (n, a, e, fmt) => `<tr><td class="l">${n}</td><td>${fmt(a)}</td><td>${e === null ? "-" : fmt(e)}</td></tr>`;
+$("#match").innerHTML = "<thead><tr><th class='l'>Measure</th><th>This result</th><th>Expected</th></tr></thead><tbody>"
+  + mrow("Trades", T.trades, E.trades, v => v) + mrow("Win rate", T.win_pct, E.win_pct, v => f2(v) + "%") + mrow("Net profit", T.net, E.net, v => rs(v))
+  + mrow("Average loss", T.avg_loss, E.avg_loss, v => rs(v)) + mrow("Worst trade", T.worst_trade, E.worst_trade, v => rs(v))
+  + mrow("Median hold (hours)", T.median_hold, E.median_hold_h, f2) + mrow("Initial stop-loss hit", T.sl_pct, E.sl_pct, v => f2(v) + "%") + "</tbody>";
+$("#mtable").innerHTML = "<thead><tr><th class='l'>Month</th><th>Net profit</th><th>Return</th><th>Trades</th><th>Win rate</th></tr></thead><tbody>"
+  + D.months.map(m => `<tr><td class="l">${m[0]}</td><td class="${sgn(m[1])}">${rs(m[1], true)}</td><td class="${sgn(m[2])}">${m[2] > 0 ? "+" : ""}${m[2].toFixed(2)}%</td><td>${m[3]}</td><td>${m[4].toFixed(1)}%</td></tr>`).join("") + "</tbody>";
+
+let charts = [];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ax = () => ({x: {grid: {display: false}, ticks: {color: css("--muted"), maxTicksLimit: 6, maxRotation: 0}}, y: {grid: {color: css("--line")}, border: {display: false}, ticks: {color: css("--muted"), callback: v => Math.round(v / 1000) + "k"}}});
+const tip = f => ({backgroundColor: css("--ink"), titleColor: css("--card"), bodyColor: css("--card"), padding: 10, displayColors: false, callbacks: {label: f}});
+const colorBy = v => v.map(x => x >= 0 ? css("--pos") : css("--neg"));
+function drawCharts(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const L = D.daily.map(d => d[0]);
+  charts.push(new Chart($("#c_eq"), {type: "line", data: {labels: L, datasets: [{data: D.daily.map(d => d[2]), borderColor: css("--pos"), borderWidth: 2, pointRadius: 0, fill: {target: "origin", above: css("--pos-soft"), below: css("--neg-soft")}}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false}, plugins: {legend: {display: false}, tooltip: tip(c => "Total " + rs(c.parsed.y, true))}, scales: ax()}}));
+  const dv = D.daily.map(d => d[1]);
+  charts.push(new Chart($("#c_day"), {type: "bar", data: {labels: L, datasets: [{data: dv, backgroundColor: colorBy(dv), barPercentage: 1, categoryPercentage: 1}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => rs(c.parsed.y, true))}, scales: ax()}}));
+  const mv = D.months.map(m => m[1]);
+  charts.push(new Chart($("#c_m"), {type: "bar", data: {labels: D.months.map(m => m[0]), datasets: [{data: mv, backgroundColor: colorBy(mv), borderRadius: 3, maxBarThickness: 48}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => rs(c.parsed.y, true))}, scales: ax()}}));
+}
+$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark"); drawCharts(); };
+
+function table(o){
+  let rows = o.rows, sortCol = o.sort[0], dir = o.sort[1], page = 0, view = rows;
+  const thead = $(o.id + " thead"), tbody = $(o.id + " tbody");
+  thead.innerHTML = "<tr>" + o.cols.map((c, i) => `<th class="s ${i === 0 ? "l" : ""}" data-i="${i}">${c.h}</th>`).join("") + "</tr>";
+  function apply(){
+    const q = o.q ? $(o.q).value.trim().toLowerCase() : "";
+    view = rows.filter(r => (!q || String(r[o.qcol]).toLowerCase().includes(q)) && o.filters.every(f => !$(f.el).value || String(r[f.col]) === $(f.el).value));
+    view.sort((a, b) => { const x = a[sortCol], y = b[sortCol]; return (x < y ? -1 : x > y ? 1 : 0) * dir; });
+    thead.querySelectorAll("th").forEach((th, i) => th.className = "s" + (i === 0 ? " l" : "") + (i === sortCol ? (dir > 0 ? " asc" : " desc") : ""));
+    page = Math.min(page, Math.max(0, Math.ceil(view.length / 50) - 1)); draw();
+  }
+  function draw(){
+    tbody.innerHTML = view.slice(page * 50, page * 50 + 50).map(r => `<tr${o.mark && o.mark(r) ? ' style="background:var(--pos-soft);font-weight:650"' : ""}>` + o.cols.map((c, i) => `<td class="${i === 0 ? "l " : ""}${c.color ? sgn(r[i]) : ""}">${c.f ? c.f(r[i], r) : r[i]}</td>`).join("") + "</tr>").join("");
+    const pages = Math.max(1, Math.ceil(view.length / 50));
+    $(o.count).textContent = view.length.toLocaleString("en-IN") + " rows";
+    $(o.pager).innerHTML = `<button class="btn" ${page ? "" : "disabled"} data-d="-1">Prev</button> Page ${page + 1} of ${pages} <button class="btn" ${page < pages - 1 ? "" : "disabled"} data-d="1">Next</button>`;
+  }
+  thead.onclick = e => { const th = e.target.closest("th"); if (!th) return; const i = +th.dataset.i; dir = i === sortCol ? -dir : (typeof rows[0][i] === "number" ? -1 : 1); sortCol = i; page = 0; apply(); };
+  $(o.pager).onclick = e => { const d = e.target.dataset.d; if (d) { page += +d; draw(); } };
+  [o.q, ...o.filters.map(f => f.el)].filter(Boolean).forEach(el => $(el).oninput = () => { page = 0; apply(); });
+  $(o.dl).onclick = () => { const esc = v => '"' + String(v).replace(/"/g, '""') + '"'; const csv = [o.heads.map(esc).join(",")].concat(view.map(r => r.map(esc).join(","))).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = o.file; a.click(); };
+  apply();
+}
+const fill = (sel, vals) => [...new Set(vals)].sort().forEach(v => { const op = document.createElement("option"); op.value = op.textContent = v; $(sel).appendChild(op); });
+const G = D.grid, gi = n => D.grid_cols.indexOf(n);
+fill("#gs", G.map(r => r[gi("slip")])); fill("#gv", G.map(r => r[gi("vol_mult")])); fill("#gl", G.map(r => r[gi("sl_mode")]));
+const pc = v => (v * 100).toFixed(1).replace(/\.0$/, "") + "%";
+table({id: "#gtable", rows: G, sort: [gi("score"), 1], filters: [{el: "#gs", col: gi("slip")}, {el: "#gv", col: gi("vol_mult")}, {el: "#gl", col: gi("sl_mode")}],
+  count: "#gcount", pager: "#gpager", dl: "#gdl", file: "combinations.csv", heads: D.grid_cols, mark: r => r[gi("best")],
+  cols: [{h: "Volume x", f: v => v + "x"}, {h: "Stop-loss"}, {h: "Breakeven", f: pc}, {h: "Trail gap", f: pc}, {h: "Slippage", f: pc}, {h: "Trades"}, {h: "Win %", f: v => v + "%"},
+    {h: "Net", color: 1, f: v => rs(v, true)}, {h: "Profit factor", f: f2}, {h: "Max DD", f: rs}, {h: "Median hold (h)"}, {h: "Avg loss", f: rs}, {h: "Worst trade", f: rs},
+    {h: "SL hit %", f: v => v + "%"}, {h: "Distance from expected", f: v => (v * 100).toFixed(0) + "%"}, {h: "Closest", f: v => v ? "YES" : ""}]});
+const tc = D.trade_cols;
+fill("#te", D.trades.map(r => r[7])); fill("#td", D.trades.map(r => r[2]));
+table({id: "#ttable", rows: D.trades, sort: [0, 1], q: "#tq", qcol: 1, filters: [{el: "#te", col: 7}, {el: "#td", col: 2}], count: "#tcount", pager: "#tpager", dl: "#tdl", file: "trades.csv", heads: tc,
+  cols: [{h: "Date"}, {h: "Stock"}, {h: "Side"}, {h: "Qty"}, {h: "Entry"}, {h: "Exit"}, {h: "Exit time"}, {h: "Exit reason"}, {h: "Net P&L", color: 1, f: v => rs(v, true)}]});
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => { document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.p)); charts.forEach(c => c.resize()); });
+window.addEventListener("beforeprint", () => { document.querySelectorAll(".panel").forEach(p => p.classList.add("on")); setTimeout(() => charts.forEach(c => c.resize()), 50); });
+if (location.hash === "#all") { document.querySelectorAll(".panel").forEach(p => p.classList.add("on")); setTimeout(() => charts.forEach(c => c.resize()), 50); }
+drawCharts();
+</script>
+</body>
+</html>

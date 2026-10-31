@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+results/
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.vscode/
+.idea/
+.claude/
+*.log

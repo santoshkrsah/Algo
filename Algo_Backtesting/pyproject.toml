@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "backtest"
+version = "0.1.0"
+description = "Backtesting on the Fyers equity data downloaded by Algo_Historical_Data"
+requires-python = ">=3.11"
+dependencies = [
+    "requests>=2.32",
+    "pandas>=2.2",
+    "python-dotenv>=1.0",
+    "matplotlib>=3.8",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,22 @@
+# ---- secrets (never commit) ----
+.env
+.env.*
+!.env.example
+
+# ---- downloaded / generated data (large; includes the cached Fyers token in data/.cache) ----
+data/
+
+# ---- Python ----
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+
+# ---- editor / tool folders and scratch files ----
+.vscode/
+.idea/
+.claude/
+*.log
+*.tmp

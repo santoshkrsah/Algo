@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>__TITLE__</title>
+<style>
+:root{
+  --bg:#f4f6f9;--card:#ffffff;--ink:#14202e;--muted:#5f6d7e;--line:#e3e8ef;--soft:#eef2f7;
+  --pos:#1f5fd1;--neg:#d4521f;--pos-soft:rgba(31,95,209,.12);--neg-soft:rgba(212,82,31,.12);--accent:#14202e;
+  --shadow:0 1px 2px rgba(20,32,46,.06),0 4px 14px rgba(20,32,46,.05);
+}
+:root[data-theme="dark"]{
+  --bg:#0e141b;--card:#161e28;--ink:#e8edf3;--muted:#93a1b3;--line:#263242;--soft:#1c2633;
+  --pos:#5b9bff;--neg:#ff8a57;--pos-soft:rgba(91,155,255,.16);--neg-soft:rgba(255,138,87,.16);--accent:#e8edf3;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e141b;--card:#161e28;--ink:#e8edf3;--muted:#93a1b3;--line:#263242;--soft:#1c2633;
+    --pos:#5b9bff;--neg:#ff8a57;--pos-soft:rgba(91,155,255,.16);--neg-soft:rgba(255,138,87,.16);--accent:#e8edf3;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 48px}
+header{padding:28px 0 8px;display:flex;gap:16px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+h1{font-size:26px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:13px;max-width:760px}
+.tools{display:flex;gap:8px}
+button,select,input{font:inherit;color:var(--ink)}
+.btn{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;font-size:13px}
+.btn:hover{background:var(--soft)}
+.verdict{margin:18px 0;padding:16px 18px;border-radius:12px;background:var(--card);box-shadow:var(--shadow);border-left:6px solid var(--muted);font-size:15px}
+.verdict.good{border-left-color:var(--pos)} .verdict.bad{border-left-color:var(--neg)}
+.verdict b{font-weight:650}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.kpi{background:var(--card);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.kpi .l{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font-size:26px;font-weight:650;margin-top:4px;letter-spacing:-.01em}
+.kpi .n{font-size:12px;color:var(--muted);margin-top:2px}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:8px 0 18px;position:sticky;top:0;background:var(--bg);z-index:5;padding-top:6px}
+.tab{background:none;border:0;padding:10px 14px;cursor:pointer;color:var(--muted);font-weight:600;border-bottom:3px solid transparent;font-size:14px}
+.tab.on{color:var(--ink);border-bottom-color:var(--pos)}
+.panel{display:none} .panel.on{display:block}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.card{background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px;min-width:0}
+.card.full{grid-column:1/-1}
+.card h3{margin:0 0 2px;font-size:15px} .card .hint{color:var(--muted);font-size:12.5px;margin-bottom:10px}
+.ch{position:relative;height:290px} .ch.tall{height:360px} .ch.short{height:240px}
+ul.rules{margin:6px 0 0;padding-left:20px} ul.rules li{margin:3px 0}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child,.l{text-align:left}
+thead th{position:sticky;top:0;background:var(--card);color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;user-select:none}
+th.s::after{content:" \2195";opacity:.35} th.asc::after{content:" \25B2";opacity:1} th.desc::after{content:" \25BC";opacity:1}
+tbody tr:hover{background:var(--soft)}
+.scroll{overflow:auto;max-height:620px;border:1px solid var(--line);border-radius:8px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.bar input,.bar select{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px}
+.bar input{min-width:200px}
+.pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:10px;font-size:13px;color:var(--muted)}
+.heat td{text-align:center;font-size:12px;padding:8px 4px;border:2px solid var(--card)} .heat th{cursor:default}
+.kv{display:grid;grid-template-columns:repeat(2,1fr);gap:0 28px}
+.kv div{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px;gap:10px}
+.kv span:first-child{color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted)}
+footer{margin-top:28px;color:var(--muted);font-size:12px}
+@media (max-width:820px){.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.kv{grid-template-columns:1fr}.kpi .v{font-size:22px}h1{font-size:21px}}
+@media print{.tools,.tabs,.bar,.pager{display:none}.panel{display:block!important}body{background:#fff}.card,.kpi,.verdict{box-shadow:none;border:1px solid var(--line);break-inside:avoid}.scroll{max-height:none;overflow:visible}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1 id="title"></h1><div class="sub" id="subtitle"></div></div>
+  <div class="tools"><button class="btn" id="theme">Dark / Light</button><button class="btn" onclick="window.print()">Print / PDF</button></div>
+</header>
+<div class="verdict" id="verdict"></div>
+<div class="kpis" id="kpis"></div>
+
+<div class="tabs" id="tabs">
+  <button class="tab on" data-p="overview">Overview</button>
+  <button class="tab" data-p="perf">Performance</button>
+  <button class="tab" data-p="split">Breakdown</button>
+  <button class="tab" data-p="comp">Companies</button>
+  <button class="tab" data-p="trades">All trades</button>
+</div>
+
+<section class="panel on" id="overview">
+  <div class="card"><h3>Strategy rules</h3><ul class="rules" id="rules"></ul></div>
+  <div class="card"><h3>Equity curve</h3><div class="hint">Total money made or lost so far, after all costs. Going up is good.</div><div class="ch tall"><canvas id="c_equity"></canvas></div></div>
+  <div class="card"><h3>Drawdown</h3><div class="hint">How far the equity curve is below its best point so far. Deep, long dips are the risk you must be able to sit through.</div><div class="ch"><canvas id="c_dd"></canvas></div></div>
+  <div class="card"><h3>Profit or loss per day</h3><div class="hint">One bar per trading day that had trades.</div><div class="ch"><canvas id="c_daily"></canvas></div></div>
+</section>
+
+<section class="panel" id="perf">
+  <div class="card"><h3>Month by month</h3><div class="hint">Net profit for each month (Rs). Blue = profit, orange = loss; darker = bigger.</div><div class="scroll" style="max-height:none"><table class="heat" id="heat"></table></div></div>
+  <div class="grid">
+    <div class="card"><h3>Profit per month</h3><div class="ch"><canvas id="c_month"></canvas></div></div>
+    <div class="card"><h3>Profit per year</h3><div class="ch"><canvas id="c_year"></canvas></div></div>
+    <div class="card full"><h3>How big are the wins and losses?</h3><div class="hint">Number of trades by return on the trade after costs. The stop-loss at -3% creates the tall bar on the left.</div><div class="ch"><canvas id="c_hist"></canvas></div></div>
+  </div>
+</section>
+
+<section class="panel" id="split">
+  <div class="grid">
+    <div class="card"><h3>By company size</h3><div class="hint">Net profit (Rs)</div><div class="ch short"><canvas id="c_cat"></canvas></div></div>
+    <div class="card"><h3>By how the trade ended</h3><div class="hint">Net profit (Rs)</div><div class="ch short"><canvas id="c_exit"></canvas></div></div>
+    <div class="card"><h3>By weekday</h3><div class="hint">Net profit (Rs)</div><div class="ch short"><canvas id="c_wd"></canvas></div></div>
+    <div class="card"><h3>Win rate by group</h3><div class="hint">Share of trades that made money</div><div class="ch short"><canvas id="c_win"></canvas></div></div>
+  </div>
+  <div class="card"><h3>All numbers</h3><div class="kv" id="kv"></div></div>
+  <div class="card"><h3>How to read this report</h3><div class="note">
+    <b>Profit factor</b>: total money won divided by total money lost; above 1 means profitable. <b>Win rate</b>: share of trades that made money; a low win rate can still work if wins are bigger than losses.
+    <b>Max drawdown</b>: the largest fall from a peak. <b>Sharpe</b>: return per unit of day-to-day swings; above 1 is decent. <b>Capital</b> used for percentages is the busiest-day exposure (max trades x amount per trade).
+    <b>Costs</b> include brokerage, STT, exchange, GST, stamp duty, SEBI fees and slippage. Fills are assumed at the candle prices shown; very thin stocks would fill worse in real trading, and prices are not adjusted for splits or bonuses.</div></div>
+</section>
+
+<section class="panel" id="comp">
+  <div class="grid">
+    <div class="card"><h3>Top 15 companies by profit</h3><div class="ch tall"><canvas id="c_top"></canvas></div></div>
+    <div class="card"><h3>Bottom 15 companies by loss</h3><div class="ch tall"><canvas id="c_bot"></canvas></div></div>
+  </div>
+  <div class="card"><h3>Every company traded</h3><div class="hint">Click a column heading to sort. Amounts in Rs.</div>
+    <div class="bar"><input id="cq" placeholder="Search company"><select id="cc"><option value="">All sizes</option></select>
+      <button class="btn" id="cdl">Download CSV</button><span class="note" id="ccount"></span></div>
+    <div class="scroll"><table id="ctable"><thead></thead><tbody></tbody></table></div><div class="pager" id="cpager"></div></div>
+</section>
+
+<section class="panel" id="trades">
+  <div class="card"><h3>Every trade</h3><div class="hint">Full trade book. Click a column heading to sort.</div>
+    <div class="bar"><input id="tq" placeholder="Search company"><select id="tc"><option value="">All sizes</option></select>
+      <select id="te"><option value="">All exits</option></select><select id="ty"><option value="">All years</option></select>
+      <button class="btn" id="tdl">Download CSV</button><span class="note" id="tcount"></span></div>
+    <div class="scroll"><table id="ttable"><thead></thead><tbody></tbody></table></div><div class="pager" id="tpager"></div></div>
+</section>
+<footer id="foot"></footer>
+</div>
+
+<script>__CHARTJS__</script>
+<script>
+const D = __DATA__;
+const $ = s => document.querySelector(s);
+const sgn = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
+function inr(v, plus){
+  if (v === null || v === undefined) return "n/a";
+  const a = Math.abs(v), s = v < 0 ? "-" : (plus && v > 0 ? "+" : "");
+  if (a >= 1e7) return s + "Rs " + (a/1e7).toFixed(2) + " Cr";
+  if (a >= 1e5) return s + "Rs " + (a/1e5).toFixed(2) + " L";
+  return s + "Rs " + Math.round(a).toLocaleString("en-IN");
+}
+const num = v => Math.round(v).toLocaleString("en-IN");
+const pct = (v, d=1) => v === null ? "n/a" : (v*100).toFixed(d) + "%";
+const K = D.kpi;
+
+// ---------- header, verdict, KPI cards
+$("#title").textContent = D.title; $("#subtitle").textContent = D.subtitle;
+$("#foot").textContent = "Generated " + D.generated + ". Data: Fyers NSE equity candles. Past results do not guarantee future results.";
+D.rules.forEach(r => { const li = document.createElement("li"); li.textContent = r; $("#rules").appendChild(li); });
+const first = D.daily[0][0], last = D.daily[D.daily.length-1][0];
+const net = K["Net profit (Rs)"];
+$("#verdict").className = "verdict " + (net >= 0 ? "good" : "bad");
+$("#verdict").innerHTML = `From <b>${first}</b> to <b>${last}</b> the strategy made <b>${K["Total trades"].toLocaleString("en-IN")}</b> trades on <b>${K["Trading days with trades"]}</b> days and ended with a net <b class="${sgn(net)}">${net>=0?"profit":"loss"} of ${inr(Math.abs(net))}</b> after all costs. `
+  + `<b>${pct(K["Win rate"])}</b> of trades won; the average win was ${inr(K["Average win (Rs)"])} and the average loss ${inr(K["Average loss (Rs)"])}. `
+  + `The deepest fall from a peak was <b class="neg">${inr(K["Max drawdown (Rs)"])}</b> (${pct(K["Max drawdown %"])} of capital).`;
+const cards = [
+  ["Net profit", inr(net, true), sgn(net), "after all costs"],
+  ["Return on capital", pct(K["Return on capital"]), sgn(K["Return on capital"]), "on Rs " + (D.capital/1e7).toFixed(0) + " Cr deployed"],
+  ["Win rate", pct(K["Win rate"]), "", K["Total trades"].toLocaleString("en-IN") + " trades"],
+  ["Profit factor", K["Profit factor"] === null ? "n/a" : K["Profit factor"].toFixed(2), K["Profit factor"] >= 1 ? "pos" : "neg", "above 1.00 is profitable"],
+  ["Max drawdown", inr(K["Max drawdown (Rs)"]), "neg", pct(K["Max drawdown %"]) + " of capital"],
+  ["Average trade", inr(K["Average trade (Rs)"], true), sgn(K["Average trade (Rs)"]), "expectancy " + pct(K["Expectancy per trade %"], 2) + " per trade"],
+  ["Costs paid", inr(K["Costs (Rs)"]), "", "gross " + inr(K["Gross profit (Rs)"], true)],
+  ["Sharpe ratio", K["Sharpe (daily, annualised)"] === null ? "n/a" : K["Sharpe (daily, annualised)"].toFixed(2), sgn(K["Sharpe (daily, annualised)"]), "winning days " + pct(K["Winning days"], 0)],
+];
+$("#kpis").innerHTML = cards.map(c => `<div class="kpi"><div class="l">${c[0]}</div><div class="v ${c[2]}">${c[1]}</div><div class="n">${c[3]}</div></div>`).join("");
+const kvRows = [
+  ["Trades", K["Total trades"].toLocaleString("en-IN")], ["Days with trades", K["Trading days with trades"]],
+  ["Gross profit", inr(K["Gross profit (Rs)"])], ["Costs", inr(K["Costs (Rs)"])],
+  ["Best trade", inr(K["Best trade (Rs)"])], ["Worst trade", inr(K["Worst trade (Rs)"])],
+  ["Best day", inr(K["Best day (Rs)"])], ["Worst day", inr(K["Worst day (Rs)"])],
+  ["Average win", inr(K["Average win (Rs)"])], ["Average loss", inr(K["Average loss (Rs)"])],
+  ["Stop-loss exits", K["Stop-loss exits"].toLocaleString("en-IN")], ["3 pm square-off exits", K["3pm square-off exits"].toLocaleString("en-IN")],
+  ["Longest losing-day streak", K["Longest losing-day streak"] + " days"], ["Winning days", pct(K["Winning days"])],
+];
+$("#kv").innerHTML = kvRows.map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+
+// ---------- theme + charts
+let charts = [];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function setTheme(t){ if (t) document.documentElement.setAttribute("data-theme", t); drawCharts(); drawHeat(); }
+$("#theme").onclick = () => {
+  const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light");
+  setTheme(cur === "dark" ? "light" : "dark");
+};
+function axes(yFmt){
+  const grid = css("--line"), mut = css("--muted");
+  return {
+    x: {grid: {display: false}, ticks: {color: mut, maxTicksLimit: 6, maxRotation: 0, autoSkip: true}, border: {color: mut}},
+    y: {grid: {color: grid}, border: {display: false}, ticks: {color: mut, callback: v => yFmt(v)}},
+  };
+}
+const axisInr = v => { const a = Math.abs(v), s = v < 0 ? "-" : ""; return a >= 1e7 ? s + (a/1e7).toFixed(1) + "Cr" : a >= 1e5 ? s + (a/1e5).toFixed(0) + "L" : s + Math.round(a); };
+const tip = fmt => ({backgroundColor: css("--ink"), titleColor: css("--card"), bodyColor: css("--card"), padding: 10, displayColors: false, callbacks: {label: c => fmt(c)}});
+function mk(id, cfg){ charts.push(new Chart($("#" + id), cfg)); }
+const colorBy = vals => vals.map(v => v >= 0 ? css("--pos") : css("--neg"));
+function bars(id, labels, vals, opt = {}){
+  mk(id, {type: "bar", data: {labels, datasets: [{data: vals, backgroundColor: colorBy(vals), borderRadius: 3, maxBarThickness: opt.thick || 46}]},
+    options: {responsive: true, maintainAspectRatio: false, indexAxis: opt.h ? "y" : "x", animation: false,
+      plugins: {legend: {display: false}, tooltip: tip(c => opt.label ? opt.label(c) : inr(c.parsed[opt.h ? "x" : "y"], true))},
+      scales: opt.h ? {x: {grid: {color: css("--line")}, border: {display: false}, ticks: {color: css("--muted"), callback: axisInr}}, y: {grid: {display: false}, ticks: {color: css("--ink")}}} : axes(opt.yFmt || axisInr)}});
+}
+function drawCharts(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const labels = D.daily.map(d => d[0]);
+  const eq = D.daily.map(d => d[2]), dd = D.daily.map(d => d[3]);
+  mk("c_equity", {type: "line", data: {labels, datasets: [{data: eq, borderColor: css("--pos"), borderWidth: 2, pointRadius: 0, tension: .15, fill: {target: "origin", above: css("--pos-soft"), below: css("--neg-soft")}}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false},
+      plugins: {legend: {display: false}, tooltip: tip(c => "Total: " + inr(c.parsed.y, true))}, scales: axes(axisInr)}});
+  mk("c_dd", {type: "line", data: {labels, datasets: [{data: dd, borderColor: css("--neg"), backgroundColor: css("--neg-soft"), borderWidth: 1.5, pointRadius: 0, fill: true}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false},
+      plugins: {legend: {display: false}, tooltip: tip(c => "Below peak: " + inr(c.parsed.y))}, scales: axes(axisInr)}});
+  const dv = D.daily.map(d => d[1]);
+  mk("c_daily", {type: "bar", data: {labels, datasets: [{data: dv, backgroundColor: colorBy(dv), barPercentage: 1, categoryPercentage: 1}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false},
+      plugins: {legend: {display: false}, tooltip: tip(c => inr(c.parsed.y, true))}, scales: axes(axisInr)}});
+  bars("c_month", D.monthly.map(m => m.k), D.monthly.map(m => m.pnl), {thick: 24});
+  bars("c_year", D.yearly.map(m => m.k), D.yearly.map(m => m.pnl));
+  mk("c_hist", {type: "bar", data: {labels: D.hist.labels, datasets: [{data: D.hist.counts, borderRadius: 3,
+      backgroundColor: D.hist.labels.map(l => parseFloat(l) < 0 || l.startsWith("-") ? css("--neg") : css("--pos"))}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: {legend: {display: false}, tooltip: tip(c => c.parsed.y + " trades")}, scales: axes(v => v)}});
+  bars("c_cat", D.category.map(m => m.k), D.category.map(m => m.pnl));
+  bars("c_exit", D.exit.map(m => m.k), D.exit.map(m => m.pnl));
+  bars("c_wd", D.weekday.map(m => m.k), D.weekday.map(m => m.pnl));
+  const groups = [...D.category.map(m => ["Size: " + m.k, m.win]), ...D.exit.map(m => [m.k, m.win]), ...D.yearly.map(m => ["Year " + m.k, m.win])];
+  mk("c_win", {type: "bar", data: {labels: groups.map(g => g[0]), datasets: [{data: groups.map(g => g[1] * 100), backgroundColor: css("--pos"), borderRadius: 3}]},
+    options: {responsive: true, maintainAspectRatio: false, indexAxis: "y", animation: false,
+      plugins: {legend: {display: false}, tooltip: tip(c => c.parsed.x.toFixed(1) + "% won")},
+      scales: {x: {min: 0, max: 100, grid: {color: css("--line")}, border: {display: false}, ticks: {color: css("--muted"), callback: v => v + "%"}}, y: {grid: {display: false}, ticks: {color: css("--ink")}}}}});
+  const byNet = [...D.companies].sort((a, b) => b[4] - a[4]);
+  const top = byNet.slice(0, 15), bot = byNet.slice(-15).reverse();
+  bars("c_top", top.map(c => c[0]), top.map(c => c[4]), {h: true, label: c => inr(c.parsed.x, true)});
+  bars("c_bot", bot.map(c => c[0]), bot.map(c => c[4]), {h: true, label: c => inr(c.parsed.x, true)});
+}
+
+// ---------- month heatmap
+function drawHeat(){
+  const M = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const years = [...new Set(D.heat.map(h => h.y))].sort();
+  const map = {}; let mx = 1;
+  D.heat.forEach(h => { map[h.y + "-" + h.m] = h.v; mx = Math.max(mx, Math.abs(h.v)); });
+  const pos = css("--pos"), neg = css("--neg");
+  let html = "<thead><tr><th>Year</th>" + M.map(m => `<th>${m}</th>`).join("") + "<th>Total</th></tr></thead><tbody>";
+  years.forEach(y => {
+    let tot = 0;
+    html += `<tr><td><b>${y}</b></td>`;
+    for (let m = 1; m <= 12; m++){
+      const v = map[y + "-" + m];
+      if (v === undefined){ html += `<td style="color:var(--muted)">-</td>`; continue; }
+      tot += v;
+      const a = (0.14 + 0.62 * Math.abs(v) / mx).toFixed(2);
+      html += `<td style="background:color-mix(in srgb, ${v >= 0 ? pos : neg} ${Math.round(a*100)}%, transparent)" title="${inr(v, true)}">${axisInr(v)}</td>`;
+    }
+    html += `<td class="${sgn(tot)}"><b>${axisInr(tot)}</b></td></tr>`;
+  });
+  $("#heat").innerHTML = html + "</tbody>";
+}
+
+// ---------- sortable, filterable, paged tables
+function table(o){
+  let rows = o.rows.slice(), sortCol = o.sort[0], dir = o.sort[1], page = 0, view = rows;
+  const thead = $(o.id + " thead"), tbody = $(o.id + " tbody");
+  thead.innerHTML = "<tr>" + o.cols.map((c, i) => `<th class="s ${i === 0 ? "l" : ""}" data-i="${i}">${c.h}</th>`).join("") + "</tr>";
+  function apply(){
+    const q = o.q ? $(o.q).value.trim().toLowerCase() : "";
+    view = rows.filter(r => (!q || String(r[o.qcol]).toLowerCase().includes(q)) && o.filters.every(f => !$(f.el).value || String(r[f.col]) === $(f.el).value));
+    view.sort((a, b) => { const x = a[sortCol], y = b[sortCol]; return (x < y ? -1 : x > y ? 1 : 0) * dir; });
+    thead.querySelectorAll("th").forEach((th, i) => th.className = "s" + (i === 0 ? " l" : "") + (i === sortCol ? (dir > 0 ? " asc" : " desc") : ""));
+    page = Math.min(page, Math.max(0, Math.ceil(view.length / 50) - 1)); draw();
+  }
+  function draw(){
+    const slice = view.slice(page * 50, page * 50 + 50);
+    tbody.innerHTML = slice.map(r => "<tr>" + o.cols.map((c, i) => `<td class="${i === 0 ? "l " : ""}${c.color ? sgn(r[c.i ?? i]) : ""}">${c.f ? c.f(r[c.i ?? i], r) : r[c.i ?? i]}</td>`).join("") + "</tr>").join("");
+    const pages = Math.max(1, Math.ceil(view.length / 50));
+    $(o.count).textContent = view.length.toLocaleString("en-IN") + " rows";
+    $(o.pager).innerHTML = `<button class="btn" ${page ? "" : "disabled"} data-d="-1">Prev</button> Page ${page + 1} of ${pages} <button class="btn" ${page < pages - 1 ? "" : "disabled"} data-d="1">Next</button>`;
+  }
+  thead.onclick = e => { const th = e.target.closest("th"); if (!th) return; const i = +th.dataset.i; dir = i === sortCol ? -dir : (typeof rows[0][i] === "number" ? -1 : 1); sortCol = i; page = 0; apply(); };
+  $(o.pager).onclick = e => { const d = e.target.dataset.d; if (d) { page += +d; draw(); } };
+  [o.q, ...o.filters.map(f => f.el)].filter(Boolean).forEach(el => $(el).oninput = () => { page = 0; apply(); });
+  $(o.dl).onclick = () => {
+    const esc = v => '"' + String(v).replace(/"/g, '""') + '"';
+    const csv = [o.heads.map(esc).join(",")].concat(view.map(r => r.map(esc).join(","))).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = o.file; a.click();
+  };
+  apply();
+}
+function fill(sel, vals){ [...new Set(vals)].sort().forEach(v => { const op = document.createElement("option"); op.value = op.textContent = v; $(sel).appendChild(op); }); }
+
+const C = D.companies;                           // sym, cat, trades, wins, net, avg, best, worst, avg%
+const compRows = C.map(c => [c[0], c[1], c[2], c[3], c[3] / c[2], c[4], c[5], c[6], c[7], c[8]]);
+fill("#cc", C.map(c => c[1]));
+table({id: "#ctable", rows: compRows, sort: [5, -1], q: "#cq", qcol: 0, filters: [{el: "#cc", col: 1}], count: "#ccount", pager: "#cpager", dl: "#cdl", file: "companies.csv",
+  heads: ["Company", "Size", "Trades", "Wins", "Win rate", "Net profit", "Avg per trade", "Best trade", "Worst trade", "Avg return %"],
+  cols: [{h: "Company"}, {h: "Size"}, {h: "Trades"}, {h: "Wins"}, {h: "Win rate", f: v => pct(v, 0)},
+    {h: "Net profit", color: 1, f: v => inr(v, true)}, {h: "Avg per trade", color: 1, f: v => inr(v, true)},
+    {h: "Best", f: v => inr(v, true)}, {h: "Worst", f: v => inr(v, true)}, {h: "Avg return", color: 1, f: v => (v > 0 ? "+" : "") + v.toFixed(2) + "%"}]});
+
+const T = D.trades, tc = D.trade_cols, ix = n => tc.indexOf(n);
+fill("#tc", T.map(r => r[ix("category")])); fill("#te", T.map(r => r[ix("exit_reason")])); fill("#ty", T.map(r => r[ix("date")].slice(0, 4)));
+const tradeRows = T.map(r => r.slice());
+tradeRows.forEach(r => r.push(r[0].slice(0, 4)));                // year, last column, used by the filter
+table({id: "#ttable", rows: tradeRows, sort: [0, -1], q: "#tq", qcol: 1, count: "#tcount", pager: "#tpager", dl: "#tdl", file: "trades.csv",
+  filters: [{el: "#tc", col: ix("category")}, {el: "#te", col: ix("exit_reason")}, {el: "#ty", col: tc.length}],
+  heads: tc,
+  cols: [{h: "Date"}, {h: "Company"}, {h: "Size"}, {h: "Qty", f: num}, {h: "R3 level"}, {h: "Buy"}, {h: "Sell"}, {h: "Exit time"}, {h: "Exit reason"},
+    {h: "Gross P&L", color: 1, f: v => inr(v, true)}, {h: "Costs", f: v => inr(v)}, {h: "Net P&L", color: 1, f: v => inr(v, true)},
+    {h: "Return", color: 1, f: v => (v > 0 ? "+" : "") + v.toFixed(2) + "%"}, {h: "1st candle volume", f: num}]});
+
+// ---------- tabs
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.p));
+  charts.forEach(c => c.resize());
+});
+function showAll(){ document.querySelectorAll(".panel").forEach(p => p.classList.add("on")); setTimeout(() => charts.forEach(c => c.resize()), 50); }
+window.addEventListener("beforeprint", showAll);
+if (location.hash === "#all") showAll();
+setTheme();
+</script>
+</body>
+</html>

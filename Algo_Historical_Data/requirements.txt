@@ -1,0 +1,3 @@
+# Installs the dependencies listed in pyproject.toml and this project itself (editable):
+#   pip install -r requirements.txt
+-e .

@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VMU ORB V4 report</title>
+__CSS__
+<style>
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:0 10px 14px 0;vertical-align:top}
+.seg button{background:var(--card);border:0;border-right:1px solid var(--line);padding:7px 14px;cursor:pointer;font-size:13px;color:var(--muted)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--soft);color:var(--ink);font-weight:650}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>VMU ORB V4 - train / test backtest</h1><div class="sub" id="subtitle"></div></div>
+  <div class="tools"><button class="btn" id="theme">Dark / Light</button></div>
+</header>
+<div class="verdict" id="verdict"></div>
+<div><div class="seg" id="segp"></div><div class="seg" id="segs"></div></div>
+<div class="kpis" id="kpis"></div>
+<div class="tabs" id="tabs">
+  <button class="tab on" data-p="sum">Summary</button>
+  <button class="tab" data-p="months">Month by month</button>
+  <button class="tab" data-p="grid">Parameter test (train)</button>
+  <button class="tab" data-p="stocks">Every stock</button>
+  <button class="tab" data-p="trades">All trades</button>
+  <button class="tab" data-p="rules">Rules used</button>
+</div>
+
+<section class="panel on" id="sum">
+  <div class="card"><h3>Train and test, all slippage levels</h3><div class="hint">Same rules and parameters in every row. The test period was only run, never tuned.</div><div class="scroll" style="max-height:none"><table id="cmp"></table></div></div>
+  <div class="card"><h3>Equity curve</h3><div class="hint" id="eqhint"></div><div class="ch tall"><canvas id="c_eq"></canvas></div></div>
+  <div class="card"><h3>Profit or loss per day</h3><div class="ch"><canvas id="c_day"></canvas></div></div>
+  <div class="card"><h3>All numbers</h3><div class="kv" id="kv"></div></div>
+</section>
+
+<section class="panel" id="months">
+  <div class="card"><h3>Net profit per month</h3><div class="ch"><canvas id="c_m"></canvas></div></div>
+  <div class="card"><h3>Month table</h3><div class="hint">Return is on Rs 70,000. Max drawdown is the deepest fall from a high inside that month.</div><div class="scroll" style="max-height:none"><table id="mtable"></table></div></div>
+</section>
+
+<section class="panel" id="grid">
+  <div class="card"><h3>Every parameter combination on the train period</h3>
+    <div class="hint" id="gridhint"></div>
+    <div class="bar"><select id="gl"><option value="">Both opening ranges</option></select><select id="gv"><option value="">All volume multiples</option></select>
+      <button class="btn" id="gdl">Download CSV</button><span class="note" id="gcount"></span></div>
+    <div class="scroll"><table id="gtable"><thead></thead><tbody></tbody></table></div><div class="pager" id="gpager"></div></div>
+</section>
+
+<section class="panel" id="stocks">
+  <div class="card"><h3>Every stock traded</h3>
+    <div class="bar"><input id="sq" placeholder="Search stock"><button class="btn" id="sdl">Download CSV</button><span class="note" id="scount"></span></div>
+    <div class="scroll"><table id="stable"><thead></thead><tbody></tbody></table></div><div class="pager" id="spager"></div></div>
+</section>
+
+<section class="panel" id="trades">
+  <div class="card"><h3>Every trade</h3>
+    <div class="bar"><input id="tq" placeholder="Search stock"><select id="te"><option value="">All exits</option></select><select id="td"><option value="">Buy and sell</option></select>
+      <button class="btn" id="tdl">Download CSV</button><span class="note" id="tcount"></span></div>
+    <div class="scroll"><table id="ttable"><thead></thead><tbody></tbody></table></div><div class="pager" id="tpager"></div></div>
+</section>
+
+<section class="panel" id="rules">
+  <div class="card"><h3>Rules used</h3><ul class="rules" id="rulelist"></ul></div>
+  <div class="card"><h3>Assumptions where the rules were open</h3><ul class="rules" id="notelist"></ul></div>
+</section>
+<footer id="foot"></footer>
+</div>
+<script>__CHARTJS__</script>
+<script>
+const D = __DATA__;
+const $ = s => document.querySelector(s);
+const sgn = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
+const rs = (v, plus) => v === null || v === undefined ? "n/a" : (v < 0 ? "-" : plus && v > 0 ? "+" : "") + "Rs " + Math.round(Math.abs(v)).toLocaleString("en-IN");
+const f2 = v => v === null || v === undefined ? "n/a" : Number(v).toFixed(2);
+const pct = v => f2(v) + "%";
+const pc1 = v => (v * 100).toFixed(1).replace(/\.0$/, "") + "%";
+const B = D.best, PER = Object.keys(D.runs), SL = Object.keys(D.runs[PER[0]]);
+let P = PER[PER.length - 1], K = SL.includes("0.3%") ? "0.3%" : SL[0], R, T;
+const combo = `opening range ${B.or_min} min, volume ${B.vol_mult}x, max SL ${pc1(B.max_sl)}, partial booking at ${B.partial_r}R`;
+$("#subtitle").textContent = Object.entries(D.periods).map(([k, v]) => k + " " + v).join(" | ") + " | NSE equity, 1-minute candles | capital Rs " + D.capital.toLocaleString("en-IN") + ", max 2 trades a day, 5x MIS | generated " + D.generated;
+$("#foot").textContent = "Past results do not guarantee future results. Prices are adjusted for corporate actions by the data source.";
+const li = (sel, arr) => arr.forEach(r => { const e = document.createElement("li"); e.textContent = r; $(sel).appendChild(e); });
+li("#rulelist", D.rules); li("#notelist", D.notes);
+$("#segp").innerHTML = PER.map(p => `<button data-p="${p}">${p} ${D.periods[p]}</button>`).join("");
+$("#segs").innerHTML = SL.map(k => `<button data-k="${k}">Slippage ${k}</button>`).join("");
+$("#segp").onclick = e => { const p = e.target.dataset.p; if (p) { P = p; render(); } };
+$("#segs").onclick = e => { const k = e.target.dataset.k; if (k) { K = k; render(); } };
+$("#cmp").innerHTML = "<thead><tr><th class='l'>Period</th><th>Slippage</th><th>Trades</th><th>Win %</th><th>Net</th><th>Return</th><th>Avg month</th><th>Profit factor</th><th>Max DD</th></tr></thead><tbody>"
+  + PER.flatMap(p => SL.map(k => { const t = D.runs[p][k].totals; return `<tr><td class="l">${p}</td><td>${k}</td><td>${t.trades}</td><td>${pct(t.win_pct)}</td><td class="${sgn(t.net)}">${rs(t.net, true)}</td><td class="${sgn(t.ret_pct)}">${pct(t.ret_pct)}</td><td class="${sgn(t.avg_month)}">${rs(t.avg_month, true)}</td><td>${f2(t.profit_factor)}</td><td>${rs(t.max_dd)}</td></tr>`; })).join("") + "</tbody>";
+$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark"); drawCharts(); };
+
+let charts = [];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ax = () => ({x: {grid: {display: false}, ticks: {color: css("--muted"), maxTicksLimit: 6, maxRotation: 0}}, y: {grid: {color: css("--line")}, border: {display: false}, ticks: {color: css("--muted"), callback: v => Math.round(v / 1000) + "k"}}});
+const tip = f => ({backgroundColor: css("--ink"), titleColor: css("--card"), bodyColor: css("--card"), padding: 10, displayColors: false, callbacks: {label: f}});
+const colorBy = v => v.map(x => x >= 0 ? css("--pos") : css("--neg"));
+function drawCharts(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const L = R.daily.map(d => d[0]);
+  charts.push(new Chart($("#c_eq"), {type: "line", data: {labels: L, datasets: [{data: R.daily.map(d => d[2]), borderColor: css("--pos"), borderWidth: 2, pointRadius: 0, fill: {target: "origin", above: css("--pos-soft"), below: css("--neg-soft")}}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false}, plugins: {legend: {display: false}, tooltip: tip(c => "Total " + rs(c.parsed.y, true))}, scales: ax()}}));
+  const dv = R.daily.map(d => d[1]);
+  charts.push(new Chart($("#c_day"), {type: "bar", data: {labels: L, datasets: [{data: dv, backgroundColor: colorBy(dv), barPercentage: 1, categoryPercentage: 1}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => rs(c.parsed.y, true))}, scales: ax()}}));
+  const mv = R.months.map(m => m[1]);
+  charts.push(new Chart($("#c_m"), {type: "bar", data: {labels: R.months.map(m => m[0]), datasets: [{data: mv, backgroundColor: colorBy(mv), borderRadius: 3, maxBarThickness: 48}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => rs(c.parsed.y, true))}, scales: ax()}}));
+}
+
+function table(o){
+  let rows = o.rows, sortCol = o.sort[0], dir = o.sort[1], page = 0, view = rows;
+  const thead = $(o.id + " thead"), tbody = $(o.id + " tbody");
+  thead.innerHTML = "<tr>" + o.cols.map((c, i) => `<th class="s ${i === 0 ? "l" : ""}" data-i="${i}">${c.h}</th>`).join("") + "</tr>";
+  function apply(){
+    const q = o.q ? $(o.q).value.trim().toLowerCase() : "";
+    view = rows.filter(r => (!q || String(r[o.qcol]).toLowerCase().includes(q)) && o.filters.every(f => !$(f.el).value || String(r[f.col]) === $(f.el).value));
+    view.sort((a, b) => { const x = a[sortCol], y = b[sortCol]; return (x < y ? -1 : x > y ? 1 : 0) * dir; });
+    thead.querySelectorAll("th").forEach((th, i) => th.className = "s" + (i === 0 ? " l" : "") + (i === sortCol ? (dir > 0 ? " asc" : " desc") : ""));
+    page = Math.min(page, Math.max(0, Math.ceil(view.length / 50) - 1)); draw();
+  }
+  function draw(){
+    tbody.innerHTML = view.slice(page * 50, page * 50 + 50).map(r => `<tr${o.mark && o.mark(r) ? ' style="background:var(--pos-soft);font-weight:650"' : ""}>` + o.cols.map((c, i) => `<td class="${i === 0 ? "l " : ""}${c.color ? sgn(r[i]) : ""}">${c.f ? c.f(r[i], r) : r[i]}</td>`).join("") + "</tr>").join("");
+    const pages = Math.max(1, Math.ceil(view.length / 50));
+    $(o.count).textContent = view.length.toLocaleString("en-IN") + " rows";
+    $(o.pager).innerHTML = `<button class="btn" ${page ? "" : "disabled"} data-d="-1">Prev</button> Page ${page + 1} of ${pages} <button class="btn" ${page < pages - 1 ? "" : "disabled"} data-d="1">Next</button>`;
+  }
+  thead.onclick = e => { const th = e.target.closest("th"); if (!th || !rows.length) return; const i = +th.dataset.i; dir = i === sortCol ? -dir : (typeof rows[0][i] === "number" ? -1 : 1); sortCol = i; page = 0; apply(); };
+  $(o.pager).onclick = e => { const d = e.target.dataset.d; if (d) { page += +d; draw(); } };
+  [o.q, ...o.filters.map(f => f.el)].filter(Boolean).forEach(el => $(el).oninput = () => { page = 0; apply(); });
+  $(o.dl).onclick = () => { const esc = v => '"' + String(v).replace(/"/g, '""') + '"'; const csv = [o.heads.map(esc).join(",")].concat(view.map(r => r.map(esc).join(","))).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = o.file; a.click(); };
+  apply();
+}
+const fill = (sel, first, vals) => { $(sel).innerHTML = `<option value="">${first}</option>`; [...new Set(vals)].sort((a, b) => a > b ? 1 : -1).forEach(v => { const op = document.createElement("option"); op.value = op.textContent = v; $(sel).appendChild(op); }); };
+
+const G = D.grid, gi = n => D.grid_cols.indexOf(n);
+$("#gridhint").textContent = `${G.length} combinations (2 opening ranges x 3 volume multiples x 3 max SL x 3 partial levels), train period, slippage ${K}. Chosen: ${combo}. Click a heading to sort.`;
+fill("#gl", "Both opening ranges", G.map(r => r[gi("or_min")])); fill("#gv", "All volume multiples", G.map(r => r[gi("vol_mult")]));
+table({id: "#gtable", rows: G, sort: [gi("net"), -1], filters: [{el: "#gl", col: gi("or_min")}, {el: "#gv", col: gi("vol_mult")}], count: "#gcount", pager: "#gpager", dl: "#gdl",
+  file: "train_combinations.csv", heads: D.grid_cols, mark: r => r[gi("chosen")],
+  cols: [{h: "Opening range", f: v => v + " min"}, {h: "Volume x", f: v => v + "x"}, {h: "Max SL", f: pc1}, {h: "Partial at", f: v => v + "R"}, {h: "Trades"}, {h: "Win %", f: v => v + "%"},
+    {h: "Net", color: 1, f: v => rs(v, true)}, {h: "Profit factor", f: f2}, {h: "Max DD", f: rs}, {h: "Avg trade", color: 1, f: v => rs(v, true)}, {h: "Chosen", f: v => v ? "YES" : ""}]});
+
+function render(){
+  R = D.runs[P][K]; T = R.totals;
+  document.querySelectorAll("#segp button").forEach(b => b.classList.toggle("on", b.dataset.p === P));
+  document.querySelectorAll("#segs button").forEach(b => b.classList.toggle("on", b.dataset.k === K));
+  const te = D.runs.TEST[K].totals, tr = D.runs.TRAIN[K].totals;
+  $("#verdict").className = "verdict " + (te.net > 0 ? "good" : "bad");
+  $("#verdict").innerHTML = `Chosen on the train period: <b>${combo}</b>. At slippage ${K} the train period made <b class="${sgn(tr.net)}">${rs(tr.net, true)}</b> (${tr.trades} trades, ${pct(tr.win_pct)} won) `
+    + `and the untouched test period made <b class="${sgn(te.net)}">${rs(te.net, true)}</b> (${te.trades} trades, ${pct(te.win_pct)} won). Now showing: <b>${P}</b>, slippage <b>${K}</b>.`;
+  const cards = [
+    ["Net profit", rs(T.net, true), sgn(T.net), pct(T.ret_pct) + " on Rs " + D.capital.toLocaleString("en-IN")],
+    ["Win rate", pct(T.win_pct), "", T.trades + " trades on " + T.trade_days + " days"],
+    ["Profit factor", f2(T.profit_factor), T.profit_factor >= 1 ? "pos" : "neg", "above 1.00 is profitable"],
+    ["Max drawdown", rs(T.max_dd), "neg", pct(T.max_dd_cap_pct) + " of Rs 70,000"],
+  ];
+  $("#kpis").innerHTML = cards.map(c => `<div class="kpi"><div class="l">${c[0]}</div><div class="v ${c[2]}">${c[1]}</div><div class="n">${c[3]}</div></div>`).join("");
+  const kv = [["Net profit", rs(T.net, true)], ["Return on Rs 70,000", pct(T.ret_pct)], ["Average month", rs(T.avg_month, true)], ["Profitable months", T.plus_months],
+    ["Total trades", T.trades], ["Win rate", pct(T.win_pct)], ["Average per trade", rs(T.avg_trade, true)], ["Average win", rs(T.avg_win)],
+    ["Average loss", rs(T.avg_loss)], ["Average win / average loss", f2(T.win_loss_ratio)], ["Profit factor", f2(T.profit_factor)], ["Payoff ratio", f2(T.win_loss_ratio)],
+    ["Max drawdown", rs(T.max_dd)], ["Max drawdown % of Rs 70,000", pct(T.max_dd_cap_pct)], ["Best trade", rs(T.best_trade)], ["Worst trade", rs(T.worst_trade)],
+    ["Best day", rs(T.best_day)], ["Worst day", rs(T.worst_day)], ["Longest winning streak (trades)", T.win_streak], ["Longest losing streak (trades)", T.loss_streak],
+    ["Initial stop-loss hit", pct(T.sl_pct)], ["Median hold time", f2(T.median_hold) + " hours"], ["Days with trades", T.trade_days], ["Net profit / max drawdown", f2(T.net_over_dd)]];
+  $("#kv").innerHTML = kv.map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+  $("#eqhint").textContent = `Cumulative net profit in Rs, ${P} period, slippage ${K}, after costs.`;
+  $("#mtable").innerHTML = "<thead><tr><th class='l'>Month</th><th>Net profit</th><th>Return</th><th>Trades</th><th>Win rate</th><th>Max drawdown</th><th>Initial SL hit</th></tr></thead><tbody>"
+    + R.months.map(m => `<tr><td class="l">${m[0]}</td><td class="${sgn(m[1])}">${rs(m[1], true)}</td><td class="${sgn(m[2])}">${m[2] > 0 ? "+" : ""}${m[2].toFixed(2)}%</td><td>${m[3]}</td><td>${m[4].toFixed(1)}%</td><td>${rs(m[5])}</td><td>${m[6].toFixed(1)}%</td></tr>`).join("") + "</tbody>";
+  table({id: "#stable", rows: R.stocks, sort: [3, -1], q: "#sq", qcol: 0, filters: [], count: "#scount", pager: "#spager", dl: "#sdl", file: `stocks_${P}_${K}.csv`,
+    heads: ["stock", "trades", "win_pct", "net", "best", "worst", "last_trade"],
+    cols: [{h: "Stock"}, {h: "Trades"}, {h: "Win %", f: v => v + "%"}, {h: "Net", color: 1, f: v => rs(v, true)}, {h: "Best trade", f: rs}, {h: "Worst trade", f: rs}, {h: "Last trade"}]});
+  fill("#te", "All exits", R.trades.map(r => r[8])); fill("#td", "Buy and sell", R.trades.map(r => r[2]));
+  table({id: "#ttable", rows: R.trades, sort: [0, 1], q: "#tq", qcol: 1, filters: [{el: "#te", col: 8}, {el: "#td", col: 2}], count: "#tcount", pager: "#tpager", dl: "#tdl", file: `trades_${P}_${K}.csv`,
+    heads: ["date", "stock", "side", "qty", "entry_time", "entry", "exit_time", "avg_exit", "exit_reason", "partial_price", "gross_pnl", "costs", "net_pnl", "hold_hours", "vol_ratio"],
+    cols: [{h: "Date"}, {h: "Stock"}, {h: "Side"}, {h: "Qty"}, {h: "Entry time"}, {h: "Entry"}, {h: "Exit time"}, {h: "Avg exit"}, {h: "Exit reason"}, {h: "Half booked at", f: v => v === "" ? "-" : v},
+      {h: "Gross P&L", color: 1, f: v => rs(v, true)}, {h: "Costs", f: rs}, {h: "Net P&L", color: 1, f: v => rs(v, true)}, {h: "Hold (h)"}, {h: "Volume x"}]});
+  drawCharts();
+}
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => { document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.p)); charts.forEach(c => c.resize()); });
+render();
+</script>
+</body>
+</html>

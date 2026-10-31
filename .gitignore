@@ -1,0 +1,10 @@
+# Safety net; each project also has its own .gitignore
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+data/
+results/

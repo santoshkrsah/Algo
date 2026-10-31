@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VMU Equity V2 report</title>
+__CSS__
+<style>
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.seg button{background:var(--card);border:0;border-right:1px solid var(--line);padding:7px 14px;cursor:pointer;font-size:13px;color:var(--muted)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--soft);color:var(--ink);font-weight:650}
+.chk td.l{white-space:normal;max-width:340px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>VMU Equity V2 - backtest</h1><div class="sub" id="subtitle"></div></div>
+  <div class="tools"><button class="btn" id="theme">Dark / Light</button></div>
+</header>
+<div class="verdict" id="verdict"></div>
+<div class="seg" id="seg"></div>
+<div class="kpis" id="kpis"></div>
+<div class="tabs" id="tabs">
+  <button class="tab on" data-p="sum">Summary</button>
+  <button class="tab" data-p="months">Month by month</button>
+  <button class="tab" data-p="stocks">Every stock</button>
+  <button class="tab" data-p="trades">All trades</button>
+  <button class="tab" data-p="rules">Rules used</button>
+</div>
+
+<section class="panel on" id="sum">
+  <div class="card"><h3>Match check against the expected result</h3><div class="hint">Selected slippage run next to the expected numbers.</div><div class="scroll" style="max-height:none"><table id="match"></table></div></div>
+  <div class="card"><h3>The three slippage runs</h3><div class="scroll" style="max-height:none"><table id="cmp"></table></div></div>
+  <div class="card"><h3>Equity curve</h3><div class="hint">Cumulative net profit in Rs, after costs and slippage.</div><div class="ch tall"><canvas id="c_eq"></canvas></div></div>
+  <div class="card"><h3>Profit or loss per day</h3><div class="ch"><canvas id="c_day"></canvas></div></div>
+  <div class="card"><h3>All numbers</h3><div class="kv" id="kv"></div></div>
+</section>
+
+<section class="panel" id="months">
+  <div class="card"><h3>Net profit per month</h3><div class="ch"><canvas id="c_m"></canvas></div></div>
+  <div class="card"><h3>Month table</h3><div class="hint">Return is on Rs 70,000. Max drawdown is the deepest fall from a high inside that month.</div><div class="scroll" style="max-height:none"><table id="mtable"></table></div></div>
+</section>
+
+<section class="panel" id="stocks">
+  <div class="card"><h3>Every stock traded</h3>
+    <div class="bar"><input id="sq" placeholder="Search stock"><button class="btn" id="sdl">Download CSV</button><span class="note" id="scount"></span></div>
+    <div class="scroll"><table id="stable"><thead></thead><tbody></tbody></table></div><div class="pager" id="spager"></div></div>
+</section>
+
+<section class="panel" id="trades">
+  <div class="card"><h3>Every trade</h3>
+    <div class="bar"><input id="tq" placeholder="Search stock"><select id="te"><option value="">All exits</option></select><select id="td"><option value="">Buy and sell</option></select>
+      <button class="btn" id="tdl">Download CSV</button><span class="note" id="tcount"></span></div>
+    <div class="scroll"><table id="ttable"><thead></thead><tbody></tbody></table></div><div class="pager" id="tpager"></div></div>
+</section>
+
+<section class="panel" id="rules">
+  <div class="card"><h3>Rules used</h3><ul class="rules" id="rulelist"></ul></div>
+  <div class="card"><h3>Assumptions where the rules were open</h3><ul class="rules" id="notelist"></ul></div>
+  <div class="card"><h3>Checks done to explain the gap to the expected result</h3><div class="hint">Same data, one change at a time, 0% slippage. None of them gets near the expected numbers.</div>
+    <div class="scroll" style="max-height:none"><table id="chk" class="chk"></table></div></div>
+</section>
+<footer id="foot"></footer>
+</div>
+<script>__CHARTJS__</script>
+<script>
+const D = __DATA__;
+const $ = s => document.querySelector(s);
+const sgn = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
+const rs = (v, plus) => v === null || v === undefined ? "n/a" : (v < 0 ? "-" : plus && v > 0 ? "+" : "") + "Rs " + Math.round(Math.abs(v)).toLocaleString("en-IN");
+const f2 = v => v === null || v === undefined ? "n/a" : Number(v).toFixed(2);
+const pct = v => f2(v) + "%";
+const E = D.expected, KEYS = Object.keys(D.runs);
+let K = KEYS[0], R = D.runs[K], T = R.totals;
+$("#subtitle").textContent = D.period + " | NSE equity, 1-minute candles | capital Rs " + D.capital.toLocaleString("en-IN") + ", 2 trades a day, 5x leverage | generated " + D.generated;
+$("#foot").textContent = "Past results do not guarantee future results. Prices are not adjusted for corporate actions.";
+const li = (sel, arr) => arr.forEach(r => { const e = document.createElement("li"); e.textContent = r; $(sel).appendChild(e); });
+li("#rulelist", D.rules); li("#notelist", D.notes);
+$("#chk").innerHTML = "<thead><tr><th class='l'>Change tested</th><th>Trades</th><th>Win %</th><th>Net</th></tr></thead><tbody>"
+  + D.checks.map(c => `<tr><td class="l">${c[0]}</td><td>${c[1]}</td><td>${f2(c[2])}%</td><td class="${sgn(c[3])}">${rs(c[3], true)}</td></tr>`).join("") + "</tbody>";
+$("#seg").innerHTML = KEYS.map(k => `<button data-k="${k}">Slippage ${k}</button>`).join("");
+$("#seg").onclick = e => { const k = e.target.dataset.k; if (k) { K = k; render(); } };
+$("#cmp").innerHTML = "<thead><tr><th class='l'>Slippage</th><th>Trades</th><th>Win %</th><th>Net</th><th>Return</th><th>Profit factor</th><th>Max DD</th><th>Worst trade</th></tr></thead><tbody>"
+  + KEYS.map(k => { const t = D.runs[k].totals; return `<tr><td class="l">${k}</td><td>${t.trades}</td><td>${pct(t.win_pct)}</td><td class="${sgn(t.net)}">${rs(t.net, true)}</td><td class="${sgn(t.ret_pct)}">${pct(t.ret_pct)}</td><td>${f2(t.profit_factor)}</td><td>${rs(t.max_dd)}</td><td>${rs(t.worst_trade)}</td></tr>`; }).join("") + "</tbody>";
+$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark"); drawCharts(); };
+
+let charts = [];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ax = () => ({x: {grid: {display: false}, ticks: {color: css("--muted"), maxTicksLimit: 6, maxRotation: 0}}, y: {grid: {color: css("--line")}, border: {display: false}, ticks: {color: css("--muted"), callback: v => Math.round(v / 1000) + "k"}}});
+const tip = f => ({backgroundColor: css("--ink"), titleColor: css("--card"), bodyColor: css("--card"), padding: 10, displayColors: false, callbacks: {label: f}});
+const colorBy = v => v.map(x => x >= 0 ? css("--pos") : css("--neg"));
+function drawCharts(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const L = R.daily.map(d => d[0]);
+  charts.push(new Chart($("#c_eq"), {type: "line", data: {labels: L, datasets: [{data: R.daily.map(d => d[2]), borderColor: css("--pos"), borderWidth: 2, pointRadius: 0, fill: {target: "origin", above: css("--pos-soft"), below: css("--neg-soft")}}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false}, plugins: {legend: {display: false}, tooltip: tip(c => "Total " + rs(c.parsed.y, true))}, scales: ax()}}));
+  const dv = R.daily.map(d => d[1]);
+  charts.push(new Chart($("#c_day"), {type: "bar", data: {labels: L, datasets: [{data: dv, backgroundColor: colorBy(dv), barPercentage: 1, categoryPercentage: 1}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => rs(c.parsed.y, true))}, scales: ax()}}));
+  const mv = R.months.map(m => m[1]);
+  charts.push(new Chart($("#c_m"), {type: "bar", data: {labels: R.months.map(m => m[0]), datasets: [{data: mv, backgroundColor: colorBy(mv), borderRadius: 3, maxBarThickness: 48}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => rs(c.parsed.y, true))}, scales: ax()}}));
+}
+
+function table(o){
+  let rows = o.rows, sortCol = o.sort[0], dir = o.sort[1], page = 0, view = rows;
+  const thead = $(o.id + " thead"), tbody = $(o.id + " tbody");
+  thead.innerHTML = "<tr>" + o.cols.map((c, i) => `<th class="s ${i === 0 ? "l" : ""}" data-i="${i}">${c.h}</th>`).join("") + "</tr>";
+  function apply(){
+    const q = o.q ? $(o.q).value.trim().toLowerCase() : "";
+    view = rows.filter(r => (!q || String(r[o.qcol]).toLowerCase().includes(q)) && o.filters.every(f => !$(f.el).value || String(r[f.col]) === $(f.el).value));
+    view.sort((a, b) => { const x = a[sortCol], y = b[sortCol]; return (x < y ? -1 : x > y ? 1 : 0) * dir; });
+    thead.querySelectorAll("th").forEach((th, i) => th.className = "s" + (i === 0 ? " l" : "") + (i === sortCol ? (dir > 0 ? " asc" : " desc") : ""));
+    page = Math.min(page, Math.max(0, Math.ceil(view.length / 50) - 1)); draw();
+  }
+  function draw(){
+    tbody.innerHTML = view.slice(page * 50, page * 50 + 50).map(r => "<tr>" + o.cols.map((c, i) => `<td class="${i === 0 ? "l " : ""}${c.color ? sgn(r[i]) : ""}">${c.f ? c.f(r[i], r) : r[i]}</td>`).join("") + "</tr>").join("");
+    const pages = Math.max(1, Math.ceil(view.length / 50));
+    $(o.count).textContent = view.length.toLocaleString("en-IN") + " rows";
+    $(o.pager).innerHTML = `<button class="btn" ${page ? "" : "disabled"} data-d="-1">Prev</button> Page ${page + 1} of ${pages} <button class="btn" ${page < pages - 1 ? "" : "disabled"} data-d="1">Next</button>`;
+  }
+  thead.onclick = e => { const th = e.target.closest("th"); if (!th) return; const i = +th.dataset.i; dir = i === sortCol ? -dir : (typeof rows[0][i] === "number" ? -1 : 1); sortCol = i; page = 0; apply(); };
+  $(o.pager).onclick = e => { const d = e.target.dataset.d; if (d) { page += +d; draw(); } };
+  [o.q, ...o.filters.map(f => f.el)].filter(Boolean).forEach(el => $(el).oninput = () => { page = 0; apply(); });
+  $(o.dl).onclick = () => { const esc = v => '"' + String(v).replace(/"/g, '""') + '"'; const csv = [o.heads.map(esc).join(",")].concat(view.map(r => r.map(esc).join(","))).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = o.file; a.click(); };
+  apply();
+}
+const fill = (sel, first, vals) => { $(sel).innerHTML = `<option value="">${first}</option>`; [...new Set(vals)].sort().forEach(v => { const op = document.createElement("option"); op.value = op.textContent = v; $(sel).appendChild(op); }); };
+
+function render(){
+  R = D.runs[K]; T = R.totals;
+  document.querySelectorAll("#seg button").forEach(b => b.classList.toggle("on", b.dataset.k === K));
+  const close = Math.abs(T.trades - E.trades) / E.trades < .15 && Math.abs(T.win_pct - E.win_pct) < 5 && Math.abs(T.net - E.net) / E.net < .25;
+  $("#verdict").className = "verdict " + (close ? "good" : "bad");
+  $("#verdict").innerHTML = (close ? "The result is <b>close to the expected result</b>. " : "The result <b>does not match the expected result</b>. ")
+    + `Slippage ${K}: <b>${T.trades}</b> trades, <b>${pct(T.win_pct)}</b> won, net <b class="${sgn(T.net)}">${rs(T.net, true)}</b>. `
+    + `Expected was about ${E.trades} trades, ${E.win_pct}% won and ${rs(E.net, true)}.` + (close ? "" : " The Rules used tab lists the checks done to find the difference.");
+  const cards = [
+    ["Net profit", rs(T.net, true), sgn(T.net), pct(T.ret_pct) + " on Rs " + D.capital.toLocaleString("en-IN")],
+    ["Win rate", pct(T.win_pct), "", T.trades + " trades on " + T.trade_days + " days"],
+    ["Profit factor", f2(T.profit_factor), T.profit_factor >= 1 ? "pos" : "neg", "above 1.00 is profitable"],
+    ["Max drawdown", rs(T.max_dd), "neg", pct(T.max_dd_pct) + " of account"],
+  ];
+  $("#kpis").innerHTML = cards.map(c => `<div class="kpi"><div class="l">${c[0]}</div><div class="v ${c[2]}">${c[1]}</div><div class="n">${c[3]}</div></div>`).join("");
+  const kv = [["Net profit", rs(T.net, true)], ["Return on Rs 70,000", pct(T.ret_pct)], ["Average month", rs(T.avg_month, true)], ["Profitable months", T.plus_months],
+    ["Total trades", T.trades], ["Win rate", pct(T.win_pct)], ["Average per trade", rs(T.avg_trade, true)], ["Average win", rs(T.avg_win)],
+    ["Average loss", rs(T.avg_loss)], ["Average win / average loss", f2(T.win_loss_ratio)], ["Profit factor", f2(T.profit_factor)], ["Payoff ratio", f2(T.win_loss_ratio)],
+    ["Max drawdown", rs(T.max_dd)], ["Max drawdown %", pct(T.max_dd_pct)], ["Best trade", rs(T.best_trade)], ["Worst trade", rs(T.worst_trade)],
+    ["Best day", rs(T.best_day)], ["Worst day", rs(T.worst_day)], ["Longest winning streak (trades)", T.win_streak], ["Longest losing streak (trades)", T.loss_streak],
+    ["Stop-loss hit", pct(T.sl_pct)], ["Median hold time", f2(T.median_hold) + " hours"], ["Days with trades", T.trade_days], ["Net profit / max drawdown", f2(T.net_over_dd)]];
+  $("#kv").innerHTML = kv.map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+  const mrow = (n, a, e, fmt) => `<tr><td class="l">${n}</td><td>${fmt(a)}</td><td>${e === null || e === undefined ? "-" : fmt(e)}</td></tr>`;
+  $("#match").innerHTML = "<thead><tr><th class='l'>Measure</th><th>This result</th><th>Expected</th></tr></thead><tbody>"
+    + mrow("Trades", T.trades, E.trades, v => v) + mrow("Win rate", T.win_pct, E.win_pct, pct) + mrow("Net profit", T.net, E.net, v => rs(v, true))
+    + mrow("Worst trade", T.worst_trade, E.worst_trade, v => rs(v)) + "</tbody>";
+  $("#mtable").innerHTML = "<thead><tr><th class='l'>Month</th><th>Net profit</th><th>Return</th><th>Trades</th><th>Win rate</th><th>Max drawdown</th><th>SL hit</th></tr></thead><tbody>"
+    + R.months.map(m => `<tr><td class="l">${m[0]}</td><td class="${sgn(m[1])}">${rs(m[1], true)}</td><td class="${sgn(m[2])}">${m[2] > 0 ? "+" : ""}${m[2].toFixed(2)}%</td><td>${m[3]}</td><td>${m[4].toFixed(1)}%</td><td>${rs(m[5])}</td><td>${m[6].toFixed(1)}%</td></tr>`).join("") + "</tbody>";
+  table({id: "#stable", rows: R.stocks, sort: [3, -1], q: "#sq", qcol: 0, filters: [], count: "#scount", pager: "#spager", dl: "#sdl", file: "stocks.csv",
+    heads: ["stock", "trades", "win_pct", "net", "best", "worst", "last_trade"],
+    cols: [{h: "Stock"}, {h: "Trades"}, {h: "Win %", f: v => v + "%"}, {h: "Net", color: 1, f: v => rs(v, true)}, {h: "Best trade", f: rs}, {h: "Worst trade", f: rs}, {h: "Last trade"}]});
+  fill("#te", "All exits", R.trades.map(r => r[7])); fill("#td", "Buy and sell", R.trades.map(r => r[2]));
+  table({id: "#ttable", rows: R.trades, sort: [0, 1], q: "#tq", qcol: 1, filters: [{el: "#te", col: 7}, {el: "#td", col: 2}], count: "#tcount", pager: "#tpager", dl: "#tdl", file: "trades_slip_" + K + ".csv",
+    heads: ["date", "stock", "side", "qty", "entry", "exit", "exit_time", "exit_reason", "gross_pnl", "costs", "net_pnl"],
+    cols: [{h: "Date"}, {h: "Stock"}, {h: "Side"}, {h: "Qty"}, {h: "Entry"}, {h: "Exit"}, {h: "Exit time"}, {h: "Exit reason"}, {h: "Gross P&L", color: 1, f: v => rs(v, true)}, {h: "Costs", f: rs}, {h: "Net P&L", color: 1, f: v => rs(v, true)}]});
+  drawCharts();
+}
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => { document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.p)); charts.forEach(c => c.resize()); });
+render();
+</script>
+</body>
+</html>
