@@ -3,7 +3,7 @@
      {id, date, title, sub, pnl, tag, meta:[[k,v,cls?]], cost:[[k,v,cls?,total?]],
       charts:[{title, legend:[[color,label]], kind:"candle"|"line", intraday:false, small:false,
                data:[{time,open,high,low,close}|{time,value}], markers:[{time,position,shape,color,text}],
-               lines:[{price,color,title,style}]}]}
+               lines:[{price,color,title,style}], overlays:[{data:[{time,value}],color,title}], focus:[fromDate,toDate]}]}
    Colours may be CSS variable names ("--pos"). Needs LightweightCharts (v4) on the page. */
 (function () {
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -75,20 +75,23 @@
       const lines = spec.lines || [];
       // fixed price range from the data and the lines, with room for the marker arrows (the default autoscale blows up on flat lines)
       let lo = Infinity, hi = -Infinity;
-      spec.data.forEach(p => { lo = Math.min(lo, spec.kind === "candle" ? p.low : p.value); hi = Math.max(hi, spec.kind === "candle" ? p.high : p.value); });
+      const fo = spec.focus, inF = t => !fo || (t >= fo[0] && t <= fo[1]);          // focus = [from, to] dates the chart zooms to
+      spec.data.forEach(p => { if (inF(p.time)) { lo = Math.min(lo, spec.kind === "candle" ? p.low : p.value); hi = Math.max(hi, spec.kind === "candle" ? p.high : p.value); } });
       lines.forEach(l => { lo = Math.min(lo, l.price); hi = Math.max(hi, l.price); });
+      (spec.overlays || []).forEach(o => o.data.forEach(p => { if (inF(p.time)) { lo = Math.min(lo, p.value); hi = Math.max(hi, p.value); } }));
       const pad = Math.max(hi - lo, Math.abs(hi) * 0.01, 1e-6) * 0.22;
       const widen = isFinite(lo) ? () => ({priceRange: {minValue: lo - pad, maxValue: hi + pad}}) : undefined;
       const s = spec.kind === "candle"
         ? ch.addCandlestickSeries({upColor: css("--pos"), downColor: css("--neg"), borderVisible: false, wickUpColor: css("--pos"), wickDownColor: css("--neg"), autoscaleInfoProvider: widen})
         : ch.addLineSeries({color: css("--accent"), lineWidth: 2, autoscaleInfoProvider: widen});
       s.setData(spec.data);
+      (spec.overlays || []).forEach(o => ch.addLineSeries({color: col(o.color), lineWidth: 2, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false, title: o.title || ""}).setData(o.data));
       if (spec.markers && spec.markers.length) {
         s.setMarkers(spec.markers.map(m => ({time: m.time, position: m.position || "aboveBar", shape: m.shape || "circle", color: col(m.color), text: m.text || ""}))
           .sort((a, b) => (a.time < b.time ? -1 : a.time > b.time ? 1 : 0)));
       }
       lines.forEach(l => s.createPriceLine({price: l.price, color: col(l.color), lineWidth: 1, lineStyle: l.style === undefined ? 2 : l.style, axisLabelVisible: true, title: l.title || ""}));
-      ch.timeScale().fitContent();
+      if (fo) ch.timeScale().setVisibleRange({from: fo[0], to: fo[1]}); else ch.timeScale().fitContent();
       charts.push({chart: ch, series: s});
     }
 
