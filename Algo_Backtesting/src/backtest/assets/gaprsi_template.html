@@ -48,6 +48,7 @@ __CSS__
   <div class="card"><h3>Saare combination ek saath</h3><div class="hint">Taraf x gap x exit. Ek line pe click nahi, bas upar ke buttons se chuno. "Avg R" = ek trade ka average R (R = jitna risk liya tha uska kitna guna kamaya).</div><div class="scroll" style="max-height:440px"><table id="grid"></table></div></div>
   <div class="card"><h3>Equity curve (kul profit)</h3><div class="hint">Trade jis din band hua us din ka net profit jodte hue, Rs.</div><div class="ch tall"><canvas id="c_eq"></canvas></div></div>
   <div class="card"><h3>Saare numbers</h3><div class="kv" id="kv"></div></div>
+  <div class="card"><h3>Paisa kaise lagaya (investment)</h3><div class="hint">Return % hamesha shuruaati capital pe hai. Profit dobara invest nahi kiya (compounding nahi), isliye har saal / mahine ka return seedha jod sakte ho.</div><div class="kv" id="inv"></div></div>
 </section>
 
 <section class="panel" id="months">
@@ -187,7 +188,7 @@ function render(){
   const avgR = n ? rows.reduce((s, r) => s + r[I.R], 0) / n : null;
   const wR = wins.length ? wins.reduce((s, r) => s + r[I.R], 0) / wins.length : null, lR = losses.length ? losses.reduce((s, r) => s + r[I.R], 0) / losses.length : null;
   const exl = (D.exits.find(e => e[0] === E) || [0, E])[1];
-  $("#subtitle").textContent = `${SN[SD]} | gap kam se kam ${GP}% | exit: ${exl} | NSE F&O stocks, daily candle | capital ${cap}, har trade ka risk 1% (Rs 10,000), max 10 stock | report bana: ${D.generated}`;
+  $("#subtitle").textContent = `${SN[SD]} | gap kam se kam ${GP}% | exit: ${exl} | NSE F&O stocks, daily candle | capital ${cap} (fixed, compounding nahi), har trade ka risk 1% (Rs 10,000), max 10 stock | report bana: ${D.generated}`;
   $("#verdict").className = "verdict " + (net > 0 ? "good" : "bad");
   $("#verdict").innerHTML = n ? `${SN[SD]}, gap ${GP}%+, "${exl}": <b>${n}</b> trade, <b>${pct(wins.length / n * 100)}</b> me profit, net <b class="${sgn(net)}">${rs(net, true)}</b> (${cap} par ${pct(net / D.capital * 100)}), profit factor <b>${f2(pf)}</b>, average <b>${f2(avgR)} R</b>, max drawdown <b>${rs(dd)}</b>.` : "Is combination pe koi trade nahi bana.";
   const cards = [["Net profit", rs(net, true), sgn(net), cap + " par " + pct(net / D.capital * 100)], ["Win rate (profit wale trade)", pct(n ? wins.length / n * 100 : null), "", n + " trade"],
@@ -200,6 +201,13 @@ function render(){
     ["Kul kharcha", rs(rows.reduce((s, r) => s + r[I.costs], 0))], ["Alag stock", new Set(rows.map(r => r[I.sym])).size], ["Average position (Rs)", rs(n ? rows.reduce((s, r) => s + r[I.val], 0) / n : null)],
     ["Profit wale mahine", months.filter(m => m[1] > 0).length + " / " + months.length]];
   $("#kv").innerHTML = kv.map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+  const ev = []; rows.forEach(r => { ev.push([r[I.ed], 1, r[I.val]], [r[I.xd], 0, -r[I.val]]); }); ev.sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : b[1] - a[1]);
+  let run = 0, peak = 0; ev.forEach(e => { run += e[2]; peak = Math.max(peak, run); });
+  const inv = [["Shuruaati capital", cap + " (fixed, compounding nahi)"], ["Risk per trade", "1% = Rs 10,000"], ["Qty kaise nikali", "10,000 / (entry - stop level)"],
+    ["Ek stock me max", "20% = Rs 2,00,000"], ["Ek saath max stock", "10 (leverage nahi; cash khatam to trade nahi)"],
+    ["Average position", rs(n ? rows.reduce((s, r) => s + r[I.val], 0) / n : null)], ["Sabse badi position", rs(n ? Math.max(...rows.map(r => r[I.val])) : null)],
+    ["Ek saath sabse zyada paisa laga", rs(peak) + " (capital ka " + pct(peak / D.capital * 100) + ")"]];
+  $("#inv").innerHTML = inv.map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
   const byw = group(rows, r => r[I.why]);
   $("#exits").innerHTML = "<thead><tr><th class='l'>Exit ka karan</th><th>Trade</th><th>Win %</th><th>Avg R</th><th>Net</th></tr></thead><tbody>"
     + Object.keys(byw).map(k => { const s = summ(byw[k]); return `<tr><td class="l">${k}</td><td>${s[0]}</td><td>${pct(s[1])}</td><td class="${sgn(s[2])}">${f2(s[2])}</td><td class="${sgn(s[3])}">${rs(s[3], true)}</td></tr>`; }).join("") + "</tbody>";
@@ -207,10 +215,10 @@ function render(){
   $("#phase").innerHTML = "<thead><tr><th class='l'>Entry ke din</th><th>Trade</th><th>Win %</th><th>Avg R</th><th>Net</th></tr></thead><tbody>"
     + ["1", "0", "null"].filter(k => byp[k]).map(k => { const s = summ(byp[k]); return `<tr><td class="l">${ph[k === "null" ? null : +k]}</td><td>${s[0]}</td><td>${pct(s[1])}</td><td class="${sgn(s[2])}">${f2(s[2])}</td><td class="${sgn(s[3])}">${rs(s[3], true)}</td></tr>`; }).join("") + "</tbody>";
   const byy = group(rows, r => r[I.xd].slice(0, 4));
-  $("#ytable").innerHTML = "<thead><tr><th class='l'>Saal</th><th>Trade</th><th>Win %</th><th>Avg R</th><th>Net</th><th>Max drawdown</th></tr></thead><tbody>"
-    + Object.keys(byy).sort().map(k => { const s = summ(byy[k]); return `<tr><td class="l">${k}</td><td>${s[0]}</td><td>${pct(s[1])}</td><td class="${sgn(s[2])}">${f2(s[2])}</td><td class="${sgn(s[3])}">${rs(s[3], true)}</td><td>${rs(ddOf(byy[k].map(r => r[I.net])))}</td></tr>`; }).join("") + "</tbody>";
-  $("#mtable").innerHTML = "<thead><tr><th class='l'>Mahina</th><th>Net profit</th><th>Trade</th><th>Win rate</th><th>Max drawdown</th></tr></thead><tbody>"
-    + months.map(m => `<tr><td class="l">${m[0]}</td><td class="${sgn(m[1])}">${rs(m[1], true)}</td><td>${m[2]}</td><td>${pct(m[3])}</td><td>${rs(m[4])}</td></tr>`).join("") + "</tbody>";
+  $("#ytable").innerHTML = "<thead><tr><th class='l'>Saal</th><th>Trade</th><th>Win %</th><th>Avg R</th><th>Net</th><th>Return %</th><th>Max drawdown</th></tr></thead><tbody>"
+    + Object.keys(byy).sort().map(k => { const s = summ(byy[k]); return `<tr><td class="l">${k}</td><td>${s[0]}</td><td>${pct(s[1])}</td><td class="${sgn(s[2])}">${f2(s[2])}</td><td class="${sgn(s[3])}">${rs(s[3], true)}</td><td class="${sgn(s[3])}">${pct(s[3] / D.capital * 100)}</td><td>${rs(ddOf(byy[k].map(r => r[I.net])))}</td></tr>`; }).join("") + "</tbody>";
+  $("#mtable").innerHTML = "<thead><tr><th class='l'>Mahina</th><th>Net profit</th><th>Return %</th><th>Trade</th><th>Win rate</th><th>Max drawdown</th></tr></thead><tbody>"
+    + months.map(m => `<tr><td class="l">${m[0]}</td><td class="${sgn(m[1])}">${rs(m[1], true)}</td><td class="${sgn(m[1])}">${pct(m[1] / D.capital * 100)}</td><td>${m[2]}</td><td>${pct(m[3])}</td><td>${rs(m[4])}</td></tr>`).join("") + "</tbody>";
   const bys = group(rows, r => r[I.sym]);
   const st = Object.keys(bys).map(s => { const a = bys[s], x = summ(a), nn = a.map(r => r[I.net]); return [s, x[0], x[1], x[2], x[3], Math.max(...nn), Math.min(...nn), a[a.length - 1][I.xd]]; });
   table({id: "#stable", rows: st, sort: [4, -1], q: "#sq", qcol: 0, filters: [], count: "#scount", pager: "#spager", dl: "#sdl", file: "stocks.csv",

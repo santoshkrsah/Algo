@@ -46,26 +46,16 @@ RULES = [
     "SHORT stock futures se maana - Rs 20 per order, STT 0.02% (sell), exchange, SEBI, stamp, GST. Slippage 0.1% har fill pe.",
 ]
 NOTES = [
-    "Summary me exact numbers nahi the, isliye rulebook ke [A] parameter liye. Upar wale rules me jo bhi number hai wo 'maana hua' hai; "
-    "Extra checks me ek-ek karke badal ke dikhaya hai.",
-    "Monthly confirm me 20-mahine ki jagah 10-mahine EMA liya, kyunki 20-mahine ke liye 20 mahine ka data chahiye aur hamare paas 5 saal hi hain "
-    "(trade Jun 2023 se hi shuru hote). 20-mahine wala extra check me hai.",
-    "'10-din RSI, 90 overbought / 10 oversold, moving average pe' ko 'RSI ka 3-din average' maana. Long me 60 se 90 ke beech, short me 70 se upar.",
-    "Stop 'close' pe lagta hai (din ke andar high / low se nahi), isliye exit price us din ka close hota hai - gap ke baad asli loss stop level se zyada ho sakta hai. "
-    "Target din ke andar touch hone pe maana (agar open hi target ke paar khule to open pe).",
-    "Stop level (jisse qty nikalta hai) = entry ke sabse paas wala level: gap-fill ya 21 EMA, jo entry ke neeche (long) / upar (short) sabse paas ho.",
-    "Fyers ka data zyada tar pehle se split / bonus adjusted hai (282 events me), 13 events me nahi tha - wo maine NSE corporate actions se adjust kiye. "
-    "12 galat price print (jaise 21 Sep 2023 ko kai stocks ka ek din ka galat close) hata diye. 19 bade jump (demerger jaise ABFRL, ALLCARGO) data me bache; "
-    "inke baad 60 din tak signal nahi, aur trade ke beech aisa jump aaye to pichhle din ke close pe exit.",
-    "Gap 25% se bada ho to trade nahi (wo corporate action hota hai).",
-    "Universe aaj ki F&O list se bani hai (2024-26 ke bhavcopy me jo stocks the). Purane saal me jo stock F&O me nahi the ya baad me nikal gaye, unka haal alag ho sakta hai "
-    "(survivorship / look-ahead). Extra check me 'saare liquid stocks' wala bhi hai.",
-    "SHORT cash market me raat bhar nahi ho sakta, isliye stock futures se maana. Futures ka basis, roll aur margin nahi joda; position value hi cash se kaati.",
-    "Short side me 'close 21 EMA ke upar' wala stop tab hi jab entry pe price EMA ke neeche ho, warna mirror karne pe trade usi din stop ho jata.",
-    "Ek stock me ek samay me ek hi position. Same din kai signal aaye to bade gap wale pehle. Cash / 10 stock ki limit se jo trade nahi hua, wo gina nahi gaya.",
-    "Pura size agar cash ya limit ki wajah se aadhe se kam mil raha ho to trade chhoda (chhote 'junk' trade se bachne ke liye).",
-    "Bajaj Finance ka 'triangle breakdown, put kharido' example me pattern ke rules nahi the, isliye test nahi kiya. Promoter buying jaise fundamental inputs bhi nahi.",
-    "Summary me 1:15 se 1:100 reward ka claim tha. Is test me 'Top 5% trade ka hissa' (Saransh -> Saare numbers) dikhata hai ki profit kitne bade winners pe tika hai.",
+    "Summary me exact numbers nahi the, isliye rulebook ke [A] parameter liye. Har 'maana hua' number Extra checks me ek-ek karke badal ke dikhaya hai. "
+    "Profit kitne bade winners pe tika hai, ye Saransh me 'Top 5% trade ka hissa' me dikhta hai.",
+    "Monthly confirm me 10-mahine EMA liya (20-mahine ke liye 20 mahine ka data chahiye aur hamare paas 5 saal hi hain). 20-mahine wala extra check me hai.",
+    "RSI = 10-din RSI ka 3-din average. Long me 60 se 90 ke beech, short me pichhle din 70 se upar.",
+    "Stop 'close' pe lagta hai, isliye exit price us din ka close hota hai; gap ke baad asli loss stop level se zyada ho sakta hai. Target din ke andar touch hone pe maana.",
+    "Data saaf kiya: Fyers ka data zyada tar pehle se split / bonus adjusted tha, 13 events khud adjust kiye; 12 galat price print hataye; 19 demerger jaise jump ke baad 60 din signal nahi; 25% se bada gap trade nahi.",
+    "Universe aaj ki F&O list hai, isliye purane saal ke liye thoda look-ahead / survivorship hai. 'Saare liquid stocks' wala extra check me hai.",
+    "SHORT stock futures se maana (basis, roll, margin nahi joda). Short me 21-EMA stop tabhi jab entry pe price EMA ke neeche ho.",
+    "Ek stock me ek hi position. Same din kai signal ho to bade gap wale pehle. Cash / limit ki wajah se size aadhe se kam mile to trade chhoda. "
+    "Bajaj Finance ka triangle example aur promoter buying jaise fundamental inputs test nahi kiye.",
 ]
 FORMULAS = [
     ["EMA 21", "EMA[t] = close[t] x k + EMA[t-1] x (1 - k),   k = 2 / (21 + 1)"],

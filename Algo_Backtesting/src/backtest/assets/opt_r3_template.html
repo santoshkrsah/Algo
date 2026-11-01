@@ -49,6 +49,7 @@ __CSS__
   <div class="card"><h3>Saare combination ek saath</h3><div class="hint">"Chune hue" = din me max 2 trade (sabse zyada turnover wale). "Saare signal" = bina kisi limit ke har signal (cherry-picking se bachne ke liye).</div><div class="scroll" style="max-height:440px"><table id="grid"></table></div></div>
   <div class="card"><h3>Equity curve (kul profit)</h3><div class="hint">Chune hue trades ka kul net profit (Rs), kharcha aur slippage kaat ke.</div><div class="ch tall"><canvas id="c_eq"></canvas></div></div>
   <div class="card"><h3>Saare numbers</h3><div class="kv" id="kv"></div></div>
+  <div class="card"><h3>Paisa kaise lagaya (investment)</h3><div class="hint">Return % hamesha shuruaati capital pe hai. Profit dobara invest nahi kiya (compounding nahi).</div><div class="kv" id="inv"></div></div>
 </section>
 
 <section class="panel" id="months">
@@ -204,6 +205,8 @@ function render(){
     ["Average profit (jeete trade)", rs(T.aw)], ["Average loss (hare trade)", rs(T.al)], ["Average profit / average loss", f2(T.aw && T.al ? T.aw / -T.al : null)], ["Profit factor", f2(T.pf)],
     ["Max drawdown", rs(dd)], ["Sabse accha trade", rs(T.best)], ["Sabse bura trade", rs(T.worst)], ["Profit wale mahine", T.plus], ["Kitne din trade hua", T.days]];
   $("#kv").innerHTML = kv.map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+  $("#inv").innerHTML = [["Shuruaati capital", cap + " (fixed, compounding nahi)"], ["Har trade me", "Rs 10,000 ka option premium (qty = 10,000 / buy price)"], ["Din me max", "2 trade (Rs 20,000)"],
+    ["20% SL pe risk", "Rs 2,000 = capital ka 1%"], ["Slippage", "1% buy aur sell dono pe"]].map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
   const sumT = (arr) => { const n = arr.map(r => r[17]); const s = n.reduce((a, b) => a + b, 0); return [n.length, n.length ? n.filter(v => v > 0).length / n.length * 100 : null, s, n.length ? s / n.length : null]; };
   const byx = group(rows, r => r[16]);
   $("#exits").innerHTML = "<thead><tr><th class='l'>Exit ka karan</th><th>Trade</th><th>Win %</th><th>Net</th><th>Average</th></tr></thead><tbody>"
@@ -213,10 +216,10 @@ function render(){
   $("#dte").innerHTML = "<thead><tr><th class='l'>Expiry tak</th><th>Trade</th><th>Win %</th><th>Net</th><th>Average</th></tr></thead><tbody>"
     + ["0-3 din", "4-7 din", "8-15 din", "16+ din"].filter(k => byd[k]).map(k => { const s = sumT(byd[k]); return `<tr><td class="l">${k}</td><td>${s[0]}</td><td>${pct(s[1])}</td><td class="${sgn(s[2])}">${rs(s[2], true)}</td><td class="${sgn(s[3])}">${rs(s[3], true)}</td></tr>`; }).join("") + "</tbody>";
   const byy = group(rows, r => r[0].slice(0, 4));
-  $("#ytable").innerHTML = "<thead><tr><th class='l'>Saal</th><th>Trade</th><th>Win %</th><th>Net</th><th>Average</th><th>Max drawdown</th></tr></thead><tbody>"
-    + Object.keys(byy).sort().map(k => { const s = sumT(byy[k]); return `<tr><td class="l">${k}</td><td>${s[0]}</td><td>${pct(s[1])}</td><td class="${sgn(s[2])}">${rs(s[2], true)}</td><td class="${sgn(s[3])}">${rs(s[3], true)}</td><td>${rs(ddOf(byy[k].map(r => r[17])))}</td></tr>`; }).join("") + "</tbody>";
-  $("#mtable").innerHTML = "<thead><tr><th class='l'>Mahina</th><th>Net profit</th><th>Trade</th><th>Win rate</th><th>Max drawdown</th></tr></thead><tbody>"
-    + months.map(m => `<tr><td class="l">${m[0]}</td><td class="${sgn(m[1])}">${rs(m[1], true)}</td><td>${m[2]}</td><td>${pct(m[3])}</td><td>${rs(m[4])}</td></tr>`).join("") + "</tbody>";
+  $("#ytable").innerHTML = "<thead><tr><th class='l'>Saal</th><th>Trade</th><th>Win %</th><th>Net</th><th>Return %</th><th>Average</th><th>Max drawdown</th></tr></thead><tbody>"
+    + Object.keys(byy).sort().map(k => { const s = sumT(byy[k]); return `<tr><td class="l">${k}</td><td>${s[0]}</td><td>${pct(s[1])}</td><td class="${sgn(s[2])}">${rs(s[2], true)}</td><td class="${sgn(s[2])}">${pct(s[2] / D.capital * 100)}</td><td class="${sgn(s[3])}">${rs(s[3], true)}</td><td>${rs(ddOf(byy[k].map(r => r[17])))}</td></tr>`; }).join("") + "</tbody>";
+  $("#mtable").innerHTML = "<thead><tr><th class='l'>Mahina</th><th>Net profit</th><th>Return %</th><th>Trade</th><th>Win rate</th><th>Max drawdown</th></tr></thead><tbody>"
+    + months.map(m => `<tr><td class="l">${m[0]}</td><td class="${sgn(m[1])}">${rs(m[1], true)}</td><td class="${sgn(m[1])}">${pct(m[1] / D.capital * 100)}</td><td>${m[2]}</td><td>${pct(m[3])}</td><td>${rs(m[4])}</td></tr>`).join("") + "</tbody>";
   const bys = group(rows, r => r[1]);
   const st = Object.keys(bys).map(s => { const x = sumT(bys[s]); const n = bys[s].map(r => r[17]); return [s, x[0], x[1], x[2], Math.max(...n), Math.min(...n), bys[s][bys[s].length - 1][0]]; });
   table({id: "#stable", rows: st, sort: [3, -1], q: "#sq", qcol: 0, filters: [], count: "#scount", pager: "#spager", dl: "#sdl", file: "stocks.csv",

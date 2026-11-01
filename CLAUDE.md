@@ -16,6 +16,8 @@
    - sticky header (web view) with logo, title, a "Data <first date> -> <last date>" chip (period of the data that was tested) and the Dark/Light button; on mobile the header scrolls away and the tabs stay sticky.
    - navy theme (dark and light), saved theme choice, fully responsive on mobile (no horizontal page scroll, tables scroll inside their card).
    - a "Trade viewer" tab: filters (stock, profit/loss, exit reason, dates, Reset), trade list with arrow-key navigation, meta box, TradingView lightweight-charts (candles / price with Entry-Exit markers and R3/SL/target lines; use 1-minute candles when the data has them, daily candles otherwise) and a P&L/cost breakdown.
+   - Every report also shows: whether profits are compounded or not (say it in the subtitle / Rules), a Return % column in the year and month tables (net / starting capital), and an "investment" card (capital, risk per trade, qty rule, max per stock, max open positions, average / biggest position, peak money deployed).
+   - Rules and Formulas tabs: only as much detail as needed to follow the test, no extra clutter.
    No personal details of the site that inspired the design are used.
 4. Almax (@albert_max) has technical skills only; Ayush (@ayushanand440) is the trading expert. Ask trading questions to Ayush.
 
