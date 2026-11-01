@@ -1,0 +1,28 @@
+Roz top 5 | Din ka close (asli): 584 trade, win 27%, net Rs -773,702, PF 0.43
+Roz top 5 | Target 10% / SL 10%: 584 trade, win 31%, net Rs -686,484, PF 0.31
+Roz top 5 | Target 20% / SL 15%: 584 trade, win 29%, net Rs -782,430, PF 0.33
+Roz top 5 | 12 baje exit: 584 trade, win 21%, net Rs -577,726, PF 0.37
+Roz top 10 | Din ka close (asli): 748 trade, win 29%, net Rs -983,120, PF 0.43
+Roz top 10 | Target 10% / SL 10%: 748 trade, win 32%, net Rs -834,623, PF 0.32
+Roz top 10 | Target 20% / SL 15%: 748 trade, win 30%, net Rs -970,354, PF 0.34
+Roz top 10 | 12 baje exit: 748 trade, win 22%, net Rs -722,272, PF 0.37
+Saare stocks | Din ka close (asli): 23308 trade, win 30%, net Rs -39,826,614, PF 0.40
+Saare stocks | Target 10% / SL 10%: 23308 trade, win 32%, net Rs -32,018,356, PF 0.32
+Saare stocks | Target 20% / SL 15%: 23308 trade, win 31%, net Rs -35,706,359, PF 0.36
+Saare stocks | 12 baje exit: 23308 trade, win 22%, net Rs -31,598,130, PF 0.29
+
+Checks:
+Kuch nahi badla (main test): 584 trade, net Rs -773,702, avg Rs -1,325
+Slippage 0 (option aur future dono): 584 trade, net Rs -236,893, avg Rs -406
+Slippage 0 aur kharcha 0 (sirf strategy ka dum): 584 trade, net Rs 68,455, avg Rs 117
+Slippage zyada: option 1%, future 0.1%: 584 trade, net Rs -1,310,511, avg Rs -2,244
+Purane STT rates (option 0.1%, future 0.02%): 584 trade, net Rs -652,431, avg Rs -1,117
+Expiry ke aakhri hafte me trade nahi (7 din se zyada bache): 444 trade, net Rs -629,548, avg Rs -1,418
+Roz top 10 stocks: 748 trade, net Rs -983,120, avg Rs -1,314
+Saare stocks (har din har stock): 23308 trade, net Rs -39,826,614, avg Rs -1,709
+Exit 12 baje (model): 584 trade, net Rs -577,726, avg Rs -989
+Strike delta 0.40: 585 trade, net Rs -802,151, avg Rs -1,371
+Strike delta 0.60: 581 trade, net Rs -709,183, avg Rs -1,221
+Asli straddle: 1 lot CE + 1 lot PE (same strike), future nahi: 585 trade, net Rs -464,314, avg Rs -794
+Next month expiry ke contract: 553 trade, net Rs -868,023, avg Rs -1,570
+Sirf liquid strike (kal 500+ trade): 584 trade, net Rs -795,684, avg Rs -1,362

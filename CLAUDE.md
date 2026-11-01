@@ -2,7 +2,7 @@
 
 ## Every backtest, always (without being asked)
 1. Telegram: message on start, progress every 10 minutes, finish message with key numbers (tools use Algo_Backtesting/src/backtest/notify.py).
-2. On finish send the report as the HTML file only (no PDF). Tag @ayushanand440 (trading) on results, @albert_max (technical) on errors.
+2. On finish send the report as the HTML file only (no PDF) AND the Reports website link (see "Reports website" below). Tag @ayushanand440 (trading) on results, @albert_max (technical) on errors.
    Any issue or open question while running a backtest goes to Telegram immediately (don't wait for the end): trading issues/questions/assumptions tag @ayushanand440, technical issues (code, data, download, login, errors) tag @albert_max.
    Also keep posting short status updates to Telegram on what Claude is doing (each main step: data download, building/testing code, run started, results) with tools/send_telegram.py.
    And EVERY 10 MINUTES while Claude is working (download, coding, testing, running - not only during the backtest run): start
@@ -26,3 +26,12 @@
 - Algo_Historical_Data: downloads data (own .venv). Algo_Backtesting: strategies, engine, results (own .venv). Backtesting only reads ../Algo_Historical_Data/data.
 - Every report folder in Algo_Backtesting/results is numbered in the order it was made: NN_<name> (01_oct_2026 ... 09_stbt_options, next one 10_).
   Runners get their folder from backtest.config.result_dir(name): a new name gets the next number, a rerun of an existing name reuses its folder. Never create results/<name> directly.
+
+## Reports website (after every new report or rerun, without being asked)
+- One private Claude Artifact lists every report (search, type/result filter, sort; each opens in a new tab):
+  https://claude.ai/artifact/Qn4HCC5NT1iakRxbAfuYCa (also in Algo_Backtesting/site/site.json). Always update THIS url, never make a second site.
+- Steps: add/update the report's entry in Algo_Backtesting/site/reports.json (name, type Intraday/Options/Calendar/Swing, period,
+  one-line Hinglish result, net, pf, trades, verdict profit/loss/study) -> `python tools/build_site.py` -> Artifact publish with
+  url from site.json, file_path site/index.html, files = only the new/changed report(s) from site/files.json (the others stay on the site).
+- The Telegram finish message carries the HTML file, the website link and the direct report link <site url>#report-NN (NN = folder number).
+- Limits: 16 MB per report file, 64 MB per publish, 256 MB / 511 files per site version.

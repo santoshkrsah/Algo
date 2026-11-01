@@ -1,0 +1,16 @@
+{
+ "reports/01_oct_2026.html": "results/01_oct_2026/report.html",
+ "reports/02_jan_oct_2026.html": "results/02_jan_oct_2026/report.html",
+ "reports/03_full_2021_2026.html": "results/03_full_2021_2026/report.html",
+ "reports/05_vmu_v3.html": "results/05_vmu_v3/report.html",
+ "reports/06_vmu_v2.html": "results/06_vmu_v2/report.html",
+ "reports/07_vol5l_2021_2026.html": "results/07_vol5l_2021_2026/report.html",
+ "reports/08_calarb_sep_oct_2026.html": "results/08_calarb_sep_oct_2026/report.html",
+ "reports/09_stbt_options.html": "results/09_stbt_options/report.html",
+ "reports/10_calspread_2024_2026.html": "results/10_calspread_2024_2026/report.html",
+ "reports/11_cpr_vwap_openlow.html": "results/11_cpr_vwap_openlow/report.html",
+ "reports/12_opt_r3_2024_2026.html": "results/12_opt_r3_2024_2026/report.html",
+ "reports/13_gap_rsi_ema.html": "results/13_gap_rsi_ema/report.html",
+ "reports/14_gap_rsi_ema_smallcap.html": "results/14_gap_rsi_ema_smallcap/report.html",
+ "reports/15_call_fut_intraday.html": "results/15_call_fut_intraday/report.html"
+}

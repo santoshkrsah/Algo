@@ -1,0 +1,210 @@
+<title>Algo Backtest Reports</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a ledger of reports - numbered rows (creation order), filters on top, each row opens its report in a new tab */
+:root {
+  --bg: #f3f5f9; --card: #ffffff; --ink: #0f1b33; --muted: #5a6680; --line: #dde3ee;
+  --navy: #1b3a6b; --accent: #2f6fd6; --accent-ink: #ffffff;
+  --gain: #0f7a4a; --gain-bg: #e3f4ec; --loss: #b3261e; --loss-bg: #fbe7e5; --study: #6a4fb3; --study-bg: #eee9fa;
+  --chip: #eaeef6;
+  --f-display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1222; --card: #121b30; --ink: #e6ecf7; --muted: #94a1bb; --line: #24304a;
+  --navy: #9fbdf0; --accent: #5b93f0; --accent-ink: #0b1222;
+  --gain: #4cc98d; --gain-bg: #10301f; --loss: #f2827a; --loss-bg: #3a1714; --study: #b8a3f2; --study-bg: #251d3d;
+  --chip: #1b2640; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b1222; --card: #121b30; --ink: #e6ecf7; --muted: #94a1bb; --line: #24304a;
+  --navy: #9fbdf0; --accent: #5b93f0; --accent-ink: #0b1222;
+  --gain: #4cc98d; --gain-bg: #10301f; --loss: #f2827a; --loss-bg: #3a1714; --study: #b8a3f2; --study-bg: #251d3d;
+  --chip: #1b2640; color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 48px; display: grid; gap: 20px }
+h1 { font: 800 clamp(26px, 4vw, 36px)/1.1 var(--f-display); margin: 0; color: var(--navy); letter-spacing: -.01em; text-wrap: balance }
+.lede { margin: 6px 0 0; color: var(--muted); max-width: 65ch }
+.tally { display: flex; flex-wrap: wrap; gap: 8px }
+.tally span { font: 600 13px var(--f-mono); padding: 5px 10px; border-radius: 6px; background: var(--chip) }
+.tally .p { background: var(--gain-bg); color: var(--gain) } .tally .l { background: var(--loss-bg); color: var(--loss) }
+.tally .s { background: var(--study-bg); color: var(--study) }
+
+.controls { display: grid; grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr)); gap: 10px; align-items: end }
+.controls label { display: grid; gap: 4px; font: 600 11px var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted) }
+.controls input, .controls select { font: 15px var(--f-body); color: var(--ink); background: var(--card); border: 1px solid var(--line);
+  border-radius: 8px; padding: 9px 10px; width: 100%; min-width: 0 }
+.controls input:focus-visible, .controls select:focus-visible, .open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.hint { margin: 0; font-size: 13px; color: var(--muted) }
+
+.list { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden }
+.head, .row { display: grid; grid-template-columns: 52px minmax(0, 1fr) 124px 56px 68px 158px 92px; gap: 14px; align-items: center; padding: 14px 18px }
+.head { font: 600 11px var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--line); padding-block: 10px }
+.row + .row { border-top: 1px solid var(--line) }
+.row:hover { background: color-mix(in srgb, var(--accent) 5%, var(--card)) }
+.num { font: 600 20px var(--f-mono); color: var(--muted) }
+.name { font: 700 16px/1.25 var(--f-display); margin: 0 }
+.res { margin: 3px 0 6px; color: var(--muted); font-size: 13.5px }
+.chips { display: flex; flex-wrap: wrap; gap: 6px }
+.chip { font: 500 12px var(--f-body); padding: 2px 8px; border-radius: 5px; background: var(--chip); color: var(--ink) }
+.v-profit { background: var(--gain-bg); color: var(--gain) } .v-loss { background: var(--loss-bg); color: var(--loss) }
+.v-study { background: var(--study-bg); color: var(--study) }
+.r { text-align: right; font: 600 14px var(--f-mono); font-variant-numeric: tabular-nums }
+.gain { color: var(--gain) } .loss { color: var(--loss) } .dim { color: var(--muted); font-weight: 400 }
+.dates { font-size: 12.5px; color: var(--muted); line-height: 1.45 }
+.dates b { color: var(--ink); font-weight: 600 }
+.open { justify-self: end; display: inline-flex; gap: 6px; align-items: center; text-decoration: none; font: 600 14px var(--f-body);
+  background: var(--accent); color: var(--accent-ink); padding: 8px 14px; border-radius: 8px; white-space: nowrap }
+.open:hover { filter: brightness(1.08) }
+.lbl { display: none }
+.empty { padding: 28px 18px; color: var(--muted); text-align: center }
+footer { font-size: 12.5px; color: var(--muted) }
+
+@media (max-width: 860px) {
+  .controls { grid-template-columns: 1fr 1fr }
+  .controls .search { grid-column: 1 / -1 }
+  .head { display: none }
+  .row { grid-template-columns: 40px minmax(0, 1fr) auto; grid-template-areas: "n main main" "n net pf" "n tr dt" "n btn btn"; gap: 6px 12px }
+  .num { grid-area: n; font-size: 16px } .main { grid-area: main } .c-net { grid-area: net } .c-pf { grid-area: pf }
+  .c-tr { grid-area: tr } .dates { grid-area: dt } .open { grid-area: btn; justify-self: stretch; justify-content: center; margin-top: 6px }
+  .r { text-align: left } .c-pf, .dates { text-align: right }
+  .lbl { display: inline; font: 400 12px var(--f-body); color: var(--muted); margin-right: 4px }
+}
+@media (prefers-reduced-motion: no-preference) { .row { transition: background .15s } }
+
+/* one report full screen (opened from its #report-NN link) */
+#viewer { position: fixed; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); background: var(--bg); z-index: 5 }
+#viewer[hidden] { display: none }
+.vbar { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; border-bottom: 1px solid var(--line); background: var(--card);
+  padding: calc(8px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px)) }
+.vbar a { font: 600 14px var(--f-body); color: var(--accent); text-decoration: none; white-space: nowrap }
+.vbar a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+#vname { font: 700 15px var(--f-display); min-width: 0 }
+#vstate { font-size: 13px; color: var(--muted) }
+#vframe { width: 100%; height: 100%; border: 0; background: #fff }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Algo Backtest Reports</h1>
+    <p class="lede">Team ke saare backtest ek jagah. Khojo ya filter lagao, phir <b>Kholo</b> dabao: report nayi tab me khulegi.</p>
+  </header>
+  <div class="tally" id="tally"></div>
+  <div class="controls">
+    <label class="search">Khojo (naam / result)<input id="q" type="search" placeholder="jaise CPR, option, smallcap" autocomplete="off"></label>
+    <label>Type<select id="type"></select></label>
+    <label>Result<select id="verdict">
+      <option value="">Sab</option><option value="profit">Profit</option><option value="loss">Loss</option><option value="study">Study (P&amp;L nahi)</option>
+    </select></label>
+    <label>Sort<select id="sort">
+      <option value="made">Naya pehle (bana)</option><option value="updated">Haal me update</option>
+      <option value="num">Number (01, 02 ...)</option><option value="name">Naam (A-Z)</option>
+      <option value="net">Net profit (zyada pehle)</option><option value="pf">Profit factor (zyada pehle)</option>
+    </select></label>
+  </div>
+  <p class="hint">Har report ka capital aur trade size alag hai (jaise 01-03 me Rs 2 Cr har trade), isliye Net ko aapas me seedha compare na karein. Profit factor (PF) 1 se upar = profit.</p>
+  <div class="list" role="table" aria-label="Reports">
+    <div class="head" role="row"><span>#</span><span>Report</span><span class="r">Net P&amp;L</span><span class="r">PF</span><span class="r">Trade</span><span>Bana / Update</span><span></span></div>
+    <div id="rows"></div>
+  </div>
+  <footer id="foot"></footer>
+</div>
+<div id="viewer" hidden>
+  <div class="vbar"><a href="#list" id="back">&larr; Saari reports</a><span id="vname"></span><span id="vstate"></span></div>
+  <iframe id="vframe" title="Report"></iframe>
+</div>
+
+<script>
+const D = {"reports":[{"num":1,"folder":"01_oct_2026","name":"Fibonacci R3 breakout (Oct 2026)","type":"Intraday","period":"Oct 2026","result":"88 trade, Rs 2 Cr har trade, win 31.8%","net":-17616126,"pf":0.38,"trades":88,"verdict":"loss","made":"2026-10-31","updated":"2026-10-31 13:49","mb":0.1,"href":"reports/01_oct_2026.html","hash":"report-1"},{"num":2,"folder":"02_jan_oct_2026","name":"Fibonacci R3 breakout (Jan-Oct 2026)","type":"Intraday","period":"Jan 2026 - Oct 2026","result":"999 trade, Rs 2 Cr har trade, win 34.6%","net":-106764005,"pf":0.63,"trades":999,"verdict":"loss","made":"2026-10-31","updated":"2026-10-31 14:09","mb":0.4,"href":"reports/02_jan_oct_2026.html","hash":"report-2"},{"num":3,"folder":"03_full_2021_2026","name":"Fibonacci R3 breakout (2021-2026)","type":"Intraday","period":"Oct 2021 - Oct 2026","result":"6,078 trade, Rs 2 Cr har trade, win 33.0%","net":-578523466,"pf":0.65,"trades":6078,"verdict":"loss","made":"2026-10-31","updated":"2026-10-31 18:12","mb":1.1,"href":"reports/03_full_2021_2026.html","hash":"report-3"},{"num":5,"folder":"05_vmu_v3","name":"VMU Equity V3","type":"Intraday","period":"Jan 2026 - Oct 2026","result":"382 trade, win 51.0%, lagbhag barabar (no profit no loss)","net":9978,"pf":1.01,"trades":382,"verdict":"profit","made":"2026-10-31","updated":"2026-10-31 14:54","mb":0.3,"href":"reports/05_vmu_v3.html","hash":"report-5"},{"num":6,"folder":"06_vmu_v2","name":"VMU Equity V2","type":"Intraday","period":"Jan 2026 - Oct 2026","result":"382 trade, win 31.7% (0% slippage)","net":-399952,"pf":0.67,"trades":382,"verdict":"loss","made":"2026-10-31","updated":"2026-10-31 15:14","mb":0.4,"href":"reports/06_vmu_v2.html","hash":"report-6"},{"num":7,"folder":"07_vol5l_2021_2026","name":"Vol 5L Target 7%","type":"Intraday","period":"Oct 2021 - Oct 2026","result":"2,505 trade, win 42.8% (0% slippage)","net":-1230596,"pf":0.74,"trades":2505,"verdict":"loss","made":"2026-10-31","updated":"2026-10-31 17:56","mb":1.2,"href":"reports/07_vol5l_2021_2026.html","hash":"report-7"},{"num":8,"folder":"08_calarb_sep_oct_2026","name":"Calendar Arbitrage Gap","type":"Calendar","period":"Sep 2026 - Oct 2026","result":"WIPRO, IREDA, IRFC, RVNL, ASTRAL: same rate aur 50 paise gap kitni baar bana (P&L nahi)","net":null,"pf":null,"trades":null,"verdict":"study","made":"2026-11-01","updated":"2026-11-01 14:10","mb":1.0,"href":"reports/08_calarb_sep_oct_2026.html","hash":"report-8"},{"num":9,"folder":"09_stbt_options","name":"Option Selling STBT","type":"Options","period":"Nov 2021 - Oct 2026","result":"NIFTY: 947 trade, win 56.1% (0% slippage); 1% slippage pe +Rs 92,219","net":169675,"pf":1.22,"trades":947,"verdict":"profit","made":"2026-11-01","updated":"2026-11-01 13:35","mb":0.9,"href":"reports/09_stbt_options.html","hash":"report-9"},{"num":10,"folder":"10_calspread_2024_2026","name":"Calendar Spread","type":"Calendar","period":"May 2025 - Oct 2026","result":"46 trade, win 15.2% (gap 0.75%, slippage 0.02%)","net":-157094,"pf":0.22,"trades":46,"verdict":"loss","made":"2026-11-01","updated":"2026-11-01 14:38","mb":0.4,"href":"reports/10_calspread_2024_2026.html","hash":"report-10"},{"num":11,"folder":"11_cpr_vwap_openlow","name":"CPR + VWAP + Open-Low","type":"Intraday","period":"Oct 2021 - Oct 2026","result":"1,807 trade, win 25.8% (0% slippage); 2,592 settings me ek bhi profit me nahi","net":-361756,"pf":0.71,"trades":1807,"verdict":"loss","made":"2026-11-01","updated":"2026-11-01 15:21","mb":1.8,"href":"reports/11_cpr_vwap_openlow.html","hash":"report-11"},{"num":12,"folder":"12_opt_r3_2024_2026","name":"Option R3 Momentum","type":"Options","period":"Nov 2024 - Oct 2026","result":"793 trade, win 46.0% (1% slippage, CALL, exit agle din open)","net":107166,"pf":1.3,"trades":793,"verdict":"profit","made":"2026-11-01","updated":"2026-11-01 18:51","mb":5.1,"href":"reports/12_opt_r3_2024_2026.html","hash":"report-12"},{"num":13,"folder":"13_gap_rsi_ema","name":"Gap + RSI + 21-EMA","type":"Swing","period":"Oct 2021 - Oct 2026","result":"242 trade, win 38.8% (F&O stocks, slippage 0.1%)","net":761310,"pf":1.7,"trades":242,"verdict":"profit","made":"2026-11-01","updated":"2026-11-01 18:50","mb":6.5,"href":"reports/13_gap_rsi_ema.html","hash":"report-13"},{"num":14,"folder":"14_gap_rsi_ema_smallcap","name":"Gap + RSI + 21-EMA (Small cap)","type":"Swing","period":"Oct 2021 - Oct 2026","result":"438 trade, win 32.9% (small cap Rs 1,000 Cr+, slippage 0.5%)","net":734411,"pf":1.28,"trades":438,"verdict":"profit","made":"2026-11-01","updated":"2026-11-01 18:48","mb":7.6,"href":"reports/14_gap_rsi_ema_smallcap.html","hash":"report-14"},{"num":15,"folder":"15_call_fut_intraday","name":"Call Future Hedge","type":"Options","period":"May 2026 - Oct 2026","result":"584 trade, win 27% (roz top 5 stock, 2 lot CALL buy + 1 lot FUT sell, din ke close pe exit)","net":-773702,"pf":0.43,"trades":584,"verdict":"loss","made":"2026-11-01","updated":"2026-11-01 19:40","mb":2.6,"href":"reports/15_call_fut_intraday.html","hash":"report-15"}],"site":"https://claude.ai/artifact/Qn4HCC5NT1iakRxbAfuYCa","generated":"01 Nov 2026 19:44"};
+const $ = id => document.getElementById(id);
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const day = s => { const [y, m, d] = s.slice(0, 10).split("-"); return `${d} ${MON[+m - 1]} ${y}` };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+function rs(v) {
+  if (v == null) return '<span class="dim">-</span>';
+  const a = Math.abs(v), sg = v < 0 ? "−" : "+";
+  const t = a >= 1e7 ? (a / 1e7).toFixed(2) + " Cr" : a >= 1e5 ? (a / 1e5).toFixed(2) + " L" : Math.round(a).toLocaleString("en-IN");
+  return `<span class="${v < 0 ? "loss" : "gain"}">${sg}Rs ${t}</span>`;
+}
+const VERD = {profit: "Profit", loss: "Loss", study: "Study"};
+const R = D.reports;
+
+const types = [...new Set(R.map(r => r.type))].sort();
+$("type").innerHTML = '<option value="">Sab</option>' + types.map(t => `<option>${esc(t)}</option>`).join("");
+const cnt = k => R.filter(r => r.verdict === k).length;
+$("tally").innerHTML = `<span>${R.length} report</span><span class="p">${cnt("profit")} profit</span><span class="l">${cnt("loss")} loss</span>` +
+  (cnt("study") ? `<span class="s">${cnt("study")} study</span>` : "");
+$("foot").textContent = `List banayi: ${D.generated}. Har report ka "Rules" tab me poore niyam aur formulas hain.`;
+
+const KEY = "algo-site-filters";
+try { const s = JSON.parse(localStorage.getItem(KEY) || "{}"); for (const k of ["q", "type", "verdict", "sort"]) if (s[k] != null) $(k).value = s[k] } catch (e) {}
+
+function render() {
+  const q = $("q").value.trim().toLowerCase(), ty = $("type").value, vd = $("verdict").value, so = $("sort").value;
+  try { localStorage.setItem(KEY, JSON.stringify({q: $("q").value, type: ty, verdict: vd, sort: so})) } catch (e) {}
+  let rows = R.filter(r => (!ty || r.type === ty) && (!vd || r.verdict === vd) &&
+    (!q || `${r.num} ${r.folder} ${r.name} ${r.result} ${r.type} ${r.period}`.toLowerCase().includes(q)));
+  const by = {
+    made: (a, b) => b.made.localeCompare(a.made) || b.num - a.num,
+    updated: (a, b) => b.updated.localeCompare(a.updated),
+    num: (a, b) => a.num - b.num,
+    name: (a, b) => a.name.localeCompare(b.name),
+    net: (a, b) => (b.net ?? -Infinity) - (a.net ?? -Infinity),
+    pf: (a, b) => (b.pf ?? -Infinity) - (a.pf ?? -Infinity),
+  }[so];
+  rows = rows.slice().sort(by);
+  $("rows").innerHTML = rows.length ? rows.map(r => `
+    <div class="row" role="row">
+      <span class="num">${String(r.num).padStart(2, "0")}</span>
+      <div class="main">
+        <p class="name">${esc(r.name)}</p>
+        <p class="res">${esc(r.result)}</p>
+        <div class="chips"><span class="chip v-${r.verdict}">${VERD[r.verdict] || esc(r.verdict)}</span><span class="chip">${esc(r.type)}</span>${r.period ? `<span class="chip">${esc(r.period)}</span>` : ""}</div>
+      </div>
+      <span class="r c-net"><span class="lbl">Net</span>${rs(r.net)}</span>
+      <span class="r c-pf"><span class="lbl">PF</span>${r.pf == null ? '<span class="dim">-</span>' : `<span class="${r.pf >= 1 ? "gain" : "loss"}">${r.pf.toFixed(2)}</span>`}</span>
+      <span class="r c-tr"><span class="lbl">Trade</span>${r.trades == null ? '<span class="dim">-</span>' : r.trades.toLocaleString("en-IN")}</span>
+      <span class="dates">Bana <b>${day(r.made)}</b><br>Update <b>${day(r.updated)}</b></span>
+      <a class="open" href="${esc(D.site ? D.site + "#" + r.hash : "#" + r.hash)}"${D.site ? ' target="_blank" rel="noopener"' : ""}>Kholo &#8599;</a>
+    </div>`).join("") : '<div class="empty">Is filter me koi report nahi mili. Filter hatao ya kuch aur khojo.</div>';
+}
+for (const id of ["q", "type", "verdict", "sort"]) $(id).addEventListener(id === "q" ? "input" : "change", render);
+render();
+
+// A report opens on the site's own link + #report-NN (new tab), shown full screen; "Saari reports" goes back to the list.
+const BY_HASH = Object.fromEntries(R.map(r => [r.hash, r]));
+const TITLE = document.title;
+let shown = null;
+async function route() {
+  const r = BY_HASH[location.hash.slice(1)];
+  $("viewer").hidden = !r;
+  document.querySelector(".wrap").hidden = !!r;
+  if (!r) {
+    if (shown) { $("vframe").srcdoc = ""; shown = null }
+    document.title = TITLE;
+    return;
+  }
+  if (shown === r.hash) return;
+  shown = r.hash;
+  document.title = `${String(r.num).padStart(2, "0")} ${r.name}`;
+  $("vname").textContent = `${String(r.num).padStart(2, "0")} · ${r.name}`;
+  $("vstate").textContent = `Report load ho rahi hai (${r.mb} MB)...`;
+  try {
+    const res = await fetch(r.href);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+    if (shown !== r.hash) return;
+    $("vframe").srcdoc = html;
+    $("vstate").textContent = "";
+  } catch (e) {
+    $("vstate").textContent = `Report load nahi hui (${e.message}). Page reload karke dobara dekho.`;
+  }
+}
+window.addEventListener("hashchange", route);
+route();
+</script>
