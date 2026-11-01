@@ -42,7 +42,7 @@ def contract_series(d: pd.DataFrame, picked: dict, before_days: int = 25, after_
 
 
 def write_html(path, picked: dict, signals: dict, capital: float, rules, notes, checks, formulas, part2: list[list], data_info, base: str,
-               series: dict, data_range: list[str], data_note: str, slip: float):
+               series: dict, data_range: list[str], data_note: str, slip: float, settings: list | None = None):
     """picked / signals: {(pivot, k): DataFrame with exit columns}. base = 'pivot|k|exit'. series = contract_series()."""
     grid, runs = [], {}
     for (pv, k), t in picked.items():
@@ -55,7 +55,7 @@ def write_html(path, picked: dict, signals: dict, capital: float, rules, notes, 
         cols = BASE + [f"{e[0]}_{x}" for e in EXITS for x in ("px", "why", "net")]
         runs[f"{pv}|{k}"] = t[cols].astype(object).where(t[cols].notna(), None).values.tolist()
     data = {"rules": rules, "notes": notes, "checks": checks, "formulas": formulas, "part2": part2, "data_info": data_info,
-            "capital": capital, "series": series, "data_range": data_range, "data_note": data_note, "slip": slip, "per_trade": PER_TRADE, "exits": [[e[0], e[1]] for e in EXITS], "grid": grid, "runs": runs, "base": base,
+            "capital": capital, "series": series, "data_range": data_range, "data_note": data_note, "slip": slip, "settings": settings, "per_trade": PER_TRADE, "exits": [[e[0], e[1]] for e in EXITS], "grid": grid, "runs": runs, "base": base,
             "cols": BASE, "generated": datetime.now().strftime("%d %b %Y %H:%M")}
     css = re.search(r"<style>.*?</style>", (ASSETS / "report_template.html").read_text(encoding="utf-8"), re.S).group(0)
     tpl = viewer_assets.apply((ASSETS / "opt_r3_template.html").read_text(encoding="utf-8")).replace("__CSS__", css)

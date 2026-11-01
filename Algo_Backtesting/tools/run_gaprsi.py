@@ -22,6 +22,9 @@ from backtest.notify import send, send_document  # noqa: E402
 
 TAG_TRADING, TAG_TECH = "@ayushanand440", "@albert_max"
 NAME = "gap_rsi_ema"
+META = {"title": "Gap + RSI + 21-EMA", "sub": "NSE F&O stocks · daily backtest & trade audit", "universe": "NSE F&O stocks (~270)", "slip_pct": 0.1, "sides": ["long", "short"],
+        "settings": [["Universe", "NSE F&O stocks (~270)", 1], ["Slippage", "0.1% har fill (buy aur sell dono)", 1], ["Kharcha", "Long: delivery (STT 0.1% buy + sell); Short: futures"],
+                     ["Capital", "Rs 10,00,000 (fixed, compounding nahi)"], ["Risk per trade", "1% = Rs 10,000"], ["Limit", "max 10 stock, 20% per stock, leverage nahi"], ["Entry", "gap wale din ka close"]]}
 BASE = "long|2|ema"
 RULES = [
     "Samay: daily candle, 1 Oct 2021 se 28 Oct 2026 (hamare equity data ki poori range). Daily candle 15-min candles se banayi: open = 9:15 ka open, "
@@ -167,7 +170,7 @@ def main() -> int:
         ]
         series = series_for(ind, runs)
         write_html(out / "report.html", runs, base.capital, RULES, NOTES, checks, FORMULAS, info, BASE, series, [ind.date.min(), ind.date.max()],
-                   "Daily data: equity 15-min candles se bana, 1 Oct 2021 se 28 Oct 2026. Pehla long trade " + first + ".")
+                   "Daily data: equity 15-min candles se bana, 1 Oct 2021 se 28 Oct 2026. Pehla long trade " + first + ".", META)
     except Exception:
         tell(f"{TAG_TECH} Gap RSI EMA backtest FAILED:\n{traceback.format_exc()[-1500:]}")
         raise

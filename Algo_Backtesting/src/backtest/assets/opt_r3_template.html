@@ -30,6 +30,7 @@ __CSS__
 <div class="wrap">
 <div class="sub" id="subtitle" style="margin:14px 0 0"></div>
 <div class="verdict" id="verdict"></div>
+<div class="setrow" id="settings"></div>
 <div class="segrow"><div class="sg"><span class="seglbl">Pivot:</span><div class="seg" id="seg_p"></div></div><div class="sg"><span class="seglbl">Strike:</span><div class="seg" id="seg_k"></div></div></div>
 <div class="segrow"><div class="sg"><span class="seglbl">Exit:</span><div class="seg" id="seg_e"></div></div></div>
 <div class="kpis" id="kpis"></div>
@@ -196,6 +197,8 @@ function render(){
        best: Math.max(...net), worst: Math.min(...net), days: daily.length, plus: months.filter(m => m[1] > 0).length + " / " + months.length};
   const exl = D.exits[ei][1];
   $("#subtitle").textContent = `${PN[P]} pivot | ${KN[K]} CALL | exit: ${exl} | NSE stock options, daily bhavcopy (expired bhi) | capital ${cap}, har trade Rs 10,000, din me max 2 | report bana: ${D.generated}`;
+  const chips = (D.settings || []).concat([["Pivot", PN[P]], ["Strike", KN[K]], ["Exit", exl]]);
+  $("#settings").innerHTML = `<span class="st">Test ki settings</span>` + chips.map(c => `<span class="sc${c[2] ? " hl" : ""}">${c[0]}: <b>${c[1]}</b></span>`).join("");
   $("#verdict").className = "verdict " + (tot > 0 ? "good" : "bad");
   $("#verdict").innerHTML = rows.length ? `${PN[P]}, ${KN[K]}, "${exl}": ${T.days} din me <b>${T.n}</b> trade, <b>${pct(T.win)}</b> me profit, net <b class="${sgn(tot)}">${rs(tot, true)}</b> (${cap} par ${pct(tot / D.capital * 100)}), profit factor <b>${f2(T.pf)}</b>, max drawdown <b>${rs(dd)}</b>.` : "Is combination pe koi trade nahi.";
   const cards = [["Net profit", rs(tot, true), sgn(tot), cap + " par " + pct(tot / D.capital * 100)], ["Win rate (profit wale trade)", pct(T.win), "", T.n + " trade"],

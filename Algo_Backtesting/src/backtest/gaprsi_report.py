@@ -48,7 +48,8 @@ def series_for(ind: pd.DataFrame, runs: dict, before_days: int = 75, after_days:
     return out
 
 
-def write_html(path, runs: dict, capital: float, rules, notes, checks, formulas, data_info, base: str, series: dict, data_range: list[str], data_note: str):
+def write_html(path, runs: dict, capital: float, rules, notes, checks, formulas, data_info, base: str, series: dict, data_range: list[str], data_note: str,
+               meta: dict | None = None):
     """runs: {(side, gap, exit): sized trades}. base = 'side|gap|exit'."""
     grid, data_runs = [], {}
     for (side, gap, ex), t in runs.items():
@@ -57,7 +58,7 @@ def write_html(path, runs: dict, capital: float, rules, notes, checks, formulas,
         data_runs[f"{side}|{gap:g}|{ex}"] = rows_of(t)
     data = {"rules": rules, "notes": notes, "checks": checks, "formulas": formulas, "data_info": data_info, "capital": capital, "series": series,
             "data_range": data_range, "data_note": data_note, "exits": [[e[0], e[1]] for e in EXITS], "gaps": list(GAPS), "grid": grid, "runs": data_runs,
-            "base": base, "cols": COLS, "generated": datetime.now().strftime("%d %b %Y %H:%M")}
+            "base": base, "meta": meta, "cols": COLS, "generated": datetime.now().strftime("%d %b %Y %H:%M")}
     css = re.search(r"<style>.*?</style>", (ASSETS / "report_template.html").read_text(encoding="utf-8"), re.S).group(0)
     tpl = viewer_assets.apply((ASSETS / "gaprsi_template.html").read_text(encoding="utf-8")).replace("__CSS__", css)
     js = (ASSETS / "chart.umd.min.js").read_text(encoding="utf-8")

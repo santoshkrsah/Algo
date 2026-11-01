@@ -23,13 +23,14 @@ __CSS__
 <div class="top">
   <div class="brand">
     <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 17l5-6 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-    <div><h1>Gap + RSI + 21-EMA</h1><div class="sub">NSE F&amp;O stocks &middot; daily backtest &amp; trade audit</div></div>
+    <div><h1 id="h1">Gap + RSI + 21-EMA</h1><div class="sub" id="hsub">NSE F&amp;O stocks &middot; daily backtest &amp; trade audit</div></div>
   </div>
   <div class="actions"><span class="chip" id="range"></span><button class="btn" id="theme">Dark / Light</button></div>
 </div>
 <div class="wrap">
 <div class="sub" id="subtitle" style="margin:14px 0 0"></div>
 <div class="verdict" id="verdict"></div>
+<div class="setrow" id="settings"></div>
 <div class="segrow"><div class="sg"><span class="seglbl">Taraf:</span><div class="seg" id="seg_s"></div></div><div class="sg"><span class="seglbl">Gap kam se kam:</span><div class="seg" id="seg_g"></div></div></div>
 <div class="segrow"><div class="sg"><span class="seglbl">Exit:</span><div class="seg" id="seg_e"></div></div></div>
 <div class="kpis" id="kpis"></div>
@@ -95,6 +96,10 @@ const rs2 = v => (v < 0 ? "-" : "") + "Rs " + Math.abs(v).toFixed(2);
 const f2 = v => v === null || v === undefined || isNaN(v) ? "n/a" : Number(v).toFixed(2);
 const pct = v => v === null || v === undefined || isNaN(v) ? "n/a" : f2(v) + "%";
 const SN = {long: "Long (gap-up breakout)", short: "Short (gap-down reversal)"};
+const META = D.meta || {};
+if (META.title) { $("#h1").textContent = META.title; document.title = META.title; }
+if (META.sub) $("#hsub").textContent = META.sub;
+const SIDES = META.sides || ["long", "short"];
 const [B0, B1, B2] = D.base.split("|");
 let SD = B0, GP = +B1, E = B2, rows = [];
 const I = {ed: 0, sym: 1, gap: 2, rsi: 3, entry: 4, stop: 5, fill: 6, ema: 7, qty: 8, xd: 9, exit: 10, why: 11, hold: 12, gross: 13, costs: 14, net: 15, R: 16, bull: 17, val: 18, tgt: 19, sd: 20};
@@ -119,7 +124,8 @@ document.querySelectorAll(".copy").forEach(b => b.onclick = async () => {
   try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) { ok = copyOld(txt); }
   b.textContent = ok ? "Copy ho gaya ✓" : "Copy nahi hua"; setTimeout(() => b.textContent = "Copy karo", 1500);
 });
-$("#seg_s").innerHTML = Object.keys(SN).map(k => `<button data-k="${k}">${SN[k]}</button>`).join("");
+$("#seg_s").innerHTML = SIDES.map(k => `<button data-k="${k}">${SN[k]}</button>`).join("");
+if (SIDES.length < 2) $("#seg_s").closest(".sg").style.display = "none";
 $("#seg_g").innerHTML = D.gaps.map(k => `<button data-k="${k}">${k}%</button>`).join("");
 $("#seg_e").innerHTML = D.exits.map(e => `<button data-k="${e[0]}">${e[1]}</button>`).join("");
 $("#seg_s").onclick = e => { const k = e.target.dataset.k; if (k) { SD = k; render(); } };
@@ -188,7 +194,9 @@ function render(){
   const avgR = n ? rows.reduce((s, r) => s + r[I.R], 0) / n : null;
   const wR = wins.length ? wins.reduce((s, r) => s + r[I.R], 0) / wins.length : null, lR = losses.length ? losses.reduce((s, r) => s + r[I.R], 0) / losses.length : null;
   const exl = (D.exits.find(e => e[0] === E) || [0, E])[1];
-  $("#subtitle").textContent = `${SN[SD]} | gap kam se kam ${GP}% | exit: ${exl} | NSE F&O stocks, daily candle | capital ${cap} (fixed, compounding nahi), har trade ka risk 1% (Rs 10,000), max 10 stock | report bana: ${D.generated}`;
+  $("#subtitle").textContent = `${SN[SD]} | gap kam se kam ${GP}% | exit: ${exl} | ${META.universe || "NSE F&O stocks"}, daily candle | slippage ${META.slip_pct !== undefined ? META.slip_pct : 0.1}% har fill | capital ${cap} (fixed, compounding nahi), har trade ka risk 1% (Rs 10,000), max 10 stock | report bana: ${D.generated}`;
+  const chips = (META.settings || []).concat([["Taraf", SN[SD]], ["Gap", "kam se kam " + GP + "%"], ["Exit", exl]]);
+  $("#settings").innerHTML = `<span class="st">Test ki settings</span>` + chips.map(c => `<span class="sc${c[2] ? " hl" : ""}">${c[0]}: <b>${c[1]}</b></span>`).join("");
   $("#verdict").className = "verdict " + (net > 0 ? "good" : "bad");
   $("#verdict").innerHTML = n ? `${SN[SD]}, gap ${GP}%+, "${exl}": <b>${n}</b> trade, <b>${pct(wins.length / n * 100)}</b> me profit, net <b class="${sgn(net)}">${rs(net, true)}</b> (${cap} par ${pct(net / D.capital * 100)}), profit factor <b>${f2(pf)}</b>, average <b>${f2(avgR)} R</b>, max drawdown <b>${rs(dd)}</b>.` : "Is combination pe koi trade nahi bana.";
   const cards = [["Net profit", rs(net, true), sgn(net), cap + " par " + pct(net / D.capital * 100)], ["Win rate (profit wale trade)", pct(n ? wins.length / n * 100 : null), "", n + " trade"],

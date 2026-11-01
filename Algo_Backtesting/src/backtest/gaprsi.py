@@ -35,6 +35,9 @@ class Params:
     max_val: float = 0.2           # max share of capital in one stock
     min_fill: float = 0.5          # skip the trade if cash / caps allow less than this share of the 1%-risk size
     min_turn: float = 0.0          # universe: 20-day average turnover (Rs) at least this
+    min_mcap: float = 0.0          # Rs crore: market cap ON THAT DAY (mcap_pit) at least this
+    cap_class: str | None = None   # "small" = day-wise rank 251+ (AMFI small cap), "midsmall" = rank 101+
+    skip_locked: bool = False      # skip days with no trading range (open = high = low = close): a locked circuit cannot be bought
     max_gap: float = 25.0          # bigger gaps are corporate actions (demerger ...), not trades
     jump_wait: int = 60            # no signal for this many days after an unexplained >35% jump (indicators are broken)
     universe: frozenset | None = None
@@ -50,6 +53,14 @@ def signals(ind: pd.DataFrame, p: Params, side: str) -> pd.DataFrame:
         x = x[x.symbol.isin(p.universe)]
     if p.min_turn:
         x = x[x.turn20 >= p.min_turn]
+    if p.min_mcap:
+        x = x[x.mcap_pit >= p.min_mcap]
+    if p.cap_class == "small":
+        x = x[x.rank_pit > 250]
+    elif p.cap_class == "midsmall":
+        x = x[x.rank_pit > 100]
+    if p.skip_locked:
+        x = x[x.high > x.low]
     x = x[(x.gap_pct.abs() <= p.max_gap) & (x.since_jump.isna() | (x.since_jump >= p.jump_wait))]
     if side == "long":
         c = (x.open > x.p_high) & (x.gap_pct >= p.gap) & x.ema.notna() & (x.close > x.ema) & (x.rsi_s > p.rsi_lo) & (x.rsi_s < p.rsi_hi)

@@ -17,6 +17,7 @@
    - navy theme (dark and light), saved theme choice, fully responsive on mobile (no horizontal page scroll, tables scroll inside their card).
    - a "Trade viewer" tab: filters (stock, profit/loss, exit reason, dates, Reset), trade list with arrow-key navigation, meta box, TradingView lightweight-charts (candles / price with Entry-Exit markers and R3/SL/target lines; use 1-minute candles when the data has them, daily candles otherwise) and a P&L/cost breakdown.
    - Every report also shows: whether profits are compounded or not (say it in the subtitle / Rules), a Return % column in the year and month tables (net / starting capital), and an "investment" card (capital, risk per trade, qty rule, max per stock, max open positions, average / biggest position, peak money deployed).
+   - Home page (top of the report, visible on every tab) has a "Test ki settings" strip of chips with EVERY setting the test used: universe / filters (e.g. small cap, market cap rule), slippage, costs, capital + compounding, risk per trade, position limits, entry rule, plus the selected side / gap / exit. Whenever a new setting (slippage, filter, cost ...) is added to a test, add it to this strip too (key ones highlighted). Code: setrow CSS in viewer.css, `settings` in the report data.
    - Rules and Formulas tabs: only as much detail as needed to follow the test, no extra clutter.
    No personal details of the site that inspired the design are used.
 4. Almax (@albert_max) has technical skills only; Ayush (@ayushanand440) is the trading expert. Ask trading questions to Ayush.

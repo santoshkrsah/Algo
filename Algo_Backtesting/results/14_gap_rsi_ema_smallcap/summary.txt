@@ -1,0 +1,13 @@
+@ayushanand440 GAP + RSI + 21-EMA (SMALL CAP) BACKTEST DONE (1.0 min). Small cap mcap Rs 1,000 Cr+ (us din), slippage 0.5%, capital Rs 10 L, 1% risk, long only.
+gap 1% ema: 439 tr | win 34% | net Rs 829,925 | PF 1.32 | avg R +0.03 | max DD Rs -334,591
+gap 1% rr2: 875 tr | win 43% | net Rs -143,619 | PF 0.97 | avg R -0.25 | max DD Rs -553,159
+gap 1% rr3: 705 tr | win 40% | net Rs 373,716 | PF 1.10 | avg R -0.16 | max DD Rs -414,760
+gap 1% monthly: 155 tr | win 21% | net Rs 529,248 | PF 1.43 | avg R +0.20 | max DD Rs -594,798
+gap 2% ema: 438 tr | win 33% | net Rs 734,411 | PF 1.28 | avg R +0.11 | max DD Rs -300,421
+gap 2% rr2: 823 tr | win 44% | net Rs 121,764 | PF 1.03 | avg R -0.15 | max DD Rs -496,215
+gap 2% rr3: 668 tr | win 39% | net Rs 242,810 | PF 1.06 | avg R -0.13 | max DD Rs -369,975
+gap 2% monthly: 148 tr | win 23% | net Rs 743,509 | PF 1.66 | avg R +0.71 | max DD Rs -407,901
+gap 3% ema: 390 tr | win 37% | net Rs 1,368,955 | PF 1.61 | avg R +0.47 | max DD Rs -187,787
+gap 3% rr2: 733 tr | win 44% | net Rs 247,438 | PF 1.06 | avg R -0.11 | max DD Rs -385,809
+gap 3% rr3: 601 tr | win 42% | net Rs 745,583 | PF 1.23 | avg R +0.01 | max DD Rs -268,700
+gap 3% monthly: 138 tr | win 25% | net Rs 1,515,598 | PF 2.42 | avg R +0.91 | max DD Rs -315,613

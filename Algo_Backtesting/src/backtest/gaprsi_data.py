@@ -11,7 +11,7 @@ from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import pandas as pd
 
-from backtest.config import DATA, EQUITY, FNO
+from backtest.config import DATA, EQUITY, FNO, UNIVERSE_CSV
 from backtest.data import COLUMNS, trading_days
 
 CORP_CSV = DATA / "reference" / "corporate_actions.csv"
@@ -134,3 +134,25 @@ def indicators(adj: pd.DataFrame, ema_n: int = 21, rsi_n: int = 10, rsi_smooth: 
         g["since_jump"] = idx - last.to_numpy()
         parts.append(g)
     return pd.concat(parts, ignore_index=True)
+
+
+def universe_table() -> pd.DataFrame:
+    """equity_universe.csv (AMFI list of 30 Jun 2026): sym, mcap_cr, category (Large = top 100, Mid = next 150, Small = the rest)."""
+    u = pd.read_csv(UNIVERSE_CSV)
+    u["sym"] = u.symbol.str.replace(r"^NSE:|-(EQ|BE|BZ|SM|ST)$", "", regex=True)
+    return u[["sym", "mcap_cr", "category"]]
+
+
+def add_mcap(ind: pd.DataFrame, anchor: tuple = ("2026-01-01", "2026-06-30")) -> pd.DataFrame:
+    """Market cap on each day = AMFI market cap (average of Jan-Jun 2026) x close / average close of Jan-Jun 2026.
+    Prices are split / bonus adjusted, so the share count behind the ratio stays constant (new issues / buybacks are not seen).
+    rank_pit = rank of that market cap among all stocks of the data on that day (1 = biggest); AMFI small cap = rank 251 and below."""
+    u = universe_table()
+    ind = ind.copy()
+    ind["mcap_now"] = ind.symbol.map(dict(zip(u.sym, u.mcap_cr)))
+    ind["cat_now"] = ind.symbol.map(dict(zip(u.sym, u.category)))
+    win = ind[(ind.date >= anchor[0]) & (ind.date <= anchor[1])].groupby("symbol").close.mean()
+    ind["anchor"] = ind.symbol.map(win).fillna(ind.symbol.map(ind.groupby("symbol").close.mean()))
+    ind["mcap_pit"] = ind.mcap_now * ind.close / ind.anchor
+    ind["rank_pit"] = ind.groupby("date").mcap_pit.rank(ascending=False, method="first")
+    return ind

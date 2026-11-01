@@ -105,6 +105,12 @@ body{font:14.5px/1.5 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,
   .kpis{grid-template-columns:repeat(2,1fr)}
   .bar input{min-width:0;flex:1 1 140px}
 }
+/* "Test ki settings" strip under the verdict: every setting the test used (slippage, universe, costs, capital ...) */
+.setrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:0 0 14px}
+.setrow .st{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-right:2px}
+.setrow .sc{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--soft);border:1px solid var(--line);color:var(--muted)}
+.setrow .sc b{color:var(--ink);font-weight:600}
+.setrow .sc.hl{border-color:var(--accent);background:var(--accent-soft)}
 .segrow{display:flex;flex-wrap:wrap;gap:0 16px}
 .sg{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%;margin-bottom:10px}
 .sg .seg{margin:0}

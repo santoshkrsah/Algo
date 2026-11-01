@@ -27,6 +27,8 @@ TAG_TRADING, TAG_TECH = "@ayushanand440", "@albert_max"
 START, END = "2024-11-01", "2026-10-29"
 CAPITAL, SLIP = 200_000.0, 0.01
 PIVOTS, STRIKES = ["classic", "camarilla"], [0, 1, 2]
+SETTINGS = [["Universe", "NSE F&O stocks ke CALL option (sabse paas wali expiry)", 1], ["Slippage", "1% har fill (buy aur sell dono)", 1], ["Kharcha", "Rs 20 per order, STT 0.1% sell, exchange, stamp, GST"],
+            ["Capital", "Rs 2,00,000 (fixed, compounding nahi)"], ["Har trade", "Rs 10,000 ka premium, din me max 2"], ["Liquidity", "signal din 200+ trade, kal 50+ trade, premium Rs 1+"], ["Entry", "signal din ka option close (BTST)"]]
 DATA_NOTE = "Part 1: NSE option bhavcopy (daily), 2024-11-01 se 2026-10-29. Part 2: Fyers 1-min option data, lagbhag 15-28 Oct 2026."
 RULES = [
     "Samay: NSE stock option bhavcopy (har contract ka din ka Open/High/Low/Close) 1 Nov 2024 se 29 Oct 2026. Expired contracts bhi shamil, "
@@ -124,7 +126,7 @@ def main() -> int:
             checks, p2, data_info = old["checks"], old["part2"], old["data_info"]
             days = sorted(d.date.unique())
             write_html(out / "report.html", picked, sigs, CAPITAL, RULES, NOTES, checks, FORMULAS, p2, data_info, a.base, contract_series(d, picked),
-                       [days[0], days[-1]], DATA_NOTE, SLIP)
+                       [days[0], days[-1]], DATA_NOTE, SLIP, SETTINGS)
             print("rebuilt ->", out)
             return 0
         checks = [
@@ -154,7 +156,7 @@ def main() -> int:
             ["Signal (Part 1)", ", ".join(f"{pv}: {sum(len(sigs[(pv, k)]) for k in STRIKES):,}" for pv in PIVOTS) + " (ATM + 1 OTM + 2 OTM, bina limit)"],
         ]
         write_html(out / "report.html", picked, sigs, CAPITAL, RULES, NOTES, checks, FORMULAS, p2, data_info, a.base, contract_series(d, picked),
-                   [days[0], days[-1]], DATA_NOTE, SLIP)
+                   [days[0], days[-1]], DATA_NOTE, SLIP, SETTINGS)
     except Exception:
         tell(f"{TAG_TECH} Option R3 backtest FAILED:\n{traceback.format_exc()[-1500:]}")
         raise
