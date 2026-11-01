@@ -17,21 +17,27 @@ __CSS__
 .card.cp h3{padding-right:120px}
 .copy{position:absolute;top:14px;right:14px}
 </style>
+<style>__VIEWER_CSS__</style>
 </head>
 <body>
+<div class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 17l5-6 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <div><h1>Option buyer "R3 momentum"</h1><div class="sub">NSE stock options &middot; backtest &amp; trade audit</div></div>
+  </div>
+  <div class="actions"><span class="chip" id="range"></span><button class="btn" id="theme">Dark / Light</button></div>
+</div>
 <div class="wrap">
-<header>
-  <div><h1>Option buyer "R3 momentum" - backtest</h1><div class="sub" id="subtitle"></div></div>
-  <div class="tools"><button class="btn" id="theme">Dark / Light</button></div>
-</header>
+<div class="sub" id="subtitle" style="margin:14px 0 0"></div>
 <div class="verdict" id="verdict"></div>
-<div><span class="seglbl">Pivot:</span><div class="seg" id="seg_p"></div><span class="seglbl">Strike:</span><div class="seg" id="seg_k"></div></div>
-<div><span class="seglbl">Exit:</span><div class="seg" id="seg_e"></div></div>
+<div class="segrow"><div class="sg"><span class="seglbl">Pivot:</span><div class="seg" id="seg_p"></div></div><div class="sg"><span class="seglbl">Strike:</span><div class="seg" id="seg_k"></div></div></div>
+<div class="segrow"><div class="sg"><span class="seglbl">Exit:</span><div class="seg" id="seg_e"></div></div></div>
 <div class="kpis" id="kpis"></div>
 <div class="tabs" id="tabs">
   <button class="tab on" data-p="sum">Saransh</button>
   <button class="tab" data-p="months">Mahine ke hisaab se</button>
   <button class="tab" data-p="stocks">Har stock</button>
+  <button class="tab" data-p="viewer">Trade viewer</button>
   <button class="tab" data-p="trades">Saare trades</button>
   <button class="tab" data-p="min1">1-min check (Oct 2026)</button>
   <button class="tab" data-p="rules">Rules</button>
@@ -56,6 +62,8 @@ __CSS__
     <div class="bar"><input id="sq" placeholder="Stock khojo"><button class="btn" id="sdl">Download CSV</button><span class="note" id="scount"></span></div>
     <div class="scroll"><table id="stable"><thead></thead><tbody></tbody></table></div><div class="pager" id="spager"></div></div>
 </section>
+
+<section class="panel" id="viewer"><div id="tv"></div></section>
 
 <section class="panel" id="trades">
   <div class="card"><h3>Har ek trade</h3><div class="hint">Entry = signal wale din option ka NSE close. Exit agle din, upar chune exit ke hisaab se. Har trade Rs 10,000 ka premium.</div>
@@ -82,6 +90,8 @@ __CSS__
 <footer id="foot"></footer>
 </div>
 <script>__CHARTJS__</script>
+<script>__LWC__</script>
+<script>__VIEWER_JS__</script>
 <script>
 const D = __DATA__;
 const $ = s => document.querySelector(s);
@@ -93,6 +103,7 @@ const KN = ["ATM", "1 OTM", "2 OTM"], PN = {classic: "Classic", camarilla: "Cama
 const [B0, B1, B2] = D.base.split("|");
 let P = B0, K = +B1, E = B2, rows = [], T = {};
 const cap = "Rs " + D.capital.toLocaleString("en-IN");
+$("#range").innerHTML = `Data <b>${D.data_range[0]}</b> &rarr; <b>${D.data_range[1]}</b>`; $("#range").title = D.data_note;
 const ci = n => D.cols.indexOf(n);
 $("#foot").textContent = "Purane result se aage ki guarantee nahi hoti. Daily data me din ke andar SL aur target ka kram pata nahi, isliye dono lage to SL pehle maana.";
 const li = (sel, arr) => arr.forEach(r => { const e = document.createElement("li"); e.textContent = r; $(sel).appendChild(e); });
@@ -124,7 +135,7 @@ $("#seg_k").onclick = e => { const k = e.target.dataset.k; if (k !== undefined) 
 $("#seg_e").onclick = e => { const k = e.target.dataset.k; if (k) { E = k; render(); } };
 $("#grid").innerHTML = "<thead><tr><th class='l'>Pivot</th><th>Strike</th><th class='l'>Exit</th><th>Chune trade</th><th>Win %</th><th>Net</th><th>PF</th><th>Max DD</th><th>Saare signal</th><th>Avg return (saare)</th><th>Win % (saare)</th></tr></thead><tbody>"
   + D.grid.map(g => `<tr><td class="l">${PN[g[0]]}</td><td>${KN[g[1]]}</td><td class="l">${g[3]}</td><td>${g[4]}</td><td>${pct(g[5])}</td><td class="${sgn(g[6])}">${rs(g[6], true)}</td><td>${f2(g[7])}</td><td>${rs(g[8])}</td><td>${g[9].toLocaleString("en-IN")}</td><td class="${sgn(g[10])}">${pct(g[10])}</td><td>${pct(g[11])}</td></tr>`).join("") + "</tbody>";
-$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); const t = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("bt_theme", t); } catch (e) {} drawCharts(); };
+$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); const t = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("bt_theme", t); } catch (e) {} drawCharts(); TV.restyle(); };
 
 let charts = [], daily = [], months = [];
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -217,9 +228,40 @@ function render(){
     cols: [{h: "Date"}, {h: "Stock"}, {h: "Strike (CE)"}, {h: "Expiry"}, {h: "Expiry tak din"}, {h: "R3", f: f2}, {h: "Entry (close)", f: f2}, {h: "R3 se upar %", f: v => f2(v) + "%"},
       {h: "Kal High", f: f2}, {h: "Kal Low", f: f2}, {h: "Kal Close", f: f2}, {h: "Agle din Open", f: f2}, {h: "Agle din High", f: f2}, {h: "Agle din Low", f: f2}, {h: "Agle din Close", f: f2},
       {h: "Exit", f: f2}, {h: "Exit ka karan"}, {h: "Net P&L", color: 1, f: v => rs(v, true)}, {h: "Lot size"}]});
+  TV.setTrades(viewerTrades(rows));
   drawCharts();
 }
-document.querySelectorAll(".tab").forEach(b => b.onclick = () => { document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.p)); charts.forEach(c => c.resize()); });
+const rs2 = v => (v < 0 ? "-" : "") + "Rs " + Math.abs(v).toFixed(2);
+function viewerTrades(rows){
+  const m = /^sl(\d+)_t(\d+)$/.exec(E), sl = m ? +m[1] / 100 : null, rr = m ? +m[2] : null;
+  return rows.map(r => {
+    const [date, sym, strike, expiry, dte, r3, entry, above, ph, pl, pc, no, nh, nl, nc, xp, why, net, lot] = r;
+    const buy = entry * (1 + D.slip), sell = xp * (1 - D.slip), qty = D.per_trade / buy, bv = qty * buy, sv = qty * sell, gross = qty * (sell - buy);
+    const brk = 40, exch = .0003503 * (bv + sv), sebi = 1e-6 * (bv + sv), gst = .18 * (brk + exch + sebi), stt = .001 * sv, stamp = 3e-5 * bv;
+    const ser = D.series[`${sym}|${expiry}|${strike}`] || [], nd = (ser.find(x => x[0] > date) || [])[0];
+    const lines = [{price: r3, color: "--warn", title: "R3 " + r3.toFixed(2)}, {price: entry, color: "--accent", style: 3, title: "Entry"}];
+    if (sl) lines.push({price: entry * (1 - sl), color: "--neg", title: "SL"}, {price: entry * (1 + sl * rr), color: "--pos", title: "Target"});
+    const mk = (y) => [{time: date, position: "belowBar", shape: "arrowUp", color: "--pos", text: "Entry " + entry.toFixed(2)}]
+      .concat(nd ? [{time: nd, position: "aboveBar", shape: "arrowDown", color: "--neg", text: "Exit"}] : []);
+    return {
+      id: `${date}|${sym}|${strike}`, date: date, title: `${sym} ${strike} CE`, sub: `R3 ${r3.toFixed(2)} · ${entry.toFixed(2)} → ${xp.toFixed(2)} · ${why}`, pnl: net, tag: why,
+      meta: [["Stock / strike", `${sym} ${strike} CE`], ["Expiry", `${expiry} (${dte} din)`], ["Signal din", date], ["Kal H / L / C", `${ph} / ${pl} / ${pc}`],
+        ["R3 (pivot)", r3.toFixed(2)], ["Entry (close)", `${entry.toFixed(2)} (R3 se ${above.toFixed(1)}% upar)`], ["Agle din O / H / L / C", `${no} / ${nh} / ${nl} / ${nc}`],
+        ["Exit", `${xp.toFixed(2)} · ${why}`], ["Qty / lot size", `${qty.toFixed(1)} / ${lot}`], ["Net P&L", rs2(net), sgn(net)]],
+      charts: ser.length ? [
+        {title: "Option premium (daily candle)", kind: "candle", data: ser.map(x => ({time: x[0], open: x[1], high: x[2], low: x[3], close: x[4]})), markers: mk(), lines: lines,
+         legend: [["--pos", "Entry"], ["--neg", "Exit"], ["--warn", "R3"]]},
+        {title: "Stock price (daily close)", kind: "line", small: true, data: ser.map(x => ({time: x[0], value: x[5]})), markers: mk(), lines: [], legend: []},
+      ] : [],
+      note: "Daily candle hai (expired option ka 1-min data Fyers pe nahi hota). Din ke andar SL aur target ka kram daily data me nahi dikhta, dono lage to SL pehle maana.",
+      cost: [["Buy value", rs2(bv)], ["Sell value", rs2(sv)], ["Gross P&L", rs2(gross), sgn(gross)], ["Brokerage (Rs 20 x 2)", rs2(brk)], ["STT (0.1% sell)", rs2(stt)],
+        ["Exchange + SEBI", rs2(exch + sebi)], ["Stamp (0.003% buy)", rs2(stamp)], ["GST 18%", rs2(gst)], ["Net P&L (slippage " + (D.slip * 100) + "% ke saath)", rs2(net), sgn(net), true]],
+    };
+  }).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+}
+TradeViewer.stickyHeader(".top");
+const TV = TradeViewer(document.querySelector("#tv"), {});
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => { document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.p)); charts.forEach(c => c.resize()); if (b.dataset.p === "viewer") TV.show(); });
 render();
 </script>
 </body>

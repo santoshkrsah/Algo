@@ -7,6 +7,8 @@
 Needs:  (Algo_Historical_Data) python -m fyers_data.download_calendar bhavopt --start 2024-11-01 --end 2026-10-29
 """
 import argparse
+import json
+import re
 import sys
 import time
 import traceback
@@ -18,12 +20,14 @@ from backtest import opt_r3 as o  # noqa: E402
 from backtest import opt_r3_1m as m1  # noqa: E402
 from backtest.config import result_dir  # noqa: E402
 from backtest.notify import send, send_document  # noqa: E402
-from backtest.opt_r3_report import stats, write_html  # noqa: E402
+import pandas as pd  # noqa: E402
+from backtest.opt_r3_report import contract_series, stats, write_html  # noqa: E402
 
 TAG_TRADING, TAG_TECH = "@ayushanand440", "@albert_max"
 START, END = "2024-11-01", "2026-10-29"
 CAPITAL, SLIP = 200_000.0, 0.01
 PIVOTS, STRIKES = ["classic", "camarilla"], [0, 1, 2]
+DATA_NOTE = "Part 1: NSE option bhavcopy (daily), 2024-11-01 se 2026-10-29. Part 2: Fyers 1-min option data, lagbhag 15-28 Oct 2026."
 RULES = [
     "Samay: NSE stock option bhavcopy (har contract ka din ka Open/High/Low/Close) 1 Nov 2024 se 29 Oct 2026. Expired contracts bhi shamil, "
     "isliye har signal gina gaya (sirf achhe wale nahi).",
@@ -96,8 +100,9 @@ def main() -> int:
     ap.add_argument("--name", default="opt_r3_2024_2026")
     ap.add_argument("--base", default="classic|0|open")
     ap.add_argument("--no-telegram", action="store_true")
+    ap.add_argument("--rebuild", action="store_true", help="redo only the report (new design): reuse checks / Part 2 / data info from the existing report.html")
     a = ap.parse_args()
-    tell = (lambda msg: None) if a.no_telegram else send
+    tell = (lambda msg: None) if a.no_telegram or a.rebuild else send
     out = result_dir(a.name)
     t0 = time.time()
     tell("OPTION R3 MOMENTUM BACKTEST STARTED: stock CALL option ka premium apne R3 ke upar close -> BTST. Part 1: NSE option bhavcopy "
@@ -114,6 +119,14 @@ def main() -> int:
             tell(f"Option R3: {pv} pivot done - {len(s):,} signal (ATM/1 OTM/2 OTM mila ke).")
         bp, bk, be = a.base.split("|")
         bk = int(bk)
+        if a.rebuild:
+            old = json.loads(re.search(r"const D = (\{.*?\});\nconst \$", (out / "report.html").read_text(encoding="utf-8"), re.S).group(1))
+            checks, p2, data_info = old["checks"], old["part2"], old["data_info"]
+            days = sorted(d.date.unique())
+            write_html(out / "report.html", picked, sigs, CAPITAL, RULES, NOTES, checks, FORMULAS, p2, data_info, a.base, contract_series(d, picked),
+                       [days[0], days[-1]], DATA_NOTE, SLIP)
+            print("rebuilt ->", out)
+            return 0
         checks = [
             ["Jaisa rules me hai"] + combo(d, bp, "CE", bk, be),
             ["PUT option (PE ka premium apne R3 ke upar)"] + combo(d, bp, "PE", bk, be),
@@ -140,7 +153,8 @@ def main() -> int:
             ["Data (Part 2)", f"Fyers 1-min, {len(cons)} stocks ke Nov 2026 CALL (har stock ~11 strike), lagbhag 15-28 Oct 2026"],
             ["Signal (Part 1)", ", ".join(f"{pv}: {sum(len(sigs[(pv, k)]) for k in STRIKES):,}" for pv in PIVOTS) + " (ATM + 1 OTM + 2 OTM, bina limit)"],
         ]
-        write_html(out / "report.html", picked, sigs, CAPITAL, RULES, NOTES, checks, FORMULAS, p2, data_info, a.base)
+        write_html(out / "report.html", picked, sigs, CAPITAL, RULES, NOTES, checks, FORMULAS, p2, data_info, a.base, contract_series(d, picked),
+                   [days[0], days[-1]], DATA_NOTE, SLIP)
     except Exception:
         tell(f"{TAG_TECH} Option R3 backtest FAILED:\n{traceback.format_exc()[-1500:]}")
         raise

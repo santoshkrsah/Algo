@@ -11,6 +11,12 @@
 3. Report = the interactive HTML dashboard in Algo_Backtesting/src/backtest/assets/ (latest: vol5l_template.html, results/07_vol5l_2021_2026/report.html): KPI cards, charts, month table, every stock and every trade, and ALWAYS a "Rules" tab (not "Rules used").
    The whole report is written in simple Hinglish (easy words), especially the Rules tab. At the bottom of the Rules tab, ALWAYS a "Formulas" card listing every formula used in that backtest (entry, qty, target, SL/trailing, exit fill, slippage, P&L, costs, win rate, profit factor, drawdown, ...).
    The Rules card and the Formulas card each have a one-click "Copy karo" button in the top-right corner that copies that card as plain text.
+   NEW LOOK for every new report (user asked 1 Nov 2026; keep the old tabs/cards, add this): start from assets/opt_r3_template.html (example: results/12_opt_r3_2024_2026/report.html),
+   which pulls in assets/viewer.css + viewer.js + lightweight-charts.js through backtest/viewer.py:
+   - sticky header (web view) with logo, title, a "Data <first date> -> <last date>" chip (period of the data that was tested) and the Dark/Light button; on mobile the header scrolls away and the tabs stay sticky.
+   - navy theme (dark and light), saved theme choice, fully responsive on mobile (no horizontal page scroll, tables scroll inside their card).
+   - a "Trade viewer" tab: filters (stock, profit/loss, exit reason, dates, Reset), trade list with arrow-key navigation, meta box, TradingView lightweight-charts (candles / price with Entry-Exit markers and R3/SL/target lines; use 1-minute candles when the data has them, daily candles otherwise) and a P&L/cost breakdown.
+   No personal details of the site that inspired the design are used.
 4. Almax (@albert_max) has technical skills only; Ayush (@ayushanand440) is the trading expert. Ask trading questions to Ayush.
 
 ## Layout
