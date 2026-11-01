@@ -13,6 +13,7 @@ FNO = DATA / "fno"                                  # fno/<1m|5m|15m|30m|60m>/<f
 FNO_CONTRACTS = FNO / "1m" / "contracts"            # one live contract each, NOT continuous (cont_flag=0)
 FNO_BHAV = FNO / "bhavcopy"                         # bhavcopy/<YYYY-MM-DD>.csv  NSE F&O daily, futures rows only
 FNO_BHAV_OPT = FNO / "bhavcopy_opt"                 # bhavcopy_opt/<YYYY-MM-DD>.csv  NSE stock option rows, 2 nearest expiries
+FNO_BHAV_IDX = FNO / "bhavcopy_idx"                 # bhavcopy_idx/<YYYY-MM-DD>.csv  NSE NIFTY / BANKNIFTY option rows, 3 nearest expiries
 EQUITY = DATA / "equity"                            # equity/<YYYY-MM-DD>.csv  (all stocks, all timeframes)
 REFERENCE = DATA / "reference"                      # lists that define what is downloaded
 REPORTS = DATA / "reports"                          # generated PDFs, statistics, per-contract / per-stock tables

@@ -1,6 +1,7 @@
 """Reference data for backtests that need point-in-time lists.
 
     python -m fyers_data.download_reference nifty     # Nifty 50 index 1m, 1 Oct 2021 -> today (replaces index/NIFTY50_1m.csv)
+    python -m fyers_data.download_reference index NSE:NIFTYBANK-INDEX BANKNIFTY --start 2024-07-01   # any index 1m -> index/<NAME>_1m.csv
     python -m fyers_data.download_reference bands [--start 2023-12-01]   # NSE price band list (sec_list) for every equity trading day (resumable)
     python -m fyers_data.download_reference corp --start 2024-11-01 [--end 2026-12-31]   # NSE corporate actions -> reference/corporate_actions.csv
 
@@ -28,17 +29,21 @@ CORP_API = "https://www.nseindia.com/api/corporates-corporateActions?index=equit
 
 
 def nifty():
+    index_1m("NSE:NIFTY50-INDEX", "NIFTY50")
+
+
+def index_1m(symbol: str, name: str, start: date = START):
     rows, end = [], date.today()
-    while end >= START:
-        begin = max(START, end - timedelta(days=CHUNK_DAYS - 1))
-        rows.extend(fetch_chunk("NSE:NIFTY50-INDEX", begin, end))
+    while end >= start:
+        begin = max(start, end - timedelta(days=CHUNK_DAYS - 1))
+        rows.extend(fetch_chunk(symbol, begin, end))
         end = begin - timedelta(days=1)
     df = pd.DataFrame(rows, columns=["ts", "open", "high", "low", "close", "volume"])
     df["datetime"] = pd.to_datetime(df["ts"], unit="s", utc=True).dt.tz_convert("Asia/Kolkata").dt.tz_localize(None)
     df = df.drop(columns="ts").drop_duplicates("datetime").sort_values("datetime")
     INDEX.mkdir(parents=True, exist_ok=True)
-    df[["datetime", "open", "high", "low", "close", "volume"]].to_csv(INDEX / "NIFTY50_1m.csv", index=False)
-    print(f"nifty: {len(df)} candles, {df.datetime.min()} -> {df.datetime.max()}")
+    df[["datetime", "open", "high", "low", "close", "volume"]].to_csv(INDEX / f"{name}_1m.csv", index=False)
+    print(f"{name}: {len(df)} candles, {df.datetime.min()} -> {df.datetime.max()}")
 
 
 def bands(start: str = ""):
@@ -99,11 +104,14 @@ def corp(start: date, end: date):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["nifty", "bands", "corp"])
+    ap.add_argument("what", choices=["nifty", "index", "bands", "corp"])
+    ap.add_argument("args", nargs="*", help="index: Fyers symbol and file name, e.g. NSE:INDIAVIX-INDEX INDIAVIX")
     ap.add_argument("--start", default="", help="bands: only days from this date; corp: first date (YYYY-MM-DD)")
     ap.add_argument("--end", default=str(date.today()), help="corp: last date")
     a = ap.parse_args()
-    if a.what == "corp":
+    if a.what == "index":
+        index_1m(a.args[0], a.args[1], date.fromisoformat(a.start) if a.start else START)
+    elif a.what == "corp":
         corp(date.fromisoformat(a.start), date.fromisoformat(a.end))
     else:
         nifty() if a.what == "nifty" else bands(a.start)

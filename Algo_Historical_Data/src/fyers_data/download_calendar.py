@@ -2,6 +2,7 @@
 
     python -m fyers_data.download_calendar bhav --start 2026-08-26 --end 2026-10-30
     python -m fyers_data.download_calendar bhavopt --start 2024-11-01 --end 2026-10-30
+    python -m fyers_data.download_calendar bhavidx --start 2024-11-01 --end 2026-10-30
     python -m fyers_data.download_calendar contract NSE:WIPRO26NOVFUT NSE:ASTRAL26NOVFUT --start 2026-08-26
 
 bhav: NSE F&O UDiFF bhavcopy for every weekday in the range, futures rows only (STF/IDF). Expired contracts are
@@ -9,6 +10,7 @@ included, but it is one row per contract per day (OHLC, close = last 30 min VWAP
 One file per trading day in fno/bhavcopy/ (resumable; holidays return 404 and are skipped).
 bhavopt: same bhavcopy, STOCK OPTION rows (STO) of the two nearest expiries that traded that day, fewer columns,
 into fno/bhavcopy_opt/ (for option-premium studies: daily OHLC of expired option contracts).
+bhavidx: same bhavcopy, NIFTY / BANKNIFTY INDEX OPTION rows (IDO) of the three nearest expiries, into fno/bhavcopy_idx/.
 contract: Fyers 1m candles of ONE contract (cont_flag=0, not the continuous series) into fno/1m/contracts/.
 Fyers has no expired contracts, so only contracts still listed today can be fetched.
 """
@@ -23,10 +25,11 @@ import requests
 
 from fyers_data.download_fno import CHUNK_DAYS, fetch_chunk
 from fyers_data.download_reference import NSE_UA
-from fyers_data.paths import FNO_BHAV, FNO_BHAV_OPT, FNO_CONTRACTS
+from fyers_data.paths import FNO_BHAV, FNO_BHAV_IDX, FNO_BHAV_OPT, FNO_CONTRACTS
 
 BHAV_URL = "https://nsearchives.nseindia.com/content/fo/BhavCopy_NSE_FO_0_0_0_{:%Y%m%d}_F_0000.csv.zip"
 FUT_TYPES = ("STF", "IDF")
+IDX_OPT_SYMBOLS = ("NIFTY", "BANKNIFTY")
 OPT_COLS = ["TradDt", "TckrSymb", "XpryDt", "StrkPric", "OptnTp", "OpnPric", "HghPric", "LwPric", "ClsPric", "LastPric",
             "UndrlygPric", "SttlmPric", "OpnIntrst", "TtlTradgVol", "TtlNbOfTxsExctd", "NewBrdLotQty"]
 
@@ -39,6 +42,12 @@ def _stock_options(df: pd.DataFrame) -> pd.DataFrame:
     o = df[(df["FinInstrmTp"] == "STO") & (df["TtlTradgVol"] > 0)]
     near2 = o.groupby("TckrSymb")["XpryDt"].transform(lambda x: x.isin(sorted(x.unique())[:2]))
     return o[near2][OPT_COLS]
+
+
+def _index_options(df: pd.DataFrame) -> pd.DataFrame:
+    o = df[(df["FinInstrmTp"] == "IDO") & df["TckrSymb"].isin(IDX_OPT_SYMBOLS) & (df["TtlTradgVol"] > 0)]
+    near3 = o.groupby("TckrSymb")["XpryDt"].transform(lambda x: x.isin(sorted(x.unique())[:3]))
+    return o[near3][OPT_COLS]
 
 
 def bhav(start: date, end: date, folder=FNO_BHAV, keep=_futures):
@@ -92,7 +101,7 @@ def contract(symbols: list[str], start: date, end: date):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["bhav", "bhavopt", "contract"])
+    ap.add_argument("what", choices=["bhav", "bhavopt", "bhavidx", "contract"])
     ap.add_argument("symbols", nargs="*", help="contract: Fyers symbols, e.g. NSE:WIPRO26NOVFUT")
     ap.add_argument("--start", required=True)
     ap.add_argument("--end", default=str(date.today()))
@@ -101,4 +110,5 @@ if __name__ == "__main__":
     if a.what == "contract":
         contract(a.symbols, s, e)
     else:
-        bhav(s, e) if a.what == "bhav" else bhav(s, e, FNO_BHAV_OPT, _stock_options)
+        keep = {"bhav": (FNO_BHAV, _futures), "bhavopt": (FNO_BHAV_OPT, _stock_options), "bhavidx": (FNO_BHAV_IDX, _index_options)}[a.what]
+        bhav(s, e, *keep)
