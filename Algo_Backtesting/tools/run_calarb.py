@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from backtest import calarb  # noqa: E402
 from backtest.calarb_report import names, write_html  # noqa: E402
-from backtest.config import FNO, RESULTS  # noqa: E402
+from backtest.config import FNO, result_dir  # noqa: E402
 from backtest.notify import send, send_document  # noqa: E402
 
 TAG_TRADING, TAG_TECH = "@ayushanand440", "@albert_max"
@@ -106,8 +106,7 @@ def main() -> int:
     ap.add_argument("--no-telegram", action="store_true")
     a = ap.parse_args()
     tell = (lambda m: None) if a.no_telegram else send
-    out = RESULTS / a.name
-    out.mkdir(parents=True, exist_ok=True)
+    out = result_dir(a.name)
     t0 = last = time.time()
     tell(f"CALENDAR ARBITRAGE STUDY STARTED: {', '.join(SYMBOLS)}. Part 1 = Sept buy / Oct sell, 1-29 Sept, NSE closing price (din-wise). "
          "Part 2 = Oct buy / Nov sell, 1-27 Oct, 1 minute. Ginti: same rate (gap 0) aur 0.50+ gap dono taraf.")

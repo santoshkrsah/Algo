@@ -5,10 +5,15 @@
 2. On finish send the report as the HTML file only (no PDF). Tag @ayushanand440 (trading) on results, @albert_max (technical) on errors.
    Any issue or open question while running a backtest goes to Telegram immediately (don't wait for the end): trading issues/questions/assumptions tag @ayushanand440, technical issues (code, data, download, login, errors) tag @albert_max.
    Also keep posting short status updates to Telegram on what Claude is doing (each main step: data download, building/testing code, run started, results) with tools/send_telegram.py.
-3. Report = the interactive HTML dashboard in Algo_Backtesting/src/backtest/assets/ (latest: vol5l_template.html, results/vol5l_2021_2026/report.html): KPI cards, charts, month table, every stock and every trade, and ALWAYS a "Rules" tab (not "Rules used").
+   And EVERY 10 MINUTES while Claude is working (download, coding, testing, running - not only during the backtest run): start
+   Algo_Backtesting/tools/status_heartbeat.py in the background at the start of the work (--status-file in the scratchpad, plus --count-dir / --log for progress),
+   keep the status file's first line updated with the current step, and write "DONE ..." to it at the end to stop the updates.
+3. Report = the interactive HTML dashboard in Algo_Backtesting/src/backtest/assets/ (latest: vol5l_template.html, results/07_vol5l_2021_2026/report.html): KPI cards, charts, month table, every stock and every trade, and ALWAYS a "Rules" tab (not "Rules used").
    The whole report is written in simple Hinglish (easy words), especially the Rules tab. At the bottom of the Rules tab, ALWAYS a "Formulas" card listing every formula used in that backtest (entry, qty, target, SL/trailing, exit fill, slippage, P&L, costs, win rate, profit factor, drawdown, ...).
    The Rules card and the Formulas card each have a one-click "Copy karo" button in the top-right corner that copies that card as plain text.
 4. Almax (@albert_max) has technical skills only; Ayush (@ayushanand440) is the trading expert. Ask trading questions to Ayush.
 
 ## Layout
 - Algo_Historical_Data: downloads data (own .venv). Algo_Backtesting: strategies, engine, results (own .venv). Backtesting only reads ../Algo_Historical_Data/data.
+- Every report folder in Algo_Backtesting/results is numbered in the order it was made: NN_<name> (01_oct_2026 ... 09_stbt_options, next one 10_).
+  Runners get their folder from backtest.config.result_dir(name): a new name gets the next number, a rerun of an existing name reuses its folder. Never create results/<name> directly.

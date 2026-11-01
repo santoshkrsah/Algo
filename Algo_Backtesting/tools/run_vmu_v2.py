@@ -1,7 +1,7 @@
 """VMU Equity V2 (7x volume, fixed 3% SL, no breakeven/trailing): run at 0%, 0.3% and 0.5% slippage, write the report, send it.
 
     python tools/run_vmu_v2.py                                   # prepares the data (reads every day file)
-    python tools/run_vmu_v2.py --cached results/vmu_v3/candidates.pkl   # reuse candidates prepared for the same period
+    python tools/run_vmu_v2.py --cached results/05_vmu_v3/candidates.pkl # reuse candidates prepared for the same period
 """
 import argparse
 import dataclasses
@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import pandas as pd  # noqa: E402
 
 from backtest import vmu  # noqa: E402
-from backtest.config import RESULTS, UNIVERSE_CSV  # noqa: E402
+from backtest.config import UNIVERSE_CSV, result_dir  # noqa: E402
 from backtest.notify import send, send_document  # noqa: E402
 from backtest.vmu_report import totals, write_html_v2  # noqa: E402
 
@@ -83,8 +83,7 @@ def main() -> int:
     ap.add_argument("--no-telegram", action="store_true")
     a = ap.parse_args()
     tell = (lambda m: None) if a.no_telegram else send
-    out = RESULTS / a.name
-    out.mkdir(parents=True, exist_ok=True)
+    out = result_dir(a.name)
     t0 = last = time.time()
     tell(f"VMU V2 BACKTEST STARTED ({a.start} to {a.end}). Volume 7x, fixed 3% SL, slippage 0 / 0.3 / 0.5%. Progress every 10 min.")
 

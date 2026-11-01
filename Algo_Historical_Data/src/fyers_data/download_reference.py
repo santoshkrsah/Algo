@@ -2,9 +2,12 @@
 
     python -m fyers_data.download_reference nifty     # Nifty 50 index 1m, 1 Oct 2021 -> today (replaces index/NIFTY50_1m.csv)
     python -m fyers_data.download_reference bands [--start 2023-12-01]   # NSE price band list (sec_list) for every equity trading day (resumable)
+    python -m fyers_data.download_reference corp --start 2024-11-01 [--end 2026-12-31]   # NSE corporate actions -> reference/corporate_actions.csv
 
 The NSE price band list gives, per day: series (EQ/BE/...), circuit band (2/5/10/20%, "No Band" = stock is in F&O)
 and the GSM stage in Remarks. One file per trading day in reference/price_bands/.
+Corporate actions (NSE website API, needs the cookie from the page first): one row per action with ex-date and subject
+("Dividend - Rs 22 Per Share", "Bonus 1:1", "Face Value Split ..."), fetched month by month.
 """
 import argparse
 import time
@@ -14,12 +17,14 @@ import pandas as pd
 import requests
 
 from fyers_data.download_fno import fetch_chunk
-from fyers_data.paths import EQUITY, INDEX, PRICE_BANDS
+from fyers_data.paths import CORP_ACTIONS, EQUITY, INDEX, PRICE_BANDS
 
 START = date(2021, 10, 1)
 CHUNK_DAYS = 95
 NSE_UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36"}
 BAND_URL = "https://nsearchives.nseindia.com/content/equities/sec_list_{:%d%m%Y}.csv"
+CORP_PAGE = "https://www.nseindia.com/companies-listing/corporate-filings-actions"
+CORP_API = "https://www.nseindia.com/api/corporates-corporateActions?index=equities&from_date={:%d-%m-%Y}&to_date={:%d-%m-%Y}"
 
 
 def nifty():
@@ -62,9 +67,43 @@ def bands(start: str = ""):
     print(f"bands: {len(days) - len(missing)} of {len(days)} days saved; missing: {missing[:20]}{' ...' if len(missing) > 20 else ''}")
 
 
+def corp(start: date, end: date):
+    s = requests.Session()
+    head = {**NSE_UA, "Accept": "application/json, text/plain, */*", "Referer": CORP_PAGE}
+    rows, failed, a = [], [], start.replace(day=1)
+    while a <= end:
+        b = min(end, (a.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1))
+        for attempt in range(4):
+            try:
+                if attempt or not s.cookies:
+                    s.get(CORP_PAGE, headers=NSE_UA, timeout=30)
+                r = s.get(CORP_API.format(a, b), headers=head, timeout=60)
+                if r.status_code == 200 and r.text.startswith("["):
+                    rows.extend(r.json())
+                    break
+            except (requests.RequestException, ValueError):
+                pass
+            time.sleep(3 * (attempt + 1))
+        else:
+            failed.append(f"{a:%Y-%m}")
+        time.sleep(0.5)
+        a = b + timedelta(days=1)
+    df = pd.DataFrame(rows)
+    df["ex_date"] = pd.to_datetime(df.exDate, format="%d-%b-%Y", errors="coerce").dt.strftime("%Y-%m-%d")
+    df = df.rename(columns={"subject": "purpose", "comp": "company", "recDate": "record_date"})
+    df = df[["symbol", "series", "ex_date", "purpose", "company", "record_date", "faceVal"]].drop_duplicates().sort_values(["ex_date", "symbol"])
+    CORP_ACTIONS.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(CORP_ACTIONS, index=False)
+    print(f"corp: {len(df)} actions, {df.ex_date.min()} -> {df.ex_date.max()}, {df.symbol.nunique()} symbols; failed months: {failed}")
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["nifty", "bands"])
-    ap.add_argument("--start", default="", help="bands: only days from this date (YYYY-MM-DD)")
+    ap.add_argument("what", choices=["nifty", "bands", "corp"])
+    ap.add_argument("--start", default="", help="bands: only days from this date; corp: first date (YYYY-MM-DD)")
+    ap.add_argument("--end", default=str(date.today()), help="corp: last date")
     a = ap.parse_args()
-    nifty() if a.what == "nifty" else bands(a.start)
+    if a.what == "corp":
+        corp(date.fromisoformat(a.start), date.fromisoformat(a.end))
+    else:
+        nifty() if a.what == "nifty" else bands(a.start)

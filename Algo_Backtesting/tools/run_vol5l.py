@@ -13,7 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from backtest import vol5l  # noqa: E402
-from backtest.config import RESULTS  # noqa: E402
+from backtest.config import result_dir  # noqa: E402
 from backtest.notify import send, send_document  # noqa: E402
 from backtest.vmu_report import totals  # noqa: E402
 from backtest.vol5l_report import write_html  # noqa: E402
@@ -107,8 +107,7 @@ def main() -> int:
     ap.add_argument("--no-telegram", action="store_true")
     a = ap.parse_args()
     tell = (lambda m: None) if a.no_telegram else send
-    out = RESULTS / a.name
-    out.mkdir(parents=True, exist_ok=True)
+    out = result_dir(a.name)
     t0 = last = time.time()
     tell(f"VOL 5L + 7% TARGET BACKTEST STARTED ({a.start} to {a.end}). 15m first candle green & vol >= 5 lakh -> BUY, "
          "SL 3% -> breakeven at +2% -> trail 2%, target 7%. Slippage 0 / 0.3 / 0.5%. Progress every 10 min.")

@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from backtest.config import DATA, EQUITY, RESULTS  # noqa: E402
+from backtest.config import DATA, EQUITY, result_dir  # noqa: E402
 from backtest.data import trading_days  # noqa: E402
 
 CAPITAL, PER_TRADE_MARGIN, LEVERAGE, MAX_TRADES = 70_000, 35_000, 5, 2
@@ -171,8 +171,7 @@ def main():
     ap.add_argument("--end", default="2026-10-23")
     ap.add_argument("--name", default="gapvol_2026")
     a = ap.parse_args()
-    out = RESULTS / a.name
-    out.mkdir(parents=True, exist_ok=True)
+    out = result_dir(a.name)
     raw = collect_trades(a.start, a.end)
     raw.to_csv(out / "raw_trades.csv", index=False)
     for s in SLIPPAGES:

@@ -12,6 +12,7 @@ DATA = ROOT / "data"
 FNO = DATA / "fno"                                  # fno/<1m|5m|15m|30m|60m>/<futures|options>/<SYMBOL>.csv
 FNO_CONTRACTS = FNO / "1m" / "contracts"            # one live contract each, NOT continuous (cont_flag=0)
 FNO_BHAV = FNO / "bhavcopy"                         # bhavcopy/<YYYY-MM-DD>.csv  NSE F&O daily, futures rows only
+FNO_BHAV_OPT = FNO / "bhavcopy_opt"                 # bhavcopy_opt/<YYYY-MM-DD>.csv  NSE stock option rows, 2 nearest expiries
 EQUITY = DATA / "equity"                            # equity/<YYYY-MM-DD>.csv  (all stocks, all timeframes)
 REFERENCE = DATA / "reference"                      # lists that define what is downloaded
 REPORTS = DATA / "reports"                          # generated PDFs, statistics, per-contract / per-stock tables
@@ -23,3 +24,4 @@ SELECTED_CONTRACTS = REFERENCE / "selected_contracts.csv"
 
 INDEX = DATA / "index"                              # index/NIFTY50_1m.csv
 PRICE_BANDS = REFERENCE / "price_bands"             # price_bands/<YYYY-MM-DD>.csv  NSE sec_list: series, band, GSM remark
+CORP_ACTIONS = REFERENCE / "corporate_actions.csv"  # NSE corporate actions (equities): symbol, ex-date, subject (dividend, bonus, split ...)

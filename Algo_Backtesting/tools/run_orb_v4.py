@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import pandas as pd  # noqa: E402
 
 from backtest import orb  # noqa: E402
-from backtest.config import RESULTS  # noqa: E402
+from backtest.config import result_dir  # noqa: E402
 from backtest.notify import send, send_document  # noqa: E402
 from backtest.orb_report import write_html  # noqa: E402
 from backtest.vmu_report import totals  # noqa: E402
@@ -64,8 +64,7 @@ def main() -> int:
     ap.add_argument("--no-telegram", action="store_true")
     a = ap.parse_args()
     tell = (lambda m: None) if a.no_telegram else send
-    out = RESULTS / a.name
-    out.mkdir(parents=True, exist_ok=True)
+    out = result_dir(a.name)
     t0 = last = time.time()
     tell("VMU ORB V4 BACKTEST STARTED. TRAIN 2024-2025 (54 combinations), then TEST Jan-Oct 2026 with the chosen one. Progress every 10 min.")
 

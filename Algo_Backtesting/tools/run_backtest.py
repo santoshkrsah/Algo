@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from backtest.config import RESULTS  # noqa: E402
+from backtest.config import result_dir  # noqa: E402
 from backtest.engine import run  # noqa: E402
 from backtest.notify import send, send_document  # noqa: E402
 import pandas as pd  # noqa: E402
@@ -41,8 +41,7 @@ def main() -> int:
     ap.add_argument("--from-trades", action="store_true", help="rebuild the report from an existing trades.csv")
     a = ap.parse_args()
     tell = (lambda m: None) if a.no_telegram else send
-    out = RESULTS / a.name
-    out.mkdir(parents=True, exist_ok=True)
+    out = result_dir(a.name)
     p = Params()
     title = f"Fibonacci R3 first-candle breakout ({a.name})"
     sub = (f"{a.start} to {a.end} | NSE equity intraday long | 15m | Rs {p.trade_value / 1e7:g} cr per trade, max "
