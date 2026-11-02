@@ -194,7 +194,8 @@ function render(){
     + lrows.map(r => row([r[0], r[1], cs(r[2]), rs(-r[3]), cs(r[4])])).join("") + row(["<b>Kul</b>", "", "<b>" + cs(lt[0]) + "</b>", "<b>" + rs(-lt[1]) + "</b>", "<b>" + cs(lt[2]) + "</b>"]) + "</tbody>";
   // money
   const g = sum(rows.map(r => r.gross)), sl = sum(rows.map(r => r.slip)), kc = sum(rows.map(r => r.costs));
-  $("#brk").innerHTML = [["Bina slippage, bina kharche ka profit", rs(g + sl, true)], ["Slippage (" + (D.slip_txt || "") + ")", rs(-sl, true)], ["Gross (slippage ke baad)", rs(g, true)],
+  const slipTxt = (V.chips.find(c => c[0] === "Slippage") || [0, D.slip_txt || ""])[1];
+  $("#brk").innerHTML = [["Bina slippage, bina kharche ka profit", rs(g + sl, true)], ["Slippage (" + slipTxt + ")", rs(-sl, true)], ["Gross (slippage ke baad)", rs(g, true)],
     ["Kharcha (brokerage " + rs(sum(rows.map(r => r.c_brokerage))) + ", STT " + rs(sum(rows.map(r => r.c_stt))) + ", exchange " + rs(sum(rows.map(r => r.c_exch))) + ", stamp " + rs(sum(rows.map(r => r.c_stamp))) + ", GST " + rs(sum(rows.map(r => r.c_gst))) + ")", rs(-kc, true)],
     ["Net profit", rs(tot, true)], ["Ek din pe: bina kharche / slippage / kharcha", `${rs(T.days ? (g + sl) / T.days : null, true)} / ${rs(T.days ? -sl / T.days : null, true)} / ${rs(T.days ? -kc / T.days : null, true)}`]]
     .map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");

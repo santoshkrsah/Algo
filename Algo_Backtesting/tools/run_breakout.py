@@ -105,11 +105,11 @@ FORMULAS = [
     ["Stock kharcha", "STT 0.1% x (buy + sell) + exchange 0.00307% + SEBI 0.0001% + stamp 0.015% x buy + GST 18% x (exchange + SEBI) + DP Rs 15.34 + GST"],
     ["B: entry din", "pehla din (breakout se 15 din ke andar) jab trading din(expiry) - trading din(aaj) 2 se 7 ho aur close >= support"],
     ["B: strike", "max(strike) jahan strike <= support (asli price me) aur us din trade hua"],
-    ["B: lots", "floor(capital x 1% / (premium fill x lot size)); margin = 20% x strike x lot x lots"],
+    ["B: lots", "floor(capital x 1% / (premium x lot size)); margin = 20% x strike x lot x lots"],
     ["B: fill", "sell = premium x (1 - 2%), buy back = price x (1 + 2%)"], ["B: P&L", "qty x (sell fill - buy fill) - kharcha"],
     ["Option kharcha", "Rs 20 x orders + STT sell x 0.1% (1 Apr 2026 se 0.15%) + exchange 0.03503% + SEBI 0.0001% + stamp 0.003% x buy + GST 18% x (brokerage + exchange + SEBI)"],
     ["B: return", "premium pe = net / premium; margin pe = net / margin; notional pe = net / (strike x qty)"],
-    ["R multiple", "A: net / (qty x (entry fill - stop)); B: net / (premium fill x qty)"], ["Win rate", "net > 0 wale trade / kul trade x 100"],
+    ["R multiple", "A: net / (qty x (entry fill - stop)); B: net / (premium x qty)"], ["Win rate", "net > 0 wale trade / kul trade x 100"],
     ["Profit factor", "jeete trades ka kul profit / hare trades ka kul loss"], ["Max drawdown", "exit din ke hisaab se kul net P&L ki curve ka sabse bada gir (peak se)"],
     ["Mahine ka average return", "net / Rs 10,00,000 / mahine x 100 (compounding nahi)"], ["Return %", "net / Rs 10,00,000 x 100"],
     ["5 din tika (study)", "breakout ke baad agle 5 din har close >= resistance"],
@@ -145,19 +145,29 @@ def peak_open(t: pd.DataFrame, col: str, cal: list) -> tuple[float, int]:
     return float(v.max()), int(n.max())
 
 
+def inr(v: float) -> str:
+    """Rs 12,34,567 (Indian grouping)."""
+    s = f"{abs(v):.0f}"
+    head, groups = s[:-3], [s[-3:]]
+    while head:
+        groups.insert(0, head[-2:])
+        head = head[:-2]
+    return ("-" if v < 0 else "") + "Rs " + ",".join(groups)
+
+
 def inv_of(typ: str, t: pd.DataFrame, p: B.Params, cal: list) -> list:
     if typ == "A":
         pk, n = peak_open(t, "notional", cal)
-        return [["Shuruaati capital", f"Rs {p.capital:,.0f} (fixed, compounding nahi)"], ["Risk har trade", f"{p.risk * 100:g}% = Rs {p.capital * p.risk:,.0f}"],
+        return [["Shuruaati capital", f"{inr(p.capital)} (fixed, compounding nahi)"], ["Risk har trade", f"{p.risk * 100:g}% = {inr(p.capital * p.risk)}"],
                 ["Qty ka rule", "capital x risk / (entry - stop), ek stock me max 50% capital"], ["Max khule trade", f"jitna cash ho (leverage nahi); sabse zyada ek saath: {n}"],
-                ["Average / sabse badi position", f"Rs {t.notional.mean():,.0f} / Rs {t.notional.max():,.0f}" if len(t) else "n/a"],
-                ["Sabse zyada paisa ek din me laga", f"Rs {pk:,.0f} ({pk / p.capital * 100:.0f}% capital)"]]
+                ["Average / sabse badi position", f"{inr(t.notional.mean())} / {inr(t.notional.max())}" if len(t) else "n/a"],
+                ["Sabse zyada paisa ek din me laga", f"{inr(pk)} ({pk / p.capital * 100:.0f}% capital)"]]
     pk, n = peak_open(t, "margin", cal)
-    return [["Shuruaati capital", f"Rs {p.capital:,.0f} (fixed, compounding nahi)"], ["Risk har trade", f"{p.risk * 100:g}% = Rs {p.capital * p.risk:,.0f} (andaza: premium double)"],
+    return [["Shuruaati capital", f"{inr(p.capital)} (fixed, compounding nahi)"], ["Risk har trade", f"{p.risk * 100:g}% = {inr(p.capital * p.risk)} (andaza: premium double)"],
             ["Lots ka rule", "capital x risk / (premium x lot size)"], ["Margin", f"{p.margin_pct * 100:g}% x strike x qty (andaza); sab milake capital tak"],
-            ["Max khule puts ek saath", str(n)], ["Average premium mila / trade", f"Rs {t.premium_rs.mean():,.0f}" if len(t) else "n/a"],
-            ["Average / sabse bada margin", f"Rs {t.margin.mean():,.0f} / Rs {t.margin.max():,.0f}" if len(t) else "n/a"],
-            ["Sabse zyada margin ek din me", f"Rs {pk:,.0f} ({pk / p.capital * 100:.0f}% capital)"]]
+            ["Max khule puts ek saath", str(n)], ["Average premium mila / trade", inr(t.premium_rs.mean()) if len(t) else "n/a"],
+            ["Average / sabse bada margin", f"{inr(t.margin.mean())} / {inr(t.margin.max())}" if len(t) else "n/a"],
+            ["Sabse zyada margin ek din me", f"{inr(pk)} ({pk / p.capital * 100:.0f}% capital)"]]
 
 
 def check_row(label: str, typ: str, t: pd.DataFrame, months: int, split: str, capital: float) -> list:

@@ -158,5 +158,25 @@
   "pf": 2.4,
   "trades": 472,
   "verdict": "profit"
+ },
+ "18_breakout_put_selling": {
+  "name": "Breakout + Put Selling (Mitesh Patel)",
+  "type": "Swing",
+  "period": "Dec 2021 - Oct 2026",
+  "result": "Top-50 F&O volume breakout. A (stock long): 110 trade, win 37%, kharche ke baad loss (2024-26 me bhi loss). B (put SELL, Nov 2024 se): 14 trade, win 79%, +Rs 36k par ek trade -31k. 80% daawa: sirf 60% breakout 5 din tike",
+  "net": -82895,
+  "pf": 0.86,
+  "trades": 110,
+  "verdict": "loss"
+ },
+ "19_straddle_risk_slip0": {
+  "name": "Straddle + Risk Layer (Slippage 0)",
+  "type": "Options",
+  "period": "Dec 2024 - Oct 2026",
+  "result": "472 din, win 70% (report 17 ki extra-check row 'Slippage 0': 9:20 NIFTY weekly ATM straddle SELL + leg SL / din ka loss limit / trailing, kharcha chalu; best case, result dekh ke chuna, model option price)",
+  "net": 3844108,
+  "pf": 2.73,
+  "trades": 472,
+  "verdict": "profit"
  }
 }

@@ -1,0 +1,38 @@
+Straddle + risk layer, slippage 0: 472 din, win 70%, net Rs 3,844,108 (128.1%), PF 2.73, max DD Rs -98,940, sabse bura din Rs -59,750 | fit Rs 2,054,968, verify Rs 1,789,140
+Sirf straddle, slippage 0: 472 din, win 69%, net Rs 3,317,183 (110.6%), PF 2.09, max DD Rs -273,225, sabse bura din Rs -131,489 | fit Rs 2,035,145, verify Rs 1,282,038
+Report 17 ka main test (slippage 0.5%): 472 din, win 68%, net Rs 3,372,696 (112.4%), PF 2.40, max DD Rs -115,810, sabse bura din Rs -61,484 | fit Rs 1,828,052, verify Rs 1,544,645
+BANKNIFTY monthly: risk layer, slippage 0: 472 din, win 68%, net Rs 3,285,142 (109.5%), PF 2.46, max DD Rs -126,131, sabse bura din Rs -59,873 | fit Rs 1,641,320, verify Rs 1,643,821
+BANKNIFTY monthly: sirf straddle, slippage 0: 472 din, win 68%, net Rs 3,293,932 (109.8%), PF 2.36, max DD Rs -233,224, sabse bura din Rs -114,936 | fit Rs 1,747,013, verify Rs 1,546,919
+
+Layer (main): core Rs 3,980,035, avg Rs 0, tac Rs 0, hedge Rs 0, slippage Rs 0, kharcha Rs 135,927
+
+Checks:
+Main test: straddle + risk layer (slippage 0): 472 din, net Rs 3,844,108, PF 2.73, worst Rs -59,750, fit Rs 2,054,968, verify Rs 1,789,140
+Leg SL band: 472 din, net Rs 3,600,677, PF 2.33, worst Rs -54,526, fit Rs 2,105,376, verify Rs 1,495,300
+Din ka loss limit band: 472 din, net Rs 3,736,925, PF 2.60, worst Rs -137,974, fit Rs 1,946,838, verify Rs 1,790,086
+Trailing band: 472 din, net Rs 3,866,587, PF 2.74, worst Rs -59,750, fit Rs 2,077,445, verify Rs 1,789,142
+Poori risk layer band (sirf straddle bechna): 472 din, net Rs 3,317,183, PF 2.09, worst Rs -131,489, fit Rs 2,035,145, verify Rs 1,282,038
+Leg SL 50%: 472 din, net Rs 3,912,422, PF 2.93, worst Rs -56,711, fit Rs 2,020,029, verify Rs 1,892,394
+Leg SL 100%: 472 din, net Rs 3,445,244, PF 2.37, worst Rs -61,405, fit Rs 1,777,053, verify Rs 1,668,191
+Din ka loss limit 1%: 472 din, net Rs 3,747,755, PF 2.63, worst Rs -49,980, fit Rs 2,085,980, verify Rs 1,661,776
+Din ka loss limit 2%: 472 din, net Rs 3,855,910, PF 2.74, worst Rs -71,385, fit Rs 2,061,894, verify Rs 1,794,017
+Trailing 30% pe chalu: 472 din, net Rs 3,769,311, PF 2.69, worst Rs -59,750, fit Rs 1,990,042, verify Rs 1,779,269
+Trailing 70% pe chalu: 472 din, net Rs 3,866,587, PF 2.74, worst Rs -59,750, fit Rs 2,077,445, verify Rs 1,789,142
+Stop ka confirm nahi (1 minute me touch pe): 472 din, net Rs 3,990,193, PF 2.96, worst Rs -48,162, fit Rs 2,057,713, verify Rs 1,932,480
+Strike adjustment chalu (ek leg 200 pt): 472 din, net Rs 3,844,108, PF 2.73, worst Rs -59,750, fit Rs 2,054,968, verify Rs 1,789,140
+Tactical buy chalu: 472 din, net Rs 3,860,694, PF 2.61, worst Rs -59,134, fit Rs 2,051,723, verify Rs 1,808,971
+Delta scalping chalu: 472 din, net Rs 3,426,490, PF 2.51, worst Rs -59,750, fit Rs 1,829,031, verify Rs 1,597,460
+Drawdown scaling chalu: 472 din, net Rs 3,844,108, PF 2.73, worst Rs -59,750, fit Rs 2,054,968, verify Rs 1,789,140
+Pause chalu (gap / VIX / Budget): 446 din, net Rs 3,363,480, PF 2.67, worst Rs -59,750, fit Rs 1,954,947, verify Rs 1,408,534
+Averaging chalu: 472 din, net Rs 3,835,921, PF 2.69, worst Rs -59,750, fit Rs 2,076,353, verify Rs 1,759,568
+Report 16 ka main test (saare layer chalu): 446 din, net Rs 2,786,327, PF 2.26, worst Rs -59,134, fit Rs 1,665,307, verify Rs 1,121,020
+Entry 9:15 pe: 472 din, net Rs 3,263,972, PF 2.29, worst Rs -113,495, fit Rs 1,762,010, verify Rs 1,501,962
+Agli weekly expiry: 472 din, net Rs 2,268,424, PF 1.99, worst Rs -50,468, fit Rs 1,294,635, verify Rs 973,790
+Expiry tak hold (har din 3:15 pe square-off nahi): 472 din, net Rs 2,296,065, PF 1.88, worst Rs -117,988, fit Rs 1,226,949, verify Rs 1,069,115
+Slippage 0 (main test): 472 din, net Rs 3,844,108, PF 2.73, worst Rs -59,750, fit Rs 2,054,968, verify Rs 1,789,140
+Slippage option 0.1%, futures 0.01%: 472 din, net Rs 3,755,089, PF 2.66, worst Rs -60,097, fit Rs 2,007,730, verify Rs 1,747,359
+Slippage option 0.25%, futures 0.01%: 472 din, net Rs 3,588,126, PF 2.53, worst Rs -60,617, fit Rs 1,938,537, verify Rs 1,649,589
+Slippage option 0.5%, futures 0.02% (report 17): 472 din, net Rs 3,372,696, PF 2.40, worst Rs -61,484, fit Rs 1,828,052, verify Rs 1,544,645
+Slippage option 1%, futures 0.05%: 472 din, net Rs 2,928,792, PF 2.14, worst Rs -55,795, fit Rs 1,587,507, verify Rs 1,341,284
+BANKNIFTY: straddle + risk layer: 472 din, net Rs 3,285,142, PF 2.46, worst Rs -59,873, fit Rs 1,641,320, verify Rs 1,643,821
+BANKNIFTY: sirf straddle: 472 din, net Rs 3,293,932, PF 2.36, worst Rs -114,936, fit Rs 1,747,013, verify Rs 1,546,919

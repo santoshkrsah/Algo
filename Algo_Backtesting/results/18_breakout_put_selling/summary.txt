@@ -1,0 +1,54 @@
+A (poora): 110 trade (1.9/mahina), win 37%, net Rs -82,895 (-8.3%, -0.14%/mahina), PF 0.86, avg R -0.12, max DD Rs -207,478, sabse bura trade Rs -21,213 | pehla hissa Rs 83,655, doosra Rs -166,550
+B put sell: 14 trade (0.6/mahina), win 79%, net Rs 36,404 (3.6%, 0.15%/mahina), PF 1.79, avg R 0.32, max DD Rs -32,966, sabse bura trade Rs -31,032 | pehla hissa Rs 4,622, doosra Rs 31,782
+A (Nov 2024 se): 36 trade (1.5/mahina), win 19%, net Rs -166,550 (-16.7%, -0.69%/mahina), PF 0.36, avg R -0.58, max DD Rs -190,436, sabse bura trade Rs -21,213 | pehla hissa Rs -84,812, doosra Rs -81,738
+B return: premium pe 34.6%, margin pe 0.6%, notional pe 0.13% (kul net / kul premium, margin, notional)
+Study: 218 breakout, 5 din tike 60%, A jeeta 37%
+
+Checks:
+A Main test: 110 trade, net Rs -82,895, PF 0.86, avg R -0.12, fit Rs 83,655, verify Rs -166,550
+B Main test: 14 trade, net Rs 36,404, PF 1.79, avg R 0.32, fit Rs 4,622, verify Rs 31,782
+A Base 40 din: 25 trade, net Rs -606, PF 0.99, avg R -0.02, fit Rs 31,898, verify Rs -32,504
+A Base 60 din: 8 trade, net Rs -499, PF 0.98, avg R -0.01, fit Rs 11,619, verify Rs -12,118
+A Range height 8% tak: 42 trade, net Rs -103,870, PF 0.57, avg R -0.28, fit Rs -21,332, verify Rs -82,537
+A Range height 15% tak: 122 trade, net Rs -83,151, PF 0.87, avg R -0.13, fit Rs 53,706, verify Rs -136,858
+A Volume 1.5x: 148 trade, net Rs -132,682, PF 0.83, avg R -0.15, fit Rs 150,131, verify Rs -282,813
+B Volume 1.5x: 23 trade, net Rs -77,328, PF 0.55, avg R -0.41, fit Rs -76,219, verify Rs -1,110
+A Volume 3x: 57 trade, net Rs -27,516, PF 0.91, avg R -0.05, fit Rs -14,249, verify Rs -13,267
+B Volume 3x: 10 trade, net Rs 36,651, PF 2.60, avg R 0.42, fit Rs 14,388, verify Rs 22,263
+A Chhoti candle filter band: 117 trade, net Rs -103,010, PF 0.84, avg R -0.13, fit Rs 75,110, verify Rs -178,120
+A Accumulation (volume badhna) filter band: 159 trade, net Rs -99,552, PF 0.88, avg R -0.09, fit Rs 32,933, verify Rs -132,486
+A Breakout candle filter band: 149 trade, net Rs -180,339, PF 0.79, avg R -0.14, fit Rs -30,495, verify Rs -149,844
+A Morning Star filter chalu: 13 trade, net Rs -4,053, PF 0.94, avg R -0.11, fit Rs 3,465, verify Rs -7,517
+A Mahine me max 3 trade: 97 trade, net Rs -22,642, PF 0.95, avg R -0.07, fit Rs 118,593, verify Rs -141,235
+A Mahine ki limit nahi: 122 trade, net Rs -127,231, PF 0.81, avg R -0.15, fit Rs 39,319, verify Rs -166,550
+B Mahine ki limit nahi: 14 trade, net Rs 36,404, PF 1.79, avg R 0.32, fit Rs 4,622, verify Rs 31,782
+A Entry breakout din ke close pe: 111 trade, net Rs -24,485, PF 0.96, avg R -0.02, fit Rs 65,776, verify Rs -90,260
+A Stop breakout candle ke low ke neeche: 112 trade, net Rs -122,821, PF 0.77, avg R -0.10, fit Rs -29,035, verify Rs -93,787
+A Target 10%: 106 trade, net Rs -177,343, PF 0.73, avg R -0.25, fit Rs -48,592, verify Rs -128,751
+A Target 1:3: 108 trade, net Rs -38,691, PF 0.94, avg R -0.10, fit Rs 96,788, verify Rs -135,479
+A Time stop 5 din: 112 trade, net Rs -29,608, PF 0.94, avg R -0.06, fit Rs 121,319, verify Rs -150,926
+A Time stop 20 din: 110 trade, net Rs -55,921, PF 0.92, avg R -0.10, fit Rs 167,648, verify Rs -223,568
+A Trailing SL 5 din ka low (target nahi, max 60 din): 104 trade, net Rs -132,172, PF 0.79, avg R -0.21, fit Rs 71,081, verify Rs -203,253
+A Trailing SL 10 din ka low (target nahi, max 60 din): 101 trade, net Rs -186,180, PF 0.72, avg R -0.27, fit Rs 27,940, verify Rs -214,120
+A Add-on: naya high bane to 50% aur, stop entry pe: 107 trade, net Rs -164,124, PF 0.72, avg R -0.22, fit Rs 9,532, verify Rs -173,656
+A Risk 0.5% / trade: 112 trade, net Rs -59,395, PF 0.82, avg R -0.11, fit Rs 43,095, verify Rs -102,489
+A Slippage 0: 110 trade, net Rs -45,258, PF 0.92, avg R -0.08, fit Rs 109,325, verify Rs -154,583
+A Slippage 2x (0.1%): 110 trade, net Rs -119,648, PF 0.80, avg R -0.15, fit Rs 58,715, verify Rs -178,363
+B Expiry 5 din door: 12 trade, net Rs 11,599, PF 1.19, avg R 0.21, fit Rs 1,483, verify Rs 10,117
+B Expiry 10 din door: 13 trade, net Rs 51,169, PF 2.55, avg R 0.54, fit Rs 141, verify Rs 51,028
+B Strike: support se 1 strike neeche: 15 trade, net Rs 60,510, PF 3.10, avg R 0.47, fit Rs 24,502, verify Rs 36,008
+B Strike: 5% OTM: 10 trade, net Rs 53,759, PF 4.44, avg R 0.63, fit Rs 14,140, verify Rs 39,619
+B SL: premium 2x: 14 trade, net Rs 48,330, PF 2.21, avg R 0.41, fit Rs 16,548, verify Rs 31,782
+B SL: loss 1.5x premium: 14 trade, net Rs 48,330, PF 2.21, avg R 0.41, fit Rs 16,548, verify Rs 31,782
+B 50% premium kamate hi band: 14 trade, net Rs 7,242, PF 1.16, avg R 0.05, fit Rs -7,487, verify Rs 14,729
+B 70% premium kamate hi band: 14 trade, net Rs 20,264, PF 1.44, avg R 0.18, fit Rs -1,687, verify Rs 21,951
+B Risk 0.5% / trade: 8 trade, net Rs 12,515, PF 1.94, avg R 0.43, fit Rs 2,533, verify Rs 9,982
+B Slippage 0: 14 trade, net Rs 39,881, PF 1.89, avg R 0.35, fit Rs 6,666, verify Rs 33,214
+B Slippage 2x (premium ka 4%): 14 trade, net Rs 32,927, PF 1.68, avg R 0.29, fit Rs 2,578, verify Rs 30,349
+
+Study:
+1.5x - 2x: 83 breakout, tike 54%, 10 din return -0.31%, A win 36%, avg R -0.20
+2x - 3x: 80 breakout, tike 55%, 10 din return 0.67%, A win 38%, avg R -0.12
+3x - 5x: 44 breakout, tike 75%, 10 din return 0.89%, A win 37%, avg R 0.04
+5x se zyada: 11 breakout, tike 73%, 10 din return 1.87%, A win 50%, avg R 0.27
+Saare (1.5x+): 218 breakout, tike 60%, 10 din return 0.40%, A win 37%, avg R -0.10

@@ -390,7 +390,7 @@ def size_b(t: pd.DataFrame, p: Params) -> pd.DataFrame:
         if any(o[1] == r.symbol for o in open_pos):
             continue
         sell = r.prem * (1 - p.opt_slip)
-        risk_lot = sell * r.lot
+        risk_lot = r.prem * r.lot                  # sized on the quoted premium, so slippage does not change the lots
         lots = int(p.capital * p.risk // risk_lot)
         m_lot = p.margin_pct * r.strike * r.lot
         lots = min(lots, int((p.capital - sum(o[2] for o in open_pos)) // m_lot))

@@ -276,7 +276,7 @@ def run(args, status, cfg: dict) -> int:
     subs = {k: sub_of(labels[k], p) for k, p in params.items()}
     invs = {k: inv_of(p) for k, p in params.items()}
     write_html(out / "report.html", runs, labels, chips, subs, invs, "main", base.capital, base.deploy, cfg["rules"], cfg["notes"], checks, cfg["formulas"], data_info, series, prem,
-               [START, END], "NSE index option bhavcopy (daily) + Fyers 1-min index / VIX; option ka din ke andar ka price model", cfg["settings"], SPLIT, "0.5% option, 0.02% futures",
+               [START, END], "NSE index option bhavcopy (daily) + Fyers 1-min index / VIX; option ka din ke andar ka price model", cfg["settings"], SPLIT, cfg.get("slip_txt", "0.5% option, 0.02% futures"),
                title=title, check_hint=cfg["check_hint"])
     for k, f in runs.items():
         f.drop(columns=["events"]).to_csv(out / f"days_{k}.csv", index=False)
