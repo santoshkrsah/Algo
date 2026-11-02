@@ -12,6 +12,7 @@ dependencies = [
     "pandas>=2.2",
     "python-dotenv>=1.0",
     "matplotlib>=3.8",
+    "pyarrow>=14",                 # Parquet store (fyers_data.store / backtest.fast)
 ]
 
 [tool.setuptools.packages.find]

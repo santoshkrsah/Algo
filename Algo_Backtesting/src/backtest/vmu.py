@@ -13,6 +13,7 @@ import pandas as pd
 
 from backtest.config import DATA, EQUITY
 from backtest.data import COLUMNS, trading_days
+from backtest import fast
 
 NIFTY_CSV = DATA / "index" / "NIFTY50_1m.csv"
 FUT_DIR = DATA / "fno" / "1m" / "futures"
@@ -81,7 +82,7 @@ def prepare(start: str, end: str, on_day: Callable[[int, int, int], None] | None
     cands: list[Cand] = []
 
     for i, day in enumerate(warm + days):
-        df = pd.read_csv(EQUITY / f"{day}.csv", usecols=COLUMNS, parse_dates=["datetime"])
+        df = fast.read_day(day, ("1m",), parse_dates=True)
         df = df[df["timeframe"] == "1m"]
         tod = df["datetime"] - pd.Timestamp(day)
         sig = df[(tod >= T0) & (tod < T_SIG_END)]

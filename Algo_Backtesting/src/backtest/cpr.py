@@ -20,6 +20,7 @@ import pandas as pd
 
 from backtest.config import DATA, EQUITY
 from backtest.data import COLUMNS, trading_days
+from backtest import fast
 
 BANDS = DATA / "reference" / "price_bands"   # NSE sec_list per day; "No Band" = stock has F&O (ETFs are not in our data)
 T_OPEN = 9 * 60 + 15
@@ -156,7 +157,7 @@ def _simulate(day, sym, side, g, sig) -> tuple[dict, list[dict]]:
 
 def read_day(day: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Daily H/L/C of every stock (+ the 9:25 -> day move of F&O stocks), loose candidates and their trade results."""
-    df = pd.read_csv(EQUITY / f"{day}.csv", usecols=COLUMNS)
+    df = fast.read_day(day, ("1m",))
     df = df[df.timeframe == "1m"].copy()
     codes, uniq = pd.factorize(df.datetime)                      # ~375 distinct times a day: parse each once
     df["m"] = np.array([int(u[11:13]) * 60 + int(u[14:16]) for u in uniq])[codes]

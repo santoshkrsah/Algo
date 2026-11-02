@@ -58,6 +58,19 @@ Run from the project folder with the virtual environment active.
 
 The equity downloader saves progress after every batch of 25 stocks. If it stops, run it again and it continues. When a full run finishes it merges the batches into daily files, builds the summary PDF and sends it to Telegram (if configured).
 
+### Keeping equity data current + the fast store
+
+| Task | Command |
+|---|---|
+| Add the missing days only (one request per stock, ~10 min; then builds the store) | `python -m fyers_data.update_equity` (`--dry-run` shows the plan, `--nifty` also refreshes the Nifty file) |
+| Build / refresh the Parquet store (first time ~10-20 min, then only new days) | `python -m fyers_data.store build` |
+| Prove the store returns the same candles as the CSVs | `python -m fyers_data.store verify --days 5` |
+| Days, stocks, size on disk | `python -m fyers_data.store info` |
+| Bad prints and split/bonus jumps -> `data/store/health/` (`--apply` adds matching NSE splits to `adjustments.csv`) | `python -m fyers_data.store health` |
+| Check pyarrow etc. on a tiny synthetic data set | `python -m fyers_data.store selftest` |
+
+`update_equity` compares the overlapping day with the saved candles: if Fyers re-adjusted a stock after a split/bonus, the factor goes to `data/store/adjustments.csv` and the backtest readers apply it. The store (`data/store/`) is a cache of the daily CSVs - delete it any time and run `store build` again. Layout and columns: see the docstring of `src/fyers_data/store.py`.
+
 ## Data format
 
 Equity daily files: `symbol, timeframe, datetime, open, high, low, close, volume`, sorted by timeframe (1m first), symbol, time.

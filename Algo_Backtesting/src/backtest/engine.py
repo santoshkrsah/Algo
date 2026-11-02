@@ -11,12 +11,13 @@ import pandas as pd
 from backtest.config import EQUITY, UNIVERSE_CSV
 from backtest.data import COLUMNS, trading_days
 from backtest.strategy import Params, costs, fib_r3
+from backtest import fast
 
 FIRST_CANDLE = pd.Timedelta(hours=9, minutes=15)
 
 
 def _read_day(day: str) -> pd.DataFrame:
-    df = pd.read_csv(EQUITY / f"{day}.csv", usecols=COLUMNS, parse_dates=["datetime"])
+    df = fast.read_day(day, ("15m", "1m"), parse_dates=True)
     return df[df["timeframe"].isin(["15m", "1m"])]
 
 

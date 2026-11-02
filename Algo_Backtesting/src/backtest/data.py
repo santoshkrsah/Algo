@@ -14,6 +14,9 @@ COLUMNS = ["symbol", "timeframe", "datetime", "open", "high", "low", "close", "v
 def trading_days(start=None, end=None) -> list[str]:
     """Dates (YYYY-MM-DD) that have a data file, optionally limited to start..end."""
     days = sorted(p.stem for p in EQUITY.glob("????-??-??.csv"))
+    if not days:                        # CSVs moved away to save disk -> days of the fast store
+        from backtest import fast
+        days = fast.days()
     if start:
         days = [d for d in days if d >= str(pd.Timestamp(start).date())]
     if end:
@@ -25,6 +28,9 @@ def load_equity(symbol: str | list[str], timeframe: str, start=None, end=None) -
     """Candles for one symbol (or a list) on one timeframe. Index = datetime; 'symbol' column kept."""
     if timeframe not in TIMEFRAMES:
         raise ValueError(f"timeframe must be one of {TIMEFRAMES}")
+    from backtest import fast
+    if fast.available():                # per-stock files: seconds instead of reading every daily CSV
+        return fast.load_equity(symbol, timeframe, start, end)
     symbols = {symbol} if isinstance(symbol, str) else set(symbol)
     parts = []
     for day in trading_days(start, end):
