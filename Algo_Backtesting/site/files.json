@@ -13,5 +13,6 @@
  "reports/13_gap_rsi_ema.html": "results/13_gap_rsi_ema/report.html",
  "reports/14_gap_rsi_ema_smallcap.html": "results/14_gap_rsi_ema_smallcap/report.html",
  "reports/15_call_fut_intraday.html": "results/15_call_fut_intraday/report.html",
- "reports/16_layered_straddle.html": "results/16_layered_straddle/report.html"
+ "reports/16_layered_straddle.html": "results/16_layered_straddle/report.html",
+ "reports/17_straddle_risk_layer.html": "results/17_straddle_risk_layer/report.html"
 }

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script>try { const t = localStorage.getItem("bt_theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
-<title>Layered Straddle Selling</title>
+<title>__TITLE__</title>
 __CSS__
 <style>
 .seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:0 10px 10px 0}
@@ -23,7 +23,7 @@ __CSS__
 <div class="top">
   <div class="brand">
     <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 17l5-6 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-    <div><h1>Layered Straddle Selling</h1><div class="sub">NIFTY / BANKNIFTY options &middot; backtest &amp; trade audit</div></div>
+    <div><h1>__TITLE__</h1><div class="sub">NIFTY / BANKNIFTY options &middot; backtest &amp; trade audit</div></div>
   </div>
   <div class="actions"><span class="chip" id="range"></span><button class="btn" id="theme">Dark / Light</button></div>
 </div>
@@ -73,7 +73,7 @@ __CSS__
   <div class="card cp"><button class="btn copy" data-copy="rules">Copy karo</button><h3>Rules</h3><ul class="rules" id="rulelist"></ul></div>
   <div class="card"><h3>Jo baat rules me clear nahi thi, wahan hamne kya maana</h3><ul class="rules" id="notelist"></ul></div>
   <div class="card"><h3>Data</h3><div class="scroll" style="max-height:none"><table id="dinfo" class="chk"></table></div></div>
-  <div class="card"><h3>Extra checks (ye rules ka hissa NAHI hai)</h3><div class="hint">Rulebook ke hisaab se: ek-ek layer band karke, aur ek-ek number badal ke (baaki sab main test jaisa). Net = poora period; Fit / Verify = do hisse.</div>
+  <div class="card"><h3>Extra checks (ye rules ka hissa NAHI hai)</h3><div class="hint" id="chkhint"></div>
     <div class="scroll" style="max-height:none"><table id="chk" class="chk"></table></div></div>
   <div class="card cp"><button class="btn copy" data-copy="formulas">Copy karo</button><h3>Formulas</h3><div class="hint">Is backtest me har number in formulas se nikala gaya hai.</div>
     <div class="scroll" style="max-height:none"><table id="fml" class="chk"></table></div></div>
@@ -102,9 +102,10 @@ $("#fml").innerHTML = "<thead><tr><th class='l'>Kya</th><th class='l'>Formula</t
 $("#dinfo").innerHTML = "<tbody>" + D.data_info.map(r => `<tr><td class="l">${r[0]}</td><td class="l">${r[1]}</td></tr>`).join("") + "</tbody>";
 $("#chk").innerHTML = "<thead><tr><th class='l'>Kya badla</th><th>Din</th><th>Win %</th><th>Net</th><th>Profit factor</th><th>Max DD</th><th>Sabse bura din</th><th>Average / din</th><th>Net (fit)</th><th>Net (verify)</th></tr></thead><tbody>"
   + D.checks.map(c => c.length === 1 ? `<tr><td class="l" colspan="10"><b>${c[0]}</b></td></tr>` : `<tr><td class="l">${c[0]}</td><td>${c[1].toLocaleString("en-IN")}</td><td>${pct(c[2])}</td><td class="${sgn(c[3])}">${rs(c[3], true)}</td><td>${f2(c[4])}</td><td>${rs(c[5])}</td><td>${rs(c[6])}</td><td class="${sgn(c[7])}">${rs(c[7], true)}</td><td class="${sgn(c[8])}">${rs(c[8], true)}</td><td class="${sgn(c[9])}">${rs(c[9], true)}</td></tr>`).join("") + "</tbody>";
+$("#chkhint").textContent = D.check_hint;
 const copyText = {
-  rules: () => "Rules - Layered Straddle Selling\n" + D.rules.map((r, i) => (i + 1) + ". " + r).join("\n"),
-  formulas: () => "Formulas - Layered Straddle Selling\n" + D.formulas.map(f => f[0] + ": " + f[1]).join("\n"),
+  rules: () => "Rules - " + D.title + "\n" + D.rules.map((r, i) => (i + 1) + ". " + r).join("\n"),
+  formulas: () => "Formulas - " + D.title + "\n" + D.formulas.map(f => f[0] + ": " + f[1]).join("\n"),
 };
 function copyOld(txt){ const ta = document.createElement("textarea"); ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; }
 document.querySelectorAll(".copy").forEach(b => b.onclick = async () => {

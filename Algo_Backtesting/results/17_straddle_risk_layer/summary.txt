@@ -1,0 +1,35 @@
+Straddle + risk layer: 472 din, win 68%, net Rs 3,372,696 (112.4%), PF 2.40, max DD Rs -115,810, sabse bura din Rs -61,484 | fit Rs 1,828,052, verify Rs 1,544,645
+Sirf straddle (risk layer bhi band): 472 din, win 68%, net Rs 2,874,196 (95.8%), PF 1.89, max DD Rs -286,377, sabse bura din Rs -132,704 | fit Rs 1,804,409, verify Rs 1,069,787
+Report 16 ka main test (saare layer): 446 din, win 65%, net Rs 1,897,263 (63.2%), PF 1.72, max DD Rs -193,120, sabse bura din Rs -60,462 | fit Rs 1,162,208, verify Rs 735,055
+BANKNIFTY monthly: straddle + risk layer: 472 din, win 64%, net Rs 2,302,946 (76.8%), PF 1.89, max DD Rs -166,799, sabse bura din Rs -53,497 | fit Rs 1,121,933, verify Rs 1,181,014
+BANKNIFTY monthly: sirf straddle: 472 din, win 64%, net Rs 2,278,461 (75.9%), PF 1.81, max DD Rs -258,131, sabse bura din Rs -121,159 | fit Rs 1,207,741, verify Rs 1,070,721
+
+Layer (main): core Rs 3,508,368, avg Rs 0, tac Rs 0, hedge Rs 0, slippage Rs 440,776, kharcha Rs 135,671
+
+Checks:
+Main test: straddle + risk layer: 472 din, net Rs 3,372,696, PF 2.40, worst Rs -61,484, fit Rs 1,828,052, verify Rs 1,544,645
+Leg SL band: 472 din, net Rs 3,184,629, PF 2.12, worst Rs -55,796, fit Rs 1,887,355, verify Rs 1,297,274
+Din ka loss limit band: 472 din, net Rs 3,296,037, PF 2.32, worst Rs -140,978, fit Rs 1,715,661, verify Rs 1,580,376
+Trailing band: 472 din, net Rs 3,395,288, PF 2.41, worst Rs -61,484, fit Rs 1,850,642, verify Rs 1,544,647
+Poori risk layer band (sirf straddle bechna): 472 din, net Rs 2,874,196, PF 1.89, worst Rs -132,704, fit Rs 1,804,409, verify Rs 1,069,787
+Leg SL 50%: 472 din, net Rs 3,478,246, PF 2.61, worst Rs -58,641, fit Rs 1,788,105, verify Rs 1,690,142
+Leg SL 100%: 472 din, net Rs 2,985,265, PF 2.11, worst Rs -59,407, fit Rs 1,542,682, verify Rs 1,442,583
+Din ka loss limit 1%: 472 din, net Rs 3,297,388, PF 2.33, worst Rs -51,228, fit Rs 1,845,524, verify Rs 1,451,864
+Din ka loss limit 2%: 472 din, net Rs 3,425,910, PF 2.45, worst Rs -72,597, fit Rs 1,840,210, verify Rs 1,585,701
+Trailing 30% pe chalu: 472 din, net Rs 3,297,526, PF 2.37, worst Rs -61,484, fit Rs 1,762,802, verify Rs 1,534,724
+Trailing 70% pe chalu: 472 din, net Rs 3,395,288, PF 2.41, worst Rs -61,484, fit Rs 1,850,642, verify Rs 1,544,647
+Stop ka confirm nahi (1 minute me touch pe): 472 din, net Rs 3,547,607, PF 2.62, worst Rs -49,839, fit Rs 1,828,491, verify Rs 1,719,116
+Strike adjustment chalu (ek leg 200 pt): 472 din, net Rs 3,372,696, PF 2.40, worst Rs -61,484, fit Rs 1,828,052, verify Rs 1,544,645
+Tactical buy chalu: 472 din, net Rs 3,378,753, PF 2.31, worst Rs -60,462, fit Rs 1,814,880, verify Rs 1,563,873
+Delta scalping chalu: 472 din, net Rs 2,607,430, PF 2.00, worst Rs -61,484, fit Rs 1,382,931, verify Rs 1,224,499
+Drawdown scaling chalu: 472 din, net Rs 3,372,696, PF 2.40, worst Rs -61,484, fit Rs 1,828,052, verify Rs 1,544,645
+Pause chalu (gap / VIX / Budget): 446 din, net Rs 2,926,897, PF 2.34, worst Rs -61,484, fit Rs 1,740,471, verify Rs 1,186,427
+Averaging chalu: 472 din, net Rs 3,371,533, PF 2.38, worst Rs -61,484, fit Rs 1,850,523, verify Rs 1,521,011
+Report 16 ka main test (saare layer chalu): 446 din, net Rs 1,897,263, PF 1.72, worst Rs -60,462, fit Rs 1,162,208, verify Rs 735,055
+Entry 9:15 pe: 472 din, net Rs 2,812,706, PF 2.05, worst Rs -115,310, fit Rs 1,516,491, verify Rs 1,296,214
+Agli weekly expiry: 472 din, net Rs 1,482,461, PF 1.57, worst Rs -52,539, fit Rs 878,068, verify Rs 604,393
+Expiry tak hold (har din 3:15 pe square-off nahi): 472 din, net Rs 2,166,550, PF 1.81, worst Rs -119,479, fit Rs 1,157,519, verify Rs 1,009,031
+Slippage 0: 472 din, net Rs 3,844,108, PF 2.73, worst Rs -59,750, fit Rs 2,054,968, verify Rs 1,789,140
+Slippage zyada: option 1%, futures 0.05%: 472 din, net Rs 2,928,792, PF 2.14, worst Rs -55,795, fit Rs 1,587,507, verify Rs 1,341,284
+BANKNIFTY: straddle + risk layer: 472 din, net Rs 2,302,946, PF 1.89, worst Rs -53,497, fit Rs 1,121,933, verify Rs 1,181,014
+BANKNIFTY: sirf straddle: 472 din, net Rs 2,278,461, PF 1.81, worst Rs -121,159, fit Rs 1,207,741, verify Rs 1,070,721

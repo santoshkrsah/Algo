@@ -148,5 +148,15 @@
   "pf": 1.72,
   "trades": 446,
   "verdict": "profit"
+ },
+ "17_straddle_risk_layer": {
+  "name": "Straddle + Risk Layer",
+  "type": "Options",
+  "period": "Dec 2024 - Oct 2026",
+  "result": "472 din, win 68% (report 16 ki extra-check row: 9:20 NIFTY weekly ATM straddle SELL + sirf leg SL / din ka loss limit / trailing; result dekh ke chuna, model option price)",
+  "net": 3372696,
+  "pf": 2.4,
+  "trades": 472,
+  "verdict": "profit"
  }
 }

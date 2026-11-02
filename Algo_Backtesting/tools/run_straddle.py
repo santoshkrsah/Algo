@@ -74,7 +74,8 @@ CHECKS = [
     ("Slippage 0", S.with_params(P0, slip_opt=0.0, slip_fut=0.0)),
     ("Slippage zyada: option 1%, futures 0.05%", S.with_params(P0, slip_opt=0.01, slip_fut=0.0005)),
 ]
-BANK_CHECKS = [["Doosra index (BANKNIFTY, sirf monthly expiry)"], ("BANKNIFTY: saare layer", BANK_VIEW["bank"][1]), ("BANKNIFTY: sirf straddle bechna", BANK_VIEW["bank_core"][1])]
+# BANKNIFTY rows point at a BANK_VIEW key (those runs are already simulated)
+BANK_CHECKS = [["Doosra index (BANKNIFTY, sirf monthly expiry)"], ("BANKNIFTY: saare layer", "bank"), ("BANKNIFTY: sirf straddle bechna", "bank_core")]
 
 SETTINGS = [["Capital", "Rs 30,00,000 (fixed, compounding nahi)", 1], ["Margin", "1/3 capital (Rs 10 lakh), ek straddle ka margin = 10% x lot x index"], ["Period", "2 Dec 2024 se 30 Oct 2026 (fit: 2024 - 2025, verify: 2026)"],
             ["Kharcha", "Rs 20/order, STT (option sell 0.15%, futures 0.05%), exchange, stamp, GST"], ["Option price", "model: asli 1-min index + Black-76 (strike-wise IV)"]]
@@ -228,19 +229,25 @@ def validate(mk) -> list:
             ["Jaanch ki seema", "Fyers sirf abhi chalu contracts ka 1-min data deta hai, isliye sirf door ki expiry check ho payi. 0-5 din wali expiry (jahan strategy chalti hai) ka asli 1-min data nahi hai - wahan model ka gamma / IV ka chaal unverified hai."]]
 
 
-def run(args, status) -> int:
+# one report = one config; tools/run_straddle_risk.py passes its own
+CFG = dict(name=NAME, title="Layered Straddle Selling", desc="NIFTY weekly, 9:20 ATM straddle SELL + sab layer", base=P0, view=VIEW, bank_view=BANK_VIEW,
+           checks=CHECKS, bank_checks=BANK_CHECKS, settings=SETTINGS, rules=RULES, notes=NOTES, formulas=FORMULAS, chips_of=chips_of, check_hint=None)
+
+
+def run(args, status, cfg: dict) -> int:
     t0 = time.time()
-    out = result_dir(NAME)
+    base, view, bank_view, title = cfg["base"], cfg["view"], cfg["bank_view"], cfg["title"]
+    out = result_dir(cfg["name"])
     say = (lambda m: None) if args.no_telegram else send
-    say(f"Run shuru: Layered Straddle Selling, {START} se {END} (NIFTY weekly + BANKNIFTY monthly). Folder {out.name}.")
+    say(f"Run shuru: {title}, {START} se {END} (NIFTY weekly + BANKNIFTY monthly). Folder {out.name}.")
     status(f"Data load + NIFTY simulation | {out.name}")
-    nv = {k: v[1] for k, v in VIEW.items()}
-    nchecks = {f"c{i}": c[1] for i, c in enumerate(CHECKS) if len(c) == 2}
+    nv = {k: v[1] for k, v in view.items()}
+    nchecks = {f"c{i}": c[1] for i, c in enumerate(cfg["checks"]) if len(c) == 2}
     allp = {**nv, **nchecks}
-    logs, series, prem, mk = run_market("NIFTY", allp, say, status, set(VIEW))
+    logs, series, prem, mk = run_market("NIFTY", allp, say, status, set(view))
     status("BANKNIFTY simulation")
-    bv = {k: v[1] for k, v in BANK_VIEW.items()}
-    blogs, bseries, bprem, bmk = run_market("BANKNIFTY", bv, say, status, set(BANK_VIEW))
+    bv = {k: v[1] for k, v in bank_view.items()}
+    blogs, bseries, bprem, bmk = run_market("BANKNIFTY", bv, say, status, set(bank_view))
     print(f"simulations done {time.time() - t0:.0f}s", flush=True)
     series.update(bseries)
     prem.update(bprem)
@@ -251,18 +258,11 @@ def run(args, status) -> int:
         assert gap < 1.0, (k, gap)
 
     status("Extra checks table + report")
-    runs = {k: logs[k] for k in VIEW} | {k: blogs[k] for k in BANK_VIEW}
-    labels = {k: v[0] for k, v in {**VIEW, **BANK_VIEW}.items()}
-    params = {k: v[1] for k, v in {**VIEW, **BANK_VIEW}.items()}
-    checks, ci = [], 0
-    for c in CHECKS:
-        if len(c) == 1:
-            checks.append(c)
-        else:
-            checks.append(check_row(c[0], logs[f"c{ci}"], P0.capital, SPLIT))
-        ci += 1
-    for c in BANK_CHECKS:
-        checks.append(c if len(c) == 1 else check_row(c[0], blogs["bank" if "saare" in c[0] else "bank_core"], P0.capital, SPLIT))
+    runs = {k: logs[k] for k in view} | {k: blogs[k] for k in bank_view}
+    labels = {k: v[0] for k, v in {**view, **bank_view}.items()}
+    params = {k: v[1] for k, v in {**view, **bank_view}.items()}
+    checks = [c if len(c) == 1 else check_row(c[0], logs[f"c{i}"], base.capital, SPLIT) for i, c in enumerate(cfg["checks"])]
+    checks += [c if len(c) == 1 else check_row(c[0], blogs[c[1]], base.capital, SPLIT) for c in cfg["bank_checks"]]
     m = logs["main"]
     chk = validate(mk)
     lots = sorted(set(m[m.traded == 1].lot.dropna().astype(int)))
@@ -272,17 +272,18 @@ def run(args, status) -> int:
                  ["Lot size (data se)", "NIFTY: " + ", ".join(str(x) for x in lots)], *chk, ["Budget din", "1 Feb 2025, 1 Feb 2026 (pause)"]]
     pause_days = m[m.pause != ""]
     data_info.append(["Pause ke karan", f"{len(pause_days)} din: " + ", ".join(sorted(set(x.split(" ")[0] if x.startswith(("gap", "VIX")) else x for x in pause_days.pause)))])
-    chips = {k: chips_of(p) for k, p in params.items()}
+    chips = {k: cfg["chips_of"](p) for k, p in params.items()}
     subs = {k: sub_of(labels[k], p) for k, p in params.items()}
     invs = {k: inv_of(p) for k, p in params.items()}
-    write_html(out / "report.html", runs, labels, chips, subs, invs, "main", P0.capital, P0.deploy, RULES, NOTES, checks, FORMULAS, data_info, series, prem, [START, END],
-               "NSE index option bhavcopy (daily) + Fyers 1-min index / VIX; option ka din ke andar ka price model", SETTINGS, SPLIT, "0.5% option, 0.02% futures")
+    write_html(out / "report.html", runs, labels, chips, subs, invs, "main", base.capital, base.deploy, cfg["rules"], cfg["notes"], checks, cfg["formulas"], data_info, series, prem,
+               [START, END], "NSE index option bhavcopy (daily) + Fyers 1-min index / VIX; option ka din ke andar ka price model", cfg["settings"], SPLIT, "0.5% option, 0.02% futures",
+               title=title, check_hint=cfg["check_hint"])
     for k, f in runs.items():
         f.drop(columns=["events"]).to_csv(out / f"days_{k}.csv", index=False)
 
     # ---- summary
     def line(label, f):
-        s = S.stats(f, P0.capital)
+        s = S.stats(f, base.capital)
         fit, ver = f[f.date < SPLIT].net.sum(), f[f.date >= SPLIT].net.sum()
         return f"{label}: {s['days']} din, win {s['win_pct']:.0f}%, net Rs {s['net']:,.0f} ({s['ret_pct']:.1f}%), PF {s['profit_factor'] or 0:.2f}, max DD Rs {s['max_dd']:,.0f}, sabse bura din Rs {s['worst']:,.0f} | fit Rs {fit:,.0f}, verify Rs {ver:,.0f}"
     lines = [line(labels[k], f) for k, f in runs.items()]
@@ -291,36 +292,35 @@ def run(args, status) -> int:
                         + [f"{c[0]}: {c[1]} din, net Rs {c[3]:,.0f}, PF {c[4] or 0:.2f}, worst Rs {c[6]:,.0f}, fit Rs {c[8]:,.0f}, verify Rs {c[9]:,.0f}" for c in checks if len(c) > 1])
     (out / "summary.txt").write_text(summary, encoding="utf-8")
     print(summary, flush=True)
-    s = S.stats(m, P0.capital)
-    core = S.stats(logs["core"], P0.capital)
-    bank = S.stats(blogs["bank"], P0.capital)
-    msg = (f"Layered Straddle Selling ka result ({START} - {END}) {TAG_TRADING}\n"
-           f"NIFTY weekly, 9:20 ATM straddle SELL + sab layer, capital Rs 30L (1/3 margin), compounding nahi.\n"
+    s = S.stats(m, base.capital)
+    others = [(labels[k], S.stats(f, base.capital)) for k, f in runs.items() if k != "main"]
+    msg = (f"{title} ka result ({START} - {END}) {TAG_TRADING}\n"
+           f"{cfg['desc']}, capital Rs 30L (1/3 margin), compounding nahi.\n"
            f"{s['days']} din, win {s['win_pct']:.0f}%, net Rs {s['net']:,.0f} ({s['ret_pct']:.1f}%), PF {s['profit_factor'] or 0:.2f}, max DD Rs {s['max_dd']:,.0f}, sabse bura din Rs {s['worst']:,.0f}.\n"
            f"Fit (2024-25) Rs {m[m.date < SPLIT].net.sum():,.0f}, verify (2026) Rs {m[m.date >= SPLIT].net.sum():,.0f}.\n"
            f"Layer: core Rs {lay['core']:,.0f}, tactical Rs {lay['tac']:,.0f}, hedge Rs {lay['hedge']:,.0f}; slippage Rs {m.slip.sum():,.0f}, kharcha Rs {m.costs.sum():,.0f}.\n"
-           f"Sirf straddle (koi layer nahi): net Rs {core['net']:,.0f}, max DD Rs {core['max_dd']:,.0f}, sabse bura din Rs {core['worst']:,.0f}.\n"
-           f"BANKNIFTY monthly (saare layer): net Rs {bank['net']:,.0f}, sabse bura din Rs {bank['worst']:,.0f}.")
+           + "\n".join(f"{lb}: net Rs {x['net']:,.0f}, max DD Rs {x['max_dd']:,.0f}, sabse bura din Rs {x['worst']:,.0f}." for lb, x in others))
     if not args.no_telegram:
         send(msg)
-        send_document(out / "report.html", f"Layered Straddle Selling report ({out.name})")
+        send_document(out / "report.html", f"{title} report ({out.name})")
     print(f"done {time.time() - t0:.0f}s -> {out}", flush=True)
     return 0
 
 
-def main() -> int:
+def main(cfg: dict | None = None) -> int:
+    cfg = cfg or CFG
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-telegram", action="store_true")
     ap.add_argument("--status-file")
     args = ap.parse_args()
     status = (lambda s: Path(args.status_file).write_text(s + "\n", encoding="utf-8")) if args.status_file else (lambda s: None)
     try:
-        return run(args, status)
+        return run(args, status, cfg)
     except Exception:
         err = traceback.format_exc()
         print(err, flush=True)
         if not args.no_telegram:
-            send(f"Layered Straddle run me error {TAG_TECH}:\n{err[-1500:]}")
+            send(f"{cfg['title']} run me error {TAG_TECH}:\n{err[-1500:]}")
         return 1
 
 

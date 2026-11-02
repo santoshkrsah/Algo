@@ -42,14 +42,16 @@ def premium_series(day, expiry: str, strike: float, step: int = 5) -> list:
 
 
 def write_html(path, runs: dict, labels: dict, chips: dict, subs: dict, invs: dict, base: str, capital: float, deploy: float, rules, notes, checks, formulas, data_info,
-               series: dict, prem: dict, data_range: list[str], data_note: str, settings: list, split: str, slip_txt: str):
+               series: dict, prem: dict, data_range: list[str], data_note: str, settings: list, split: str, slip_txt: str, title: str = "Layered Straddle Selling",
+               check_hint: str | None = None):
     """runs: {key: day log DataFrame}; labels / chips / subs: per variant key."""
     data = {"rules": rules, "notes": notes, "checks": checks, "formulas": formulas, "data_info": data_info, "capital": capital, "deploy": deploy, "series": series, "prem": prem,
-            "data_range": data_range, "data_note": data_note, "settings": settings, "split": split, "slip_txt": slip_txt, "base": base, "cols": COLS,
+            "data_range": data_range, "data_note": data_note, "settings": settings, "split": split, "slip_txt": slip_txt, "base": base, "cols": COLS, "title": title,
+            "check_hint": check_hint or "Rulebook ke hisaab se: ek-ek layer band karke, aur ek-ek number badal ke (baaki sab main test jaisa). Net = poora period; Fit / Verify = do hisse.",
             "variants": [[k, labels[k]] for k in runs], "runs": {k: {"rows": rows_of(v), "chips": chips[k], "sub": subs[k], "inv": invs[k]} for k, v in runs.items()},
             "generated": datetime.now().strftime("%d %b %Y %H:%M")}
     css = re.search(r"<style>.*?</style>", (ASSETS / "report_template.html").read_text(encoding="utf-8"), re.S).group(0)
-    tpl = viewer_assets.apply((ASSETS / "straddle_template.html").read_text(encoding="utf-8")).replace("__CSS__", css)
+    tpl = viewer_assets.apply((ASSETS / "straddle_template.html").read_text(encoding="utf-8")).replace("__CSS__", css).replace("__TITLE__", title)
     js = (ASSETS / "chart.umd.min.js").read_text(encoding="utf-8")
     blob = json.dumps(data, separators=(",", ":"), default=lambda o: o.item() if hasattr(o, "item") else _clean(o)).replace("</", "<\\/")
     Path(path).write_text(tpl.replace("__CHARTJS__", js).replace("__DATA__", blob), encoding="utf-8")
