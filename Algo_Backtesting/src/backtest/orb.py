@@ -14,6 +14,7 @@ import pandas as pd
 
 from backtest.config import DATA, EQUITY
 from backtest.data import COLUMNS, trading_days
+from backtest import fast
 
 NIFTY_CSV = DATA / "index" / "NIFTY50_1m.csv"
 BANDS_DIR = DATA / "reference" / "price_bands"
@@ -117,7 +118,7 @@ def prepare(start: str, end: str, on_day: Callable[[int, int, int], None] | None
     skipped = {"no_nifty": 0, "gap": 0, "flat_nifty": 0, "no_bands": 0}
 
     for i, day in enumerate(warm + days):
-        df = pd.read_csv(EQUITY / f"{day}.csv", usecols=COLUMNS)
+        df = fast.read_day(day, ("1m",))
         df = df[df.timeframe == "1m"]
         df["m"] = df.datetime.str[11:13].astype(int) * 60 + df.datetime.str[14:16].astype(int)
         df = df[(df.m >= OPEN_MIN) & (df.m <= SQUARE_MIN)].sort_values(["symbol", "m"])

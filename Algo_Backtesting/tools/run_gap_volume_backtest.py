@@ -17,6 +17,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from backtest.config import DATA, EQUITY, result_dir  # noqa: E402
 from backtest.data import trading_days  # noqa: E402
+from backtest import fast  # noqa: E402
 
 CAPITAL, PER_TRADE_MARGIN, LEVERAGE, MAX_TRADES = 70_000, 35_000, 5, 2
 EXPOSURE = PER_TRADE_MARGIN * LEVERAGE
@@ -41,7 +42,7 @@ def nifty_gap() -> pd.Series:
 
 
 def load_day(day: str) -> pd.DataFrame:
-    df = pd.read_csv(EQUITY / f"{day}.csv", usecols=["symbol", "timeframe", "datetime", "open", "high", "low", "close", "volume"])
+    df = fast.read_day(day, ("1m",))
     df = df[df["timeframe"].eq("1m")].drop(columns="timeframe")
     df["m"] = df["datetime"].str[11:13].astype(int) * 60 + df["datetime"].str[14:16].astype(int)
     return df.sort_values(["symbol", "m"], kind="stable").reset_index(drop=True)

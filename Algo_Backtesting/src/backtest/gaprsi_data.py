@@ -13,13 +13,14 @@ import pandas as pd
 
 from backtest.config import DATA, EQUITY, FNO, UNIVERSE_CSV
 from backtest.data import COLUMNS, trading_days
+from backtest import fast
 
 CORP_CSV = DATA / "reference" / "corporate_actions.csv"
 WORKERS = 6
 
 
 def _one_day(day: str) -> pd.DataFrame:
-    d = pd.read_csv(EQUITY / f"{day}.csv", usecols=COLUMNS)
+    d = fast.read_day(day, ("15m",))
     d = d[d.timeframe == "15m"].sort_values(["symbol", "datetime"])
     g = d.groupby("symbol")
     out = pd.DataFrame({"open": g.open.first(), "high": g.high.max(), "low": g.low.min(), "close": g.close.last(), "volume": g.volume.sum()})

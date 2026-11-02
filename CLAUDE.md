@@ -23,9 +23,22 @@
 4. Almax (@albert_max) has technical skills only; Ayush (@ayushanand440) is the trading expert. Ask trading questions to Ayush.
 
 ## Layout
-- Algo_Historical_Data: downloads data (own .venv). Algo_Backtesting: strategies, engine, results (own .venv). Backtesting only reads ../Algo_Historical_Data/data.
+- Algo_Historical_Data: downloads data + builds the fast store (own .venv). Algo_Backtesting: strategies, engine, results (own .venv). Backtesting only reads ../Algo_Historical_Data/data.
 - Every report folder in Algo_Backtesting/results is numbered in the order it was made: NN_<name> (01_oct_2026 ... 09_stbt_options, next one 10_).
   Runners get their folder from backtest.config.result_dir(name): a new name gets the next number, a rerun of an existing name reuses its folder. Never create results/<name> directly.
+
+## Data: fast store + daily updates (use these, never re-download or loop over CSVs)
+- New days: in Algo_Historical_Data run `python -m fyers_data.update_equity` (only missing days, ~1 request per stock, ~10 min; it also builds the store). Never re-run download_equity.py for new days. Never run two Fyers downloads at once.
+- Store = ../Algo_Historical_Data/data/store (Parquet, rebuildable). `python -m fyers_data.store build` (only new/changed days), `verify --days 5` (must say OK), `info`, `health` (bad prints / split jumps -> store/health/).
+- In backtest code: `from backtest import fast` -> `fast.read_day(day, ("1m","15m"))` (same columns as the daily CSV), `fast.day_1m(day)`, `fast.symbol_1m(sym, start, end)`, `fast.panel(start, end)` + `fast.add_features()`. Pick stocks on the panel first, load minutes only for them. No new `pd.read_csv` loops over data/equity.
+- fast.* applies data/store/adjustments.csv (split/bonus factors). Mention in reports if a strategy used adjust=False.
+
+## Rulebook strategies (orb, noise, vwap, fh) - honest-testing rules
+- Spec: Algo_Backtesting/strategies/RULEBOOK.md. Engine: src/backtest/rulebook.py (change rules only together with the spec). Runner: tools/run_rulebook.py.
+- DEV = 2021-10-01 -> 2023-12-31 (2023 = validation) is the default; FINAL = 2024 -> latest only with `--final`, once per frozen setting (the runner refuses repeats). Tuning, filters and new ideas only on DEV.
+- Costs + slippage always on (never lower them to improve a result); every report shows build vs validation/FINAL vs stress (2x slippage), year by year, long vs short, pass/fail.
+- Every run is a row in results/RULEBOOK_RUNS.csv; tell the team how many variants were tried. Stock list = AMFI Jun-2026 (survivorship bias) - say it in every report.
+- HTML report: src/backtest/rulebook_report.py `write_html(out_dir, data)` reads report_data.json (rules / formulas / settings already in Hinglish) and follows the report rules above; run_rulebook.py calls it automatically.
 
 ## Reports website (after every new report or rerun, without being asked)
 - One private Claude Artifact lists every report (search, type/result filter, sort; each opens in a new tab):

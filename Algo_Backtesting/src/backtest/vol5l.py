@@ -15,6 +15,7 @@ import pandas as pd
 
 from backtest.config import EQUITY
 from backtest.data import COLUMNS, trading_days
+from backtest import fast
 
 T_ENTRY = 9 * 60 + 30       # entry at the close of the 9:15 15m candle = 9:30
 T_SQUARE = 15 * 60 + 15     # square-off: open of the 15:15 one-minute candle
@@ -50,7 +51,7 @@ class Cand:
 
 def read_day(day: str) -> tuple[list[Cand], int]:
     """Qualifying stocks of one day (see KEEP) and how many stocks qualified in total."""
-    df = pd.read_csv(EQUITY / f"{day}.csv", usecols=COLUMNS)
+    df = fast.read_day(day, ("1m", "15m"))
     first = df[(df.timeframe == "15m") & (df.datetime == f"{day} 09:15:00")].set_index("symbol")
     q = first[(first.volume >= MIN_VOL) & (first.close > first.open)].sort_values("volume", ascending=False)
     by_turn = q.assign(t=q.volume * q.close).sort_values("t", ascending=False)
