@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>try { const t = localStorage.getItem("bt_theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<title>R3 S3 Option Buying</title>
+__CSS__
+<style>
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:0 10px 10px 0}
+.seg button{background:var(--card);border:0;border-right:1px solid var(--line);padding:7px 12px;cursor:pointer;font-size:13px;color:var(--muted)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--soft);color:var(--ink);font-weight:650}
+.seglbl{font-size:12px;color:var(--muted);margin-right:6px}
+.chk td.l{white-space:normal;max-width:460px}
+.card.cp{position:relative}
+.card.cp h3{padding-right:120px}
+.copy{position:absolute;top:14px;right:14px}
+.faisla li{margin:0 0 8px}
+.faisla li b{font-weight:700}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:900px){.two{grid-template-columns:1fr}}
+tr.pick td{background:var(--accent-soft)}
+#gtable tbody tr{cursor:pointer}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.tag.good{color:var(--pos);border-color:var(--pos)}
+.tag.bad{color:var(--neg);border-color:var(--neg)}
+</style>
+<style>__VIEWER_CSS__</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 17l5-6 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <div><h1>Option buying: R3 / S3 breakout</h1><div class="sub">NIFTY, BANKNIFTY + stock options &middot; BTST &middot; backtest &amp; trade audit</div></div>
+  </div>
+  <div class="actions"><span class="chip" id="range"></span><button class="btn" id="theme">Dark / Light</button></div>
+</div>
+<div class="wrap">
+<div class="sub" id="subtitle" style="margin:14px 0 0"></div>
+<div class="verdict" id="verdict"></div>
+<div class="setrow" id="settings"></div>
+<div class="segrow"><div class="sg"><span class="seglbl">Setup:</span><div class="seg" id="seg_s"></div></div><div class="sg"><span class="seglbl">Kahan:</span><div class="seg" id="seg_u"></div></div>
+  <div class="sg"><span class="seglbl">Pivot:</span><div class="seg" id="seg_p"></div></div></div>
+<div class="segrow"><div class="sg"><span class="seglbl">Strike:</span><div class="seg" id="seg_k"></div></div><div class="sg"><span class="seglbl">Gap filter:</span><div class="seg" id="seg_g"></div></div></div>
+<div class="segrow"><div class="sg"><span class="seglbl">Exit:</span><div class="seg" id="seg_e"></div></div></div>
+<div class="kpis" id="kpis"></div>
+<div class="tabs" id="tabs">
+  <button class="tab on" data-p="sum">Saransh</button>
+  <button class="tab" data-p="edge">Random se tulna</button>
+  <button class="tab" data-p="oos">Out-of-sample</button>
+  <button class="tab" data-p="split">Alag alag hisaab</button>
+  <button class="tab" data-p="months">Mahine ke hisaab se</button>
+  <button class="tab" data-p="stocks">Har stock</button>
+  <button class="tab" data-p="viewer">Trade viewer</button>
+  <button class="tab" data-p="trades">Saare trades</button>
+  <button class="tab" data-p="grid">Saare combination</button>
+  <button class="tab" data-p="rules">Rules</button>
+</div>
+
+<section class="panel on" id="sum">
+  <div class="card"><h3>Faisla (seedhi baat)</h3><ul class="rules faisla" id="faisla"></ul></div>
+  <div class="card"><h3>Equity curve (kul profit)</h3><div class="hint">Upar chune setting ke trades ka kul net profit (Rs), kharcha aur slippage kaat ke. Neela dotted = in-sample / out-of-sample ki line.</div><div class="ch tall"><canvas id="c_eq"></canvas></div></div>
+  <div class="two">
+    <div class="card"><h3>Drawdown</h3><div class="hint">Sabse upar wale point se kitna neeche (Rs).</div><div class="ch"><canvas id="c_dd"></canvas></div></div>
+    <div class="card"><h3>Har trade ka return (premium pe %)</h3><div class="hint">Kitne trade kis return range me aaye. Net P&L / lagaya premium.</div><div class="ch"><canvas id="c_hist"></canvas></div></div>
+  </div>
+  <div class="two">
+    <div class="card"><h3>Trade kaise band hue</h3><div class="scroll" style="max-height:none"><table id="exits"></table></div></div>
+    <div class="card"><h3>Saare numbers</h3><div class="kv" id="kv"></div></div>
+  </div>
+  <div class="card"><h3>Paisa kaise lagaya (investment)</h3><div class="hint" id="invhint"></div><div class="kv" id="inv"></div></div>
+</section>
+
+<section class="panel" id="edge">
+  <div class="card"><h3>Kya R3 / S3 random entry se behtar hai?</h3>
+    <div class="hint">Har setting ke liye 1,000 baar random trade liye: utne hi trade, wahi strike class, wahi expiry rule, wahi liquidity filter, wahi qty rule aur wahi exit - bas din aur contract random, R3 / S3 ki koi shart nahi. "Random se behtar %" = kitne random test ka average per trade hamari strategy se kam tha. 95% ya zyada = asli edge ka ishara; 50% ke aas paas = sikka uchhalne jaisa.</div>
+    <div class="scroll" style="max-height:none"><table id="edgetbl" class="chk"></table></div></div>
+  <div class="card"><h3>Bina kisi signal ke (koi bhi ATM option, koi bhi din)</h3>
+    <div class="hint">Base line: har liquid ATM contract, har din, close pe kharido. Isse pata chalta hai ki sirf "close pe kharido, agle din becho" se kya milta hai.</div>
+    <div class="scroll" style="max-height:none"><table id="uncond" class="chk"></table></div></div>
+  <div class="card"><h3>Kya 9:15 ke open pe bechna sach me ho sakta hai? (asli 1-min data)</h3><div class="hint" id="fillhint"></div>
+    <div class="scroll" style="max-height:none"><table id="fill" class="chk"></table></div></div>
+</section>
+
+<section class="panel" id="oos">
+  <div class="card"><h3>Pehle 60% din pe best chuna, baaki 40% pe check</h3><div class="hint" id="oohint"></div>
+    <div class="scroll" style="max-height:none"><table id="chosen" class="chk"></table></div></div>
+  <div class="card"><h3>Overfitting check</h3><ul class="rules" id="robust"></ul></div>
+  <div class="card"><h3>Upar chuni setting: in-sample vs out-of-sample (har exit)</h3><div class="scroll" style="max-height:none"><table id="ooexit" class="chk"></table></div></div>
+  <div class="card"><h3>Ek cheez badal ke (risk aur slippage)</h3><div class="hint">Sirf in-sample se chuni settings ke liye. Baaki sab same, ek baar me ek cheez badli.</div>
+    <div class="scroll" style="max-height:none"><table id="sens" class="chk"></table></div></div>
+</section>
+
+<section class="panel" id="split">
+  <div class="card"><h3>Setup, pivot aur strike ki tulna (isi kahan / gap / exit pe)</h3><div class="hint">Poora samay + out-of-sample. Click karo to wo setting upar chun jayegi.</div>
+    <div class="scroll" style="max-height:none"><table id="spk" class="chk"></table></div></div>
+  <div class="two" id="splits"></div>
+</section>
+
+<section class="panel" id="months">
+  <div class="card"><h3>Har mahine ka net profit</h3><div class="ch"><canvas id="c_m"></canvas></div></div>
+  <div class="card"><h3>Saal ke hisaab se</h3><div class="scroll" style="max-height:none"><table id="ytable"></table></div></div>
+  <div class="card"><h3>Mahine ki table</h3><div class="scroll" style="max-height:none"><table id="mtable"></table></div></div>
+</section>
+
+<section class="panel" id="stocks">
+  <div class="card"><h3>Har stock / index jisme trade hua</h3>
+    <div class="bar"><input id="sq" placeholder="Stock khojo"><button class="btn" id="sdl">Download CSV</button><span class="note" id="scount"></span></div>
+    <div class="scroll"><table id="stable"><thead></thead><tbody></tbody></table></div><div class="pager" id="spager"></div></div>
+</section>
+
+<section class="panel" id="viewer"><div id="tv"></div></section>
+
+<section class="panel" id="trades">
+  <div class="card"><h3>Har ek trade (trade log)</h3><div class="hint">Signal = din ka aakhri candle (3:30). Entry = us din ka last price. Exit agle trading din, upar chune exit se. "Download CSV" me poora trade log (level, SL, target, gross, kharcha, net, MAE).</div>
+    <div class="bar"><input id="tq" placeholder="Stock khojo"><select id="te"><option value="">Saare exit</option></select>
+      <button class="btn" id="tdl">Download CSV</button><span class="note" id="tcount"></span></div>
+    <div class="scroll"><table id="ttable"><thead></thead><tbody></tbody></table></div><div class="pager" id="tpager"></div></div>
+</section>
+
+<section class="panel" id="grid">
+  <div class="card"><h3>Har combination (setup x kahan x pivot x strike x gap x exit)</h3>
+    <div class="hint">Yahi wo saari settings hain jo try ki gayi. Itni settings me se kuch to sirf kismat se achhi dikhengi - isliye "Out-of-sample" aur "Random se behtar" dekho. Line pe click = wo setting upar chuno (A / C, Index / Stocks ke liye trade bhi dikhenge).</div>
+    <div class="bar"><select id="gs"><option value="">Saare setup</option></select><select id="gu"><option value="">Saari jagah</option></select><select id="gp"><option value="">Dono pivot</option></select>
+      <select id="gk"><option value="">Saare strike</option></select><select id="gg"><option value="">Gap: sab</option></select><select id="ge"><option value="">Saare exit</option></select>
+      <button class="btn" id="gdl">Download CSV</button><span class="note" id="gcount"></span></div>
+    <div class="scroll"><table id="gtable"><thead></thead><tbody></tbody></table></div><div class="pager" id="gpager"></div></div>
+</section>
+
+<section class="panel" id="rules">
+  <div class="card cp"><button class="btn copy" data-copy="rules">Copy karo</button><h3>Rules</h3><ul class="rules" id="rulelist"></ul></div>
+  <div class="card"><h3>Ye test NAHI ho saka (data nahi hai)</h3><ul class="rules" id="nottested"></ul></div>
+  <div class="card"><h3>Jo baat clear nahi thi, wahan hamne kya maana</h3><ul class="rules" id="notelist"></ul></div>
+  <div class="card"><h3>Kharcha (rates jo maane - apne broker se mila lo)</h3><div class="scroll" style="max-height:none"><table id="crates" class="chk"></table></div></div>
+  <div class="card"><h3>Data</h3><div class="scroll" style="max-height:none"><table id="dinfo" class="chk"></table></div></div>
+  <div class="card cp"><button class="btn copy" data-copy="formulas">Copy karo</button><h3>Formulas</h3><div class="hint">Is backtest me har number in formulas se nikala gaya hai.</div>
+    <div class="scroll" style="max-height:none"><table id="fml" class="chk"></table></div></div>
+</section>
+<footer id="foot"></footer>
+</div>
+<script>__CHARTJS__</script>
+<script>__LWC__</script>
+<script>__VIEWER_JS__</script>
+<script>
+const D = __DATA__;
+const $ = s => document.querySelector(s);
+const sgn = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
+const rs = (v, plus) => v === null || v === undefined || isNaN(v) ? "n/a" : (v < 0 ? "-" : plus && v > 0 ? "+" : "") + "Rs " + Math.round(Math.abs(v)).toLocaleString("en-IN");
+const rs2 = v => (v < 0 ? "-" : "") + "Rs " + Math.abs(v).toFixed(2);
+const f2 = v => v === null || v === undefined || isNaN(v) ? "n/a" : Number(v).toFixed(2);
+const pct = v => v === null || v === undefined || isNaN(v) ? "n/a" : Number(v).toFixed(1) + "%";
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const KN = ["ATM", "1 OTM", "2 OTM"], PN = {classic: "Classic", camarilla: "Camarilla"};
+const SN = {A: "A: option premium R3 ke upar (CALL)", C: "C: underlying R3 / S3 ke paar (CALL / PUT)", AC: "A + C dono"};
+const SS = {A: "A (premium > R3)", C: "C (underlying R3/S3)", AC: "A + C"};
+const UN = {index: "Index (NIFTY, BANKNIFTY)", stocks: "Stocks", all: "Index + stocks"};
+const GN = ["Har din", "Sirf gap din"];
+const EX = {}; D.exits.forEach(e => EX[e[0]] = e);
+const [B0, B1, B2, B3, B4, B5] = D.base.split("|");
+let S = {setup: B0, univ: B1, pivot: B2, k: +B3, gap: +B4, exit: B5};
+let rows = [], daily = [], months = [], T = {};
+const cap = "Rs " + D.capital.toLocaleString("en-IN");
+const TC = {}; D.trade_cols.forEach((c, i) => TC[c] = i);
+const GC = {}; D.grid_cols.forEach((c, i) => GC[c] = i);
+const runKey = s => `${s.setup}|${s.univ}|${s.pivot}|${s.k}|${s.gap}`;
+const gridRow = s => D.grid.find(g => g[GC.setup] === s.setup && g[GC.univ] === s.univ && g[GC.pivot] === s.pivot && g[GC.k] === s.k && +g[GC.gap] === s.gap && g[GC.exit] === s.exit);
+const comboName = s => `${SS[s.setup]}, ${UN[s.univ]}, ${PN[s.pivot]}, ${KN[s.k]}, ${GN[s.gap]}, "${EX[s.exit][1]}"`;
+
+$("#range").innerHTML = `Data <b>${D.data_range[0]}</b> &rarr; <b>${D.data_range[1]}</b>`; $("#range").title = D.data_note;
+$("#foot").textContent = "Purane result se aage ki guarantee nahi hoti. Daily data me din ke andar SL aur target ka kram pata nahi, isliye dono lage to SL pehle maana. Report bana: " + D.generated;
+const li = (sel, arr) => arr.forEach(r => { const e = document.createElement("li"); e.innerHTML = r; $(sel).appendChild(e); });
+li("#rulelist", D.rules.map(esc)); li("#notelist", D.notes.map(esc)); li("#nottested", D.not_tested.map(esc)); li("#faisla", D.faisla);
+const kvTable = (sel, arr, heads) => $(sel).innerHTML = (heads ? "<thead><tr>" + heads.map(h => `<th class='l'>${h}</th>`).join("") + "</tr></thead>" : "") + "<tbody>" + arr.map(r => "<tr>" + r.map((c, i) => `<td class="l">${i === 1 && heads && heads[1] === "Formula" ? "<code>" + esc(c) + "</code>" : esc(c)}</td>`).join("") + "</tr>").join("") + "</tbody>";
+kvTable("#fml", D.formulas, ["Kya", "Formula"]); kvTable("#dinfo", D.data_info); kvTable("#crates", D.cost_rates, ["Kharcha", "Rate", "Kab"]);
+const copyText = {
+  rules: () => "Rules - Option buying R3 / S3 breakout\n" + D.rules.map((r, i) => (i + 1) + ". " + r).join("\n"),
+  formulas: () => "Formulas - Option buying R3 / S3 breakout\n" + D.formulas.map(f => f[0] + ": " + f[1]).join("\n"),
+};
+function copyOld(txt){ const ta = document.createElement("textarea"); ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; }
+document.querySelectorAll(".copy").forEach(b => b.onclick = async () => {
+  const txt = copyText[b.dataset.copy]();
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) { ok = copyOld(txt); }
+  b.textContent = ok ? "Copy ho gaya ✓" : "Copy nahi hua"; setTimeout(() => b.textContent = "Copy karo", 1500);
+});
+
+// ---- selectors (trade-level runs exist for setup A / C and Index / Stocks)
+const segs = [["#seg_s", "setup", ["A", "C"], k => SS[k]], ["#seg_u", "univ", ["index", "stocks"], k => UN[k]], ["#seg_p", "pivot", ["classic", "camarilla"], k => PN[k]],
+  ["#seg_k", "k", [0, 1, 2], k => KN[k]], ["#seg_g", "gap", [0, 1], k => GN[k]], ["#seg_e", "exit", D.exits.map(e => e[0]), k => EX[k][1]]];
+segs.forEach(([sel, f, vals, lab]) => {
+  $(sel).innerHTML = vals.map(v => `<button data-k="${v}">${esc(lab(v))}</button>`).join("");
+  $(sel).onclick = e => { const k = e.target.dataset.k; if (k === undefined) return; S[f] = typeof S[f] === "number" ? +k : k; render(); };
+});
+function choose(s){ if (!["A", "C"].includes(s.setup) || !["index", "stocks"].includes(s.univ)) return false; S = Object.assign({}, s); render(); window.scrollTo({top: 0, behavior: "smooth"}); return true; }
+$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); const t = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("bt_theme", t); } catch (e) {} drawCharts(); TV.restyle(); };
+
+// ---- one trade for the chosen exit
+function tradeView(r){
+  const ex = EX[S.exit], fam = ex[2], rr = ex[4], e = r[TC.close], lot = r[TC.lot];
+  const why = r[TC[S.exit + "_why"]], net = r[TC[S.exit + "_net"]];
+  const stop = fam === "t" ? null : fam === "sl20" ? e * 0.8 : fam === "sl30" ? e * 0.7 : Math.min(r[TC.low], e * (1 - D.min_stop));
+  const tgt = stop === null ? null : e + rr * (e - stop);
+  const px = [0, 2, 3].includes(why) ? r[TC.n_open] : why === 1 ? r[TC.n_close] : why === 4 ? stop : tgt;
+  const lots = r[TC["lots_" + fam]], qty = lots * lot, buy = e * (1 + D.slip), sell = px * (1 - D.slip);
+  const gross = qty * (sell - buy), prem = qty * buy;
+  const onOpt = S.setup === "A", ce = r[TC.type] === "CE";
+  const level = onOpt ? r[TC["r3_" + S.pivot]] : ce ? r[TC["ur3_" + S.pivot]] : r[TC["us3_" + S.pivot]];
+  const worst = [0, 2, 3].includes(why) ? r[TC.n_open] : why === 4 ? stop : r[TC.n_low];
+  const g = r[TC.gap_pct], gapDir = ce ? g >= D.gap_min * 100 : g <= -D.gap_min * 100;
+  return {date: r[TC.date], sym: r[TC.symbol], type: r[TC.type], strike: r[TC.strike], expiry: r[TC.expiry], dte: r[TC.dte], ew: r[TC.exp_week], vix: r[TC.vix], gap: g, gapDir: gapDir,
+    level: level, levelOn: onOpt ? "option R3" : ce ? "underlying R3" : "underlying S3", uclose: r[TC.u_close], r3opt: r[TC["r3_" + S.pivot]], entry: e, low: r[TC.low],
+    ph: r[TC.p_high], pl: r[TC.p_low], pc: r[TC.p_close], nd: r[TC.n_date], no: r[TC.n_open], nh: r[TC.n_high], nl: r[TC.n_low], nc: r[TC.n_close],
+    stop: stop, tgt: tgt, px: px, why: D.why[why], lots: lots, qty: qty, lot: lot, gross: gross, cost: gross - net, net: net, prem: prem, ret: net / prem * 100,
+    mae: Math.min(0, worst - e) * qty, maePct: Math.min(0, worst / e - 1) * 100, oos: r[TC.date] >= D.cut};
+}
+function group(a, keyf){ const m = {}; a.forEach(r => { const k = keyf(r); (m[k] = m[k] || []).push(r); }); return m; }
+const ddOf = nets => { let c = 0, pk = 0, dd = 0; nets.forEach(v => { c += v; pk = Math.max(pk, c); dd = Math.min(dd, c - pk); }); return dd; };
+function sumUp(a){
+  const n = a.map(r => r.net), w = n.filter(v => v > 0), l = n.filter(v => v <= 0), s = n.reduce((x, y) => x + y, 0);
+  const gw = w.reduce((x, y) => x + y, 0), gl = -l.reduce((x, y) => x + y, 0);
+  const byD = group(a, r => r.date), dd = ddOf(Object.keys(byD).sort().map(d => byD[d].reduce((x, r) => x + r.net, 0)));
+  return {n: n.length, net: s, win: n.length ? w.length / n.length * 100 : null, pf: gl > 0 ? gw / gl : null, avg: n.length ? s / n.length : null,
+          aw: w.length ? gw / w.length : null, al: l.length ? -gl / l.length : null, dd: dd, ret: a.length ? a.reduce((x, r) => x + r.ret, 0) / a.length : null};
+}
+const sumRow = (label, s, extra) => `<tr><td class="l">${label}</td><td>${s.n}</td><td>${pct(s.win)}</td><td class="${sgn(s.net)}">${rs(s.net, true)}</td><td class="${sgn(s.net)}">${pct(s.net / D.capital * 100)}</td><td class="${sgn(s.avg)}">${rs(s.avg, true)}</td><td>${f2(s.pf)}</td><td>${rs(s.dd)}</td>${extra || ""}</tr>`;
+const sumHead = first => `<thead><tr><th class='l'>${first}</th><th>Trade</th><th>Win %</th><th>Net</th><th>Return %</th><th>Average / trade</th><th>PF</th><th>Max DD</th></tr></thead>`;
+
+let charts = [];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ax = (fmt) => ({x: {grid: {display: false}, ticks: {color: css("--muted"), maxTicksLimit: 7, maxRotation: 0}}, y: {grid: {color: css("--line")}, border: {display: false}, ticks: {color: css("--muted"), callback: fmt || (v => Math.round(v / 1000) + "k")}}});
+const tip = f => ({backgroundColor: css("--ink"), titleColor: css("--card"), bodyColor: css("--card"), padding: 10, displayColors: false, callbacks: {label: f}});
+const colorBy = v => v.map(x => x >= 0 ? css("--pos") : css("--neg"));
+let hist = [];
+function drawCharts(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const cutIdx = daily.findIndex(d => d[0] >= D.cut);
+  const cutLine = {id: "cut", afterDraw(c){ if (cutIdx < 0) return; const x = c.scales.x.getPixelForValue(cutIdx), y = c.chartArea; const g = c.ctx; g.save(); g.strokeStyle = css("--accent"); g.setLineDash([4, 4]); g.beginPath(); g.moveTo(x, y.top); g.lineTo(x, y.bottom); g.stroke(); g.restore(); }};
+  charts.push(new Chart($("#c_eq"), {type: "line", data: {labels: daily.map(d => d[0]), datasets: [{data: daily.map(d => d[2]), borderColor: css("--pos"), borderWidth: 2, pointRadius: 0, fill: {target: "origin", above: css("--pos-soft"), below: css("--neg-soft")}}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false}, plugins: {legend: {display: false}, tooltip: tip(c => "Kul " + rs(c.parsed.y, true))}, scales: ax()}, plugins: [cutLine]}));
+  charts.push(new Chart($("#c_dd"), {type: "line", data: {labels: daily.map(d => d[0]), datasets: [{data: daily.map(d => d[3]), borderColor: css("--neg"), borderWidth: 1.5, pointRadius: 0, fill: {target: "origin", below: css("--neg-soft")}}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false}, plugins: {legend: {display: false}, tooltip: tip(c => rs(c.parsed.y))}, scales: ax()}}));
+  charts.push(new Chart($("#c_hist"), {type: "bar", data: {labels: hist.map(h => h[0]), datasets: [{data: hist.map(h => h[1]), backgroundColor: hist.map(h => h[2] >= 0 ? css("--pos") : css("--neg")), borderRadius: 3}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => c.parsed.y + " trade")}, scales: ax(v => v)}}));
+  const mv = months.map(m => m[1]);
+  charts.push(new Chart($("#c_m"), {type: "bar", data: {labels: months.map(m => m[0]), datasets: [{data: mv, backgroundColor: colorBy(mv), borderRadius: 3, maxBarThickness: 48}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => rs(c.parsed.y, true))}, scales: ax()}}));
+}
+function table(o){
+  let rws = o.rows, sortCol = o.sort[0], dir = o.sort[1], page = 0, view = rws;
+  const thead = $(o.id + " thead"), tbody = $(o.id + " tbody");
+  thead.innerHTML = "<tr>" + o.cols.map((c, i) => `<th class="s ${i === 0 ? "l" : ""}" data-i="${i}">${c.h}</th>`).join("") + "</tr>";
+  function apply(){
+    const q = o.q ? $(o.q).value.trim().toLowerCase() : "";
+    view = rws.filter(r => (!q || String(r[o.qcol]).toLowerCase().includes(q)) && o.filters.every(f => !$(f.el).value || String(r[f.col]) === $(f.el).value));
+    view.sort((a, b) => { const x = a[sortCol], y = b[sortCol]; return (x === null) - (y === null) || (x < y ? -1 : x > y ? 1 : 0) * dir; });
+    thead.querySelectorAll("th").forEach((th, i) => th.className = "s" + (i === 0 ? " l" : "") + (i === sortCol ? (dir > 0 ? " asc" : " desc") : ""));
+    page = Math.min(page, Math.max(0, Math.ceil(view.length / 50) - 1)); draw();
+  }
+  function draw(){
+    tbody.innerHTML = view.slice(page * 50, page * 50 + 50).map((r, j) => `<tr data-j="${page * 50 + j}" class="${o.rowClass ? o.rowClass(r) : ""}">` + o.cols.map((c, i) => `<td class="${i === 0 ? "l " : ""}${c.color ? sgn(r[i]) : ""}">${c.f ? c.f(r[i], r) : r[i]}</td>`).join("") + "</tr>").join("");
+    const pages = Math.max(1, Math.ceil(view.length / 50));
+    $(o.count).textContent = view.length.toLocaleString("en-IN") + " line";
+    $(o.pager).innerHTML = `<button class="btn" ${page ? "" : "disabled"} data-d="-1">Pichhla</button> Page ${page + 1} / ${pages} <button class="btn" ${page < pages - 1 ? "" : "disabled"} data-d="1">Agla</button>`;
+  }
+  thead.onclick = e => { const th = e.target.closest("th"); if (!th || !rws.length) return; const i = +th.dataset.i; dir = i === sortCol ? -dir : (typeof rws[0][i] === "number" ? -1 : 1); sortCol = i; page = 0; apply(); };
+  $(o.pager).onclick = e => { const d = e.target.dataset.d; if (d) { page += +d; draw(); } };
+  if (o.click) tbody.onclick = e => { const tr = e.target.closest("tr"); if (tr) o.click(view[+tr.dataset.j]); };
+  [o.q, ...o.filters.map(f => f.el)].filter(Boolean).forEach(el => $(el).oninput = () => { page = 0; apply(); });
+  $(o.dl).onclick = () => { const esc2 = v => '"' + String(v === null ? "" : v).replace(/"/g, '""') + '"'; const src = o.csv ? o.csv(view) : view; const csv = [o.heads.map(esc2).join(",")].concat(src.map(r => r.map(esc2).join(","))).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = o.file; a.click(); };
+  apply();
+}
+const fill = (sel, first, vals, lab) => { const cur = $(sel).value; $(sel).innerHTML = `<option value="">${first}</option>`; [...new Set(vals)].forEach(v => { const op = document.createElement("option"); op.value = v; op.textContent = lab ? lab(v) : v; $(sel).appendChild(op); }); if ([...$(sel).options].some(o => o.value === cur)) $(sel).value = cur; };
+
+// ---- static tables (do not depend on the selection)
+$("#uncond").innerHTML = "<thead><tr><th class='l'>Kahan</th><th class='l'>Type</th><th>Contract-din</th><th>Agle din open tak premium (avg)</th><th>Net / trade (open exit)</th><th>Win % (open exit)</th><th>Agle din close tak premium (avg)</th><th>Net / trade (close exit)</th></tr></thead><tbody>"
+  + D.uncond.map(r => `<tr><td class="l">${r[0]}</td><td class="l">${r[1]}</td><td>${r[2].toLocaleString("en-IN")}</td><td class="${sgn(r[3])}">${pct(r[3])}</td><td class="${sgn(r[4])}">${rs(r[4], true)}</td><td>${pct(r[5])}</td><td class="${sgn(r[6])}">${pct(r[6])}</td><td class="${sgn(r[7])}">${rs(r[7], true)}</td></tr>`).join("") + "</tbody>";
+$("#fillhint").textContent = `Fyers ka asli 1-min option data (sirf jo contracts abhi tak the): ${D.fill.days[0]} se ${D.fill.days[1]}, ${D.fill.days[2]} din. 9:15 candle ke open ko 9:16-9:20 ke average aur 9:30 ke price se milaya. Agar 9:15 ka open baad ke price se zyada hota, to "open pe bechna" sapna hota. Ye sab contracts ka hai, sirf signal wale nahi.`;
+$("#fill").innerHTML = "<thead><tr><th class='l'>Kahan</th><th>Contract-din</th><th>9:16-9:20 avg vs open (avg)</th><th>median</th><th>Beech ka 50%</th><th>9:30 vs open (avg)</th><th>9:30 median</th></tr></thead><tbody>"
+  + D.fill.rows.map(r => `<tr><td class="l">${r[0]}</td><td>${r[1].toLocaleString("en-IN")}</td><td class="${sgn(r[2])}">${pct(r[2])}</td><td>${pct(r[3])}</td><td>${pct(r[4])} se ${pct(r[5])}</td><td class="${sgn(r[6])}">${pct(r[6])}</td><td>${pct(r[7])}</td></tr>`).join("") + "</tbody>";
+$("#oohint").textContent = `In-sample = ${D.data_range[0]} se ${D.cut_prev} (pehle 60% din). Out-of-sample = ${D.cut} se ${D.data_range[1]}. Har setup x jagah ke liye in-sample me sabse zyada net wali setting (kam se kam ${D.min_is_trades} trade) chuni, phir bina badle out-of-sample pe chalayi. Line pe click = wo setting upar chuno.`;
+$("#chosen").innerHTML = "<thead><tr><th class='l'>Setup</th><th class='l'>Kahan</th><th class='l'>Chuni setting</th><th>In-sample trade</th><th>In-sample net</th><th>In-sample PF</th><th>Out-of-sample trade</th><th>Out-of-sample net</th><th>OOS PF</th><th>OOS win %</th><th>Random se behtar</th></tr></thead><tbody>"
+  + D.chosen.map((c, i) => `<tr data-i="${i}" style="cursor:pointer"><td class="l">${SS[c.setup]}</td><td class="l">${UN[c.univ]}</td><td class="l">${PN[c.pivot]}, ${KN[c.k]}, ${GN[+c.gap]}, ${esc(EX[c.exit][1])}</td><td>${c.is_trades}</td><td class="${sgn(c.is_net)}">${rs(c.is_net, true)}</td><td>${f2(c.is_pf)}</td><td>${c.oos_trades}</td><td class="${sgn(c.oos_net)}">${rs(c.oos_net, true)}</td><td>${f2(c.oos_pf)}</td><td>${pct(c.oos_win_pct)}</td><td>${pct(c.rand_pct)}</td></tr>`).join("") + "</tbody>";
+$("#chosen").onclick = e => { const tr = e.target.closest("tr[data-i]"); if (!tr) return; const c = D.chosen[+tr.dataset.i]; if (!choose({setup: c.setup, univ: c.univ, pivot: c.pivot, k: c.k, gap: +c.gap, exit: c.exit})) alert("Is setup / jagah ke trade report me nahi hain (sirf A / C aur Index / Stocks ke hain). Numbers 'Saare combination' me hain."); };
+li("#robust", D.robust_text);
+$("#sens").innerHTML = "<thead><tr><th class='l'>Setting</th><th class='l'>Kya badla</th><th>Trade</th><th>Win %</th><th>Net</th><th>PF</th><th>Max DD</th><th>Return %</th></tr></thead><tbody>"
+  + D.sens.map(r => `<tr><td class="l">${esc(r[0])}</td><td class="l">${esc(r[1])}</td><td>${r[2]}</td><td>${pct(r[3])}</td><td class="${sgn(r[4])}">${rs(r[4], true)}</td><td>${f2(r[5])}</td><td>${rs(r[6])}</td><td class="${sgn(r[7])}">${pct(r[7])}</td></tr>`).join("") + "</tbody>";
+["#gs", "#gu", "#gp", "#gk", "#gg", "#ge"].forEach((sel, i) => fill(sel, $(sel).options[0].text, [...new Set(D.grid.map(g => String([g[GC.setup], g[GC.univ], g[GC.pivot], g[GC.k], +g[GC.gap], g[GC.exit]][i])))],
+  [v => SS[v], v => UN[v], v => PN[v], v => KN[+v], v => GN[+v], v => EX[v][1]][i]));
+const gview = D.grid.map(g => [SS[g[GC.setup]], UN[g[GC.univ]], PN[g[GC.pivot]], KN[g[GC.k]], GN[+g[GC.gap]], EX[g[GC.exit]][1], g[GC.signals], g[GC.sig_per_month], g[GC.all_trades], g[GC.all_win_pct], g[GC.all_net], g[GC.all_pf], g[GC.all_max_dd],
+  g[GC.is_net], g[GC.oos_net], g[GC.oos_pf], g[GC.rand_pct], g[GC.setup], g[GC.univ], g[GC.pivot], String(g[GC.k]), String(+g[GC.gap]), g[GC.exit]]);
+table({id: "#gtable", rows: gview, sort: [14, -1], filters: [{el: "#gs", col: 17}, {el: "#gu", col: 18}, {el: "#gp", col: 19}, {el: "#gk", col: 20}, {el: "#gg", col: 21}, {el: "#ge", col: 22}],
+  count: "#gcount", pager: "#gpager", dl: "#gdl", file: "r3buy_grid.csv",
+  heads: ["setup", "universe", "pivot", "strike", "gap", "exit", "signals", "signals_per_month", "trades", "win_pct", "net", "pf", "max_dd", "in_sample_net", "out_of_sample_net", "oos_pf", "beats_random_pct"],
+  csv: v => v.map(r => r.slice(0, 17)),
+  click: r => { if (!choose({setup: r[17], univ: r[18], pivot: r[19], k: +r[20], gap: +r[21], exit: r[22]})) alert("Is setup / jagah ke trade report me nahi hain (sirf A / C aur Index / Stocks ke hain)."); },
+  cols: [{h: "Setup"}, {h: "Kahan"}, {h: "Pivot"}, {h: "Strike"}, {h: "Gap"}, {h: "Exit"}, {h: "Signal"}, {h: "Signal / mahina", f: f2}, {h: "Trade"}, {h: "Win %", f: pct}, {h: "Net", color: 1, f: v => rs(v, true)},
+    {h: "PF", f: f2}, {h: "Max DD", f: rs}, {h: "In-sample net", color: 1, f: v => rs(v, true)}, {h: "Out-of-sample net", color: 1, f: v => rs(v, true)}, {h: "OOS PF", f: f2}, {h: "Random se behtar", f: pct}]});
+
+function render(){
+  segs.forEach(([sel, f]) => document.querySelectorAll(sel + " button").forEach(b => b.classList.toggle("on", String(S[f]) === b.dataset.k)));
+  const ex = EX[S.exit], g = gridRow(S);
+  rows = (D.runs[runKey(S)] || []).map(i => tradeView(D.trades[i])).filter(r => r.net !== null);
+  const skipped = (D.runs[runKey(S)] || []).length - rows.length;
+  const byDay = group(rows, r => r.date); daily = []; let c = 0, pk = 0;
+  Object.keys(byDay).sort().forEach(d => { const v = byDay[d].reduce((a, r) => a + r.net, 0); c += v; pk = Math.max(pk, c); daily.push([d, v, c, c - pk]); });
+  T = sumUp(rows);
+  const tis = sumUp(rows.filter(r => !r.oos)), too = sumUp(rows.filter(r => r.oos));
+  const bym = group(rows, r => r.date.slice(0, 7)); months = Object.keys(bym).sort().map(m => { const s = sumUp(bym[m]); return [m, s.net, s.n, s.win, s.dd]; });
+  const hb = [-100, -75, -50, -25, -10, 0, 10, 25, 50, 100, 200, 1e9], hl = ["-100 se -75%", "-75 se -50%", "-50 se -25%", "-25 se -10%", "-10 se 0%", "0 se 10%", "10 se 25%", "25 se 50%", "50 se 100%", "100 se 200%", "200%+"];
+  hist = hl.map((l, i) => [l, rows.filter(r => r.ret >= hb[i] && r.ret < hb[i + 1] || (i === 0 && r.ret < hb[0])).length, hb[i]]);
+  $("#subtitle").textContent = `${SN[S.setup]} | ${UN[S.univ]} | ${PN[S.pivot]} pivot | ${KN[S.k]} | ${GN[S.gap]} | exit: ${ex[1]} | capital ${cap} fixed (compounding nahi), risk ${D.risk_pct}% / trade, din me max ${D.max_per_day}`;
+  const chips = D.settings.concat([["Setup", SS[S.setup], 1], ["Kahan", UN[S.univ], 1], ["Pivot", PN[S.pivot], 1], ["Strike", KN[S.k], 1], ["Gap filter", GN[S.gap], 1], ["Exit", ex[1], 1]]);
+  $("#settings").innerHTML = `<span class="st">Test ki settings</span>` + chips.map(c => `<span class="sc${c[2] ? " hl" : ""}">${esc(c[0])}: <b>${esc(c[1])}</b></span>`).join("");
+  const rp = g ? g[GC.rand_pct] : null;
+  const good = T.net > 0 && too.net > 0 && rp !== null && rp >= 95;
+  $("#verdict").className = "verdict " + (good ? "good" : "bad");
+  $("#verdict").innerHTML = rows.length ? `${esc(comboName(S))}: ${T.n} trade, <b>${pct(T.win)}</b> me profit (loss <b>${pct(100 - T.win)}</b>), net <b class="${sgn(T.net)}">${rs(T.net, true)}</b> (${pct(T.net / D.capital * 100)}), PF <b>${f2(T.pf)}</b>, max DD <b>${rs(T.dd)}</b>.
+    In-sample <b class="${sgn(tis.net)}">${rs(tis.net, true)}</b> &middot; out-of-sample <b class="${sgn(too.net)}">${rs(too.net, true)}</b> (PF ${f2(too.pf)}) &middot; random se behtar <b>${pct(rp)}</b>. ${good ? "Kharche ke baad, out-of-sample me bhi aur random se bhi behtar." : "Ye setting teeno test (net profit, out-of-sample, random) paas NAHI karti."}` : "Is combination pe koi trade nahi.";
+  const cards = [["Net profit", rs(T.net, true), sgn(T.net), cap + " par " + pct(T.net / D.capital * 100)], ["Win rate / loss rate", pct(T.win) + " / " + pct(T.n ? 100 - T.win : null), "", T.n + " trade"],
+    ["Profit factor", f2(T.pf), T.pf >= 1 ? "pos" : "neg", "1.00 se upar = profit"], ["Max drawdown", rs(T.dd), "neg", "capital ka " + pct(T.dd / D.capital * 100)],
+    ["Out-of-sample net", rs(too.net, true), sgn(too.net), too.n + " trade, PF " + f2(too.pf)], ["Random se behtar", pct(rp), rp >= 95 ? "pos" : "neg", "95% ya zyada = edge"]];
+  $("#kpis").innerHTML = cards.map(c => `<div class="kpi"><div class="l">${c[0]}</div><div class="v ${c[2]}">${c[1]}</div><div class="n">${c[3]}</div></div>`).join("");
+  const nets = rows.map(r => r.net), maes = rows.map(r => r.maePct);
+  const kv = [["Net profit", rs(T.net, true)], ["Return on capital", pct(T.net / D.capital * 100)], ["Kul trade", T.n], ["Signal (din me limit se pehle)", g ? g[GC.signals].toLocaleString("en-IN") : "n/a"],
+    ["Signal / mahina", g ? f2(g[GC.sig_per_month]) : "n/a"], ["Trade / mahina", f2(T.n / Math.max(1, months.length))], ["Win rate", pct(T.win)], ["Loss rate", pct(T.n ? 100 - T.win : null)],
+    ["Average profit (jeete trade)", rs(T.aw, true)], ["Average loss (hare trade)", rs(T.al, true)], ["Average profit / average loss", f2(T.aw && T.al ? T.aw / -T.al : null)], ["Expectancy (ek trade ka average)", rs(T.avg, true)],
+    ["Average return (premium pe)", pct(T.ret)], ["Profit factor", f2(T.pf)], ["Max drawdown", rs(T.dd)], ["Sabse accha trade", rs(Math.max(...nets), true)], ["Sabse bura trade", rs(Math.min(...nets), true)],
+    ["Average MAE (sabse bura price, premium pe)", pct(maes.reduce((a, b) => a + b, 0) / Math.max(1, maes.length))], ["Profit wale mahine", months.filter(m => m[1] > 0).length + " / " + months.length],
+    ["Trade nahi hua (is exit ke stop pe 1 lot bhi risk se bada)", skipped]];
+  $("#kv").innerHTML = kv.map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+  const prem = rows.map(r => r.prem), byd = group(rows, r => r.date), dayPrem = Object.values(byd).map(a => a.reduce((x, r) => x + r.prem, 0));
+  $("#invhint").textContent = `Return % hamesha shuruaati capital (${cap}) pe hai. Profit dobara invest nahi kiya (compounding nahi).`;
+  $("#inv").innerHTML = [["Shuruaati capital", cap + " (fixed, compounding nahi)"], ["Risk per trade", `${D.risk_pct}% = Rs ${(D.capital * D.risk_pct / 100).toLocaleString("en-IN")} (stop lagne pe)`],
+    ["Qty rule", ex[2] === "t" ? `lots = risk / (entry x ${D.sizing_sl * 100}% x lot size) (is exit me SL nahi, isliye ${D.sizing_sl * 100}% maan ke)` : "lots = risk / ((entry - SL) x lot size), neeche round"],
+    ["Ek trade me max", `premium ${D.max_premium_pct}% capital (Rs ${(D.capital * D.max_premium_pct / 100).toLocaleString("en-IN")}), us din ke volume ka ${D.max_vol_share * 100}%`],
+    ["Max khule trade", D.max_per_day + " (din me max " + D.max_per_day + ", agle din band)"], ["Average premium / trade", rs(prem.reduce((a, b) => a + b, 0) / Math.max(1, prem.length))],
+    ["Sabse bada premium (ek trade)", rs(Math.max(0, ...prem))], ["Peak paisa laga (ek din)", rs(Math.max(0, ...dayPrem))], ["Average lots", f2(rows.reduce((a, r) => a + r.lots, 0) / Math.max(1, rows.length))]]
+    .map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+  const byx = group(rows, r => r.why);
+  $("#exits").innerHTML = sumHead("Exit ka karan") + "<tbody>" + Object.keys(byx).map(k => sumRow(k, sumUp(byx[k]))).join("") + "</tbody>";
+  // edge table: every exit of this setting
+  $("#edgetbl").innerHTML = "<thead><tr><th class='l'>Exit</th><th>Trade</th><th>Win %</th><th>Net</th><th>Average / trade</th><th>PF</th><th>Out-of-sample net</th><th>Random se behtar</th><th class='l'>Matlab</th></tr></thead><tbody>"
+    + D.exits.map(e => { const r = gridRow(Object.assign({}, S, {exit: e[0]})); if (!r) return ""; const p = r[GC.rand_pct];
+      const m = p === null ? "kam trade" : p >= 95 ? "random se saaf behtar" : p >= 80 ? "thoda behtar, pakka nahi" : p <= 20 ? "random se BURA" : "random jaisa";
+      return `<tr class="${e[0] === S.exit ? "pick" : ""}"><td class="l">${esc(e[1])}</td><td>${r[GC.all_trades]}</td><td>${pct(r[GC.all_win_pct])}</td><td class="${sgn(r[GC.all_net])}">${rs(r[GC.all_net], true)}</td><td class="${sgn(r[GC.all_avg])}">${rs(r[GC.all_avg], true)}</td><td>${f2(r[GC.all_pf])}</td><td class="${sgn(r[GC.oos_net])}">${rs(r[GC.oos_net], true)}</td><td>${pct(p)}</td><td class="l">${m}</td></tr>`; }).join("") + "</tbody>";
+  $("#ooexit").innerHTML = "<thead><tr><th class='l'>Exit</th><th>In-sample trade</th><th>In-sample net</th><th>In-sample PF</th><th>Out-of-sample trade</th><th>Out-of-sample net</th><th>OOS PF</th><th>OOS win %</th></tr></thead><tbody>"
+    + D.exits.map(e => { const r = gridRow(Object.assign({}, S, {exit: e[0]})); if (!r) return "";
+      return `<tr class="${e[0] === S.exit ? "pick" : ""}"><td class="l">${esc(e[1])}</td><td>${r[GC.is_trades]}</td><td class="${sgn(r[GC.is_net])}">${rs(r[GC.is_net], true)}</td><td>${f2(r[GC.is_pf])}</td><td>${r[GC.oos_trades]}</td><td class="${sgn(r[GC.oos_net])}">${rs(r[GC.oos_net], true)}</td><td>${f2(r[GC.oos_pf])}</td><td>${pct(r[GC.oos_win_pct])}</td></tr>`; }).join("") + "</tbody>";
+  // setup x pivot x strike at this universe / gap / exit
+  const spk = D.grid.filter(r => r[GC.univ] === S.univ && +r[GC.gap] === S.gap && r[GC.exit] === S.exit);
+  $("#spk").innerHTML = "<thead><tr><th class='l'>Setup</th><th class='l'>Pivot</th><th>Strike</th><th>Trade</th><th>Win %</th><th>Net</th><th>PF</th><th>Out-of-sample net</th><th>Random se behtar</th></tr></thead><tbody>"
+    + spk.map(r => `<tr class="${r[GC.setup] === S.setup && r[GC.pivot] === S.pivot && r[GC.k] === S.k ? "pick" : ""}" data-s="${r[GC.setup]}" data-p="${r[GC.pivot]}" data-k="${r[GC.k]}" style="cursor:pointer"><td class="l">${SS[r[GC.setup]]}</td><td class="l">${PN[r[GC.pivot]]}</td><td>${KN[r[GC.k]]}</td><td>${r[GC.all_trades]}</td><td>${pct(r[GC.all_win_pct])}</td><td class="${sgn(r[GC.all_net])}">${rs(r[GC.all_net], true)}</td><td>${f2(r[GC.all_pf])}</td><td class="${sgn(r[GC.oos_net])}">${rs(r[GC.oos_net], true)}</td><td>${pct(r[GC.rand_pct])}</td></tr>`).join("") + "</tbody>";
+  $("#spk").onclick = e => { const tr = e.target.closest("tr[data-s]"); if (tr && !choose(Object.assign({}, S, {setup: tr.dataset.s, pivot: tr.dataset.p, k: +tr.dataset.k}))) alert("A + C ke trade report me nahi hain, numbers isi table me hain."); };
+  // splits of the chosen setting
+  const dteB = d => d <= 1 ? "0-1 din" : d <= 3 ? "2-3 din" : d <= 7 ? "4-7 din" : d <= 15 ? "8-15 din" : "16+ din";
+  const vixB = v => v === null ? "n/a" : v < 12 ? "VIX 12 se kam" : v < 15 ? "VIX 12-15" : v < 18 ? "VIX 15-18" : "VIX 18+";
+  const instB = r => r.sym === "NIFTY" || r.sym === "BANKNIFTY" ? r.sym : "Stocks";
+  const sp = [["Expiry kitne din door (signal din se)", r => dteB(r.dte), ["0-1 din", "2-3 din", "4-7 din", "8-15 din", "16+ din"]], ["Expiry wala hafta?", r => r.ew ? "Expiry ka hafta" : "Baaki hafte"],
+    ["India VIX (signal din)", r => vixB(r.vix), ["VIX 12 se kam", "VIX 12-15", "VIX 15-18", "VIX 18+"]], ["Gap (signal ki direction me 0.25%+)", r => r.gapDir ? "Gap din" : "Bina gap"],
+    ["CALL ya PUT", r => r.type === "CE" ? "CALL (CE)" : "PUT (PE)"], ["Index ya stock", instB], ["Saal", r => r.date.slice(0, 4)], ["In-sample / out-of-sample", r => r.oos ? "Out-of-sample" : "In-sample"]];
+  $("#splits").innerHTML = sp.map((s, i) => `<div class="card"><h3>${s[0]}</h3><div class="scroll" style="max-height:none"><table id="sp${i}" class="chk"></table></div></div>`).join("");
+  sp.forEach((s, i) => { const gr = group(rows, s[1]); const keys = (s[2] || Object.keys(gr).sort()).filter(k => gr[k]); $("#sp" + i).innerHTML = sumHead("") + "<tbody>" + keys.map(k => sumRow(k, sumUp(gr[k]))).join("") + "</tbody>"; });
+  const byy = group(rows, r => r.date.slice(0, 4));
+  $("#ytable").innerHTML = sumHead("Saal") + "<tbody>" + Object.keys(byy).sort().map(k => sumRow(k, sumUp(byy[k]))).join("") + "</tbody>";
+  $("#mtable").innerHTML = "<thead><tr><th class='l'>Mahina</th><th>Net profit</th><th>Return %</th><th>Trade</th><th>Win rate</th><th>Max drawdown</th></tr></thead><tbody>"
+    + months.map(m => `<tr><td class="l">${m[0]}</td><td class="${sgn(m[1])}">${rs(m[1], true)}</td><td class="${sgn(m[1])}">${pct(m[1] / D.capital * 100)}</td><td>${m[2]}</td><td>${pct(m[3])}</td><td>${rs(m[4])}</td></tr>`).join("") + "</tbody>";
+  const bys = group(rows, r => r.sym);
+  const st = Object.keys(bys).map(s => { const x = sumUp(bys[s]), n = bys[s].map(r => r.net); return [s, x.n, x.win, x.net, x.avg, Math.max(...n), Math.min(...n), bys[s][bys[s].length - 1].date]; });
+  table({id: "#stable", rows: st, sort: [3, -1], q: "#sq", qcol: 0, filters: [], count: "#scount", pager: "#spager", dl: "#sdl", file: "stocks.csv",
+    heads: ["symbol", "trades", "win_pct", "net", "avg", "best", "worst", "last"],
+    cols: [{h: "Stock / index"}, {h: "Trade"}, {h: "Win %", f: pct}, {h: "Net", color: 1, f: v => rs(v, true)}, {h: "Average", color: 1, f: v => rs(v, true)}, {h: "Sabse accha", f: v => rs(v, true)}, {h: "Sabse bura", f: v => rs(v, true)}, {h: "Aakhri trade"}]});
+  fill("#te", "Saare exit", rows.map(r => r.why));
+  const tl = rows.map(r => [r.date, `${r.sym} ${r.strike} ${r.type}`, r.expiry, r.dte, r.levelOn, r.level, r.entry, r.stop, r.tgt, r.nd, r.px, r.why, r.lots, r.qty, r.gross, r.cost, r.net, r.mae, r.maePct, r.ret, r.vix, r.gap]);
+  table({id: "#ttable", rows: tl, sort: [0, 1], q: "#tq", qcol: 1, filters: [{el: "#te", col: 11}], count: "#tcount", pager: "#tpager", dl: "#tdl", file: `trades_${runKey(S).replace(/\|/g, "_")}_${S.exit}.csv`,
+    heads: ["date", "instrument", "setup", "pivot", "signal_time", "dte", "level_on", "level", "entry", "sl", "target", "exit_date", "exit", "exit_reason", "lots", "qty", "gross_pnl", "costs", "net_pnl", "mae_rs", "mae_pct", "return_pct", "vix", "gap_pct"],
+    csv: v => v.map(r => [r[0], r[1] + " " + r[2], r[4] === "option R3" ? "A" : "C", S.pivot, "15:30 (din ka aakhri candle close)", r[3], r[4], f2(r[5]), r[6], r[7] === null ? "" : f2(r[7]), r[8] === null ? "" : f2(r[8]),
+      r[9], f2(r[10]), r[11], r[12], r[13], f2(r[14]), f2(r[15]), f2(r[16]), f2(r[17]), f2(r[18]), f2(r[19]), r[20], f2(r[21])]),
+    cols: [{h: "Date"}, {h: "Contract"}, {h: "Expiry"}, {h: "Expiry tak din"}, {h: "Level kiska"}, {h: "Level", f: f2}, {h: "Entry", f: f2}, {h: "SL", f: f2}, {h: "Target", f: f2}, {h: "Exit din"}, {h: "Exit", f: f2},
+      {h: "Exit ka karan"}, {h: "Lots"}, {h: "Qty"}, {h: "Gross", color: 1, f: v => rs(v, true)}, {h: "Kharcha", f: v => rs(v)}, {h: "Net P&L", color: 1, f: v => rs(v, true)}, {h: "MAE (Rs)", f: v => rs(v)}, {h: "MAE %", f: pct}, {h: "Return %", color: 1, f: pct}, {h: "VIX", f: f2}, {h: "Gap %", f: f2}]});
+  TV.setTrades(viewerTrades(rows));
+  drawCharts();
+}
+function viewerTrades(rs_){
+  return rs_.map(r => {
+    const ser = D.series[`${r.sym}|${r.expiry}|${r.strike}|${r.type}`] || [];
+    const lines = [{price: r.entry, color: "--accent", style: 3, title: "Entry"}];
+    if (S.setup === "A") lines.push({price: r.level, color: "--warn", title: "R3 " + r.level.toFixed(2)}); else lines.push({price: r.r3opt, color: "--warn", style: 1, title: "option R3"});
+    if (r.stop !== null) lines.push({price: r.stop, color: "--neg", title: "SL"}, {price: r.tgt, color: "--pos", title: "Target"});
+    const mk = [{time: r.date, position: "belowBar", shape: "arrowUp", color: "--pos", text: "Entry " + r.entry.toFixed(2)}, {time: r.nd, position: "aboveBar", shape: "arrowDown", color: "--neg", text: "Exit " + r.px.toFixed(2)}];
+    const b = r.qty * r.entry * (1 + D.slip), sv = r.qty * r.px * (1 - D.slip), stt = (r.nd >= D.stt_new_from ? D.stt_sell_new : D.stt_sell) * sv;
+    const exch = (D.exch + D.sebi) * (b + sv), brk = 2 * D.brokerage, gst = D.gst * (brk + exch), stamp = D.stamp_buy * b;
+    return {
+      id: `${r.date}|${r.sym}|${r.strike}|${r.type}`, date: r.date, title: `${r.sym} ${r.strike} ${r.type}`, sub: `${r.levelOn} ${f2(r.level)} · ${r.entry.toFixed(2)} → ${r.px.toFixed(2)} · ${r.why}`, pnl: r.net, tag: r.why,
+      meta: [["Contract", `${r.sym} ${r.strike} ${r.type}`], ["Expiry", `${r.expiry} (${r.dte} din)`], ["Signal din / exit din", `${r.date} → ${r.nd}`], ["Level", `${r.levelOn} = ${f2(r.level)}` + (S.setup === "C" ? ` (close ${f2(r.uclose)})` : "")],
+        ["Option kal H / L / C", `${r.ph} / ${r.pl} / ${r.pc}`], ["Entry (last price)", r.entry.toFixed(2)], ["Agle din O / H / L / C", `${r.no} / ${r.nh} / ${r.nl} / ${r.nc}`],
+        ["SL / target", r.stop === null ? "nahi (time exit)" : `${r.stop.toFixed(2)} / ${r.tgt.toFixed(2)}`], ["Exit", `${r.px.toFixed(2)} · ${r.why}`], ["Lots x lot size", `${r.lots} x ${r.lot} = ${r.qty}`],
+        ["VIX / gap", `${f2(r.vix)} / ${f2(r.gap)}%`], ["MAE", `${rs(r.mae)} (${pct(r.maePct)})`], ["Net P&L", rs2(r.net), sgn(r.net)]],
+      charts: ser.length ? [
+        {title: "Option premium (daily candle)", kind: "candle", data: ser.map(x => ({time: x[0], open: x[1], high: x[2], low: x[3], close: x[4]})), markers: mk, lines: lines,
+         legend: [["--pos", "Entry"], ["--neg", "Exit / SL"], ["--warn", "R3"]]},
+        {title: S.setup === "C" ? `Underlying close + ${r.levelOn}` : "Underlying close", kind: "line", small: true, data: ser.map(x => ({time: x[0], value: x[5]})), markers: mk,
+         lines: S.setup === "C" ? [{price: r.level, color: "--warn", title: r.levelOn.replace("underlying ", "")}] : [], legend: []},
+      ] : [],
+      note: "Daily candle hai (expired option ka intraday data nahi hai). Underlying = NSE bhavcopy ka underlying close. Din ke andar SL aur target ka kram daily data me nahi dikhta, dono lage to SL pehle maana.",
+      cost: [["Buy value (slippage ke saath)", rs2(b)], ["Sell value (slippage ke saath)", rs2(sv)], ["Gross P&L", rs2(r.gross), sgn(r.gross)], ["Brokerage (Rs 20 x 2)", rs2(brk)], [`STT (${(r.nd >= D.stt_new_from ? D.stt_sell_new : D.stt_sell) * 100}% sell)`, rs2(stt)],
+        ["Exchange + SEBI", rs2(exch)], ["Stamp (0.003% buy)", rs2(stamp)], ["GST 18%", rs2(gst)], ["Net P&L (slippage " + (D.slip * 100) + "% har taraf)", rs2(r.net), sgn(r.net), true]],
+    };
+  }).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+}
+TradeViewer.stickyHeader(".top");
+const TV = TradeViewer(document.querySelector("#tv"), {});
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => { document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.p)); charts.forEach(c => c.resize()); if (b.dataset.p === "viewer") TV.show(); });
+render();
+</script>
+</body>
+</html>

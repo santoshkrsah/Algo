@@ -29,6 +29,13 @@ def first_added(report: Path) -> date:
     return date.fromisoformat(out[-1]) if out else datetime.fromtimestamp(report.stat().st_mtime).date()
 
 
+def backtested(report: Path) -> datetime:
+    """When the backtest ran: newest result file (trades, summary ...) in the folder. report.html alone is not used,
+    because a UI-only rebuild rewrites it without rerunning the test."""
+    out = [p.stat().st_mtime for p in report.parent.iterdir() if p.is_file() and p.name != "report.html"]
+    return datetime.fromtimestamp(max(out) if out else report.stat().st_mtime)
+
+
 def main() -> int:
     meta = json.loads((SITE / "reports.json").read_text(encoding="utf-8"))
     rows, files, missing = [], {}, []
@@ -42,7 +49,7 @@ def main() -> int:
                  "net": None, "pf": None, "trades": None, "verdict": "study"}
         made, upd = first_added(f), datetime.fromtimestamp(f.stat().st_mtime)
         rows.append({"num": int(folder.split("_", 1)[0]), "folder": folder, **m, "made": str(min(made, upd.date())),
-                     "updated": upd.strftime("%Y-%m-%d %H:%M"), "mb": round(f.stat().st_size / 1e6, 1),
+                     "updated": upd.strftime("%Y-%m-%d %H:%M"), "tested": backtested(f).strftime("%Y-%m-%d %H:%M"), "mb": round(f.stat().st_size / 1e6, 1),
                      "href": f"reports/{folder}.html", "hash": f"report-{int(folder.split('_', 1)[0])}"})
         files[f"reports/{folder}.html"] = str(f.relative_to(ROOT)).replace("\\", "/")
     site = SITE / "site.json"

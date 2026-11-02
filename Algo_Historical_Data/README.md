@@ -53,6 +53,7 @@ Run from the project folder with the virtual environment active.
 | NSE F&O bhavcopy, futures rows (expired contracts too, one row per day; works from Jul 2024) | `python -m fyers_data.download_calendar bhav --start 2024-11-01 --end 2026-10-30` |
 | NSE corporate actions (dividend, bonus, split ex-dates) to `reference/corporate_actions.csv` | `python -m fyers_data.download_reference corp --start 2024-11-01 --end 2026-12-31` |
 | 1m candles of single live contracts (not continuous) | `python -m fyers_data.download_calendar contract NSE:WIPRO26NOVFUT --start 2026-08-26` |
+| Daily candles 2010 -> today for every stock of the equity list + Nifty 50 / 200 / 500 (resumable, ~2 h first time) to `daily/`, then `daily/equity_daily.parquet` | `python -m fyers_data.download_daily` (`--only RELIANCE TCS`, `--indices-only`, `--combine-only`) |
 | F&O summary PDF | `python -m fyers_data.reports.fno_stats` then `python -m fyers_data.reports.fno_pdf` |
 | Equity summary PDF | `python -m fyers_data.reports.equity_stats --final` then `python -m fyers_data.reports.equity_pdf` |
 
@@ -75,6 +76,9 @@ The equity downloader saves progress after every batch of 25 stocks. If it stops
 
 Equity daily files: `symbol, timeframe, datetime, open, high, low, close, volume`, sorted by timeframe (1m first), symbol, time.
 F&O files: `datetime, open, high, low, close, volume`. Timestamps are IST candle start times with no timezone suffix.
+Daily history (`daily/equity/<SYMBOL>.csv`, `daily/index/<NAME>.csv`): `date, open, high, low, close, volume` straight from Fyers' daily
+candles (split / bonus adjusted; demergers are NOT always adjusted, e.g. ITC 6 Jan 2025, Adani Enterprises 3 Jun 2015; delisted or merged
+stocks are not served at all).
 
 ## Things to know
 

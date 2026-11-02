@@ -23,10 +23,11 @@ def _clean(v):
     return None if isinstance(v, float) and not np.isfinite(v) else v
 
 
-def write_html(path, data: dict) -> Path:
+def write_html(path, data: dict, template: str = "breakout_template.html") -> Path:
+    """template: breakout_template.html (report 18) or breakout2_template.html (full spec, tools/run_breakout2.py)."""
     data = {**data, "generated": datetime.now().strftime("%d %b %Y %H:%M")}
     css = re.search(r"<style>.*?</style>", (ASSETS / "report_template.html").read_text(encoding="utf-8"), re.S).group(0)
-    tpl = viewer_assets.apply((ASSETS / "breakout_template.html").read_text(encoding="utf-8")).replace("__CSS__", css).replace("__TITLE__", data["title"])
+    tpl = viewer_assets.apply((ASSETS / template).read_text(encoding="utf-8")).replace("__CSS__", css).replace("__TITLE__", data["title"])
     js = (ASSETS / "chart.umd.min.js").read_text(encoding="utf-8")
     blob = json.dumps(_clean(data), separators=(",", ":"), default=str).replace("</", "<\\/")
     path = Path(path)

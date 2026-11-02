@@ -11,6 +11,10 @@ One file per trading day in fno/bhavcopy/ (resumable; holidays return 404 and ar
 bhavopt: same bhavcopy, STOCK OPTION rows (STO) of the two nearest expiries that traded that day, fewer columns,
 into fno/bhavcopy_opt/ (for option-premium studies: daily OHLC of expired option contracts).
 bhavidx: same bhavcopy, NIFTY / BANKNIFTY INDEX OPTION rows (IDO) of the three nearest expiries, into fno/bhavcopy_idx/.
+bhavhist: STOCK futures (STF, every expiry) + STOCK options (STO, two nearest traded expiries) for the years before the
+folders above, into fno/bhavcopy_hist/ (columns FinInstrmTp + the bhavcopy_opt columns + TtlTrfVal). Before 8 Jul 2024
+NSE only has the old format (fo<DD><MON><YYYY>bhav.csv): it is renamed to the UDiFF columns; it has no lot size, underlying
+price, last price or trade count (left empty: lot = turnover / (contracts x price) of the futures, spot = futures close).
 contract: Fyers 1m candles of ONE contract (cont_flag=0, not the continuous series) into fno/1m/contracts/.
 Fyers has no expired contracts, so only contracts still listed today can be fetched.
 """
@@ -25,13 +29,37 @@ import requests
 
 from fyers_data.download_fno import CHUNK_DAYS, fetch_chunk
 from fyers_data.download_reference import NSE_UA
-from fyers_data.paths import FNO_BHAV, FNO_BHAV_IDX, FNO_BHAV_OPT, FNO_CONTRACTS
+from fyers_data.paths import FNO_BHAV, FNO_BHAV_HIST, FNO_BHAV_IDX, FNO_BHAV_OPT, FNO_CONTRACTS
 
 BHAV_URL = "https://nsearchives.nseindia.com/content/fo/BhavCopy_NSE_FO_0_0_0_{:%Y%m%d}_F_0000.csv.zip"
+OLD_URL = "https://nsearchives.nseindia.com/content/historical/DERIVATIVES/{y}/{m}/fo{d:02d}{m}{y}bhav.csv.zip"
+UDIFF_FROM = date(2024, 7, 8)                  # first day of the UDiFF file; the old format stops on 5 Jul 2024
+MONTHS = ("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")
 FUT_TYPES = ("STF", "IDF")
 IDX_OPT_SYMBOLS = ("NIFTY", "BANKNIFTY")
 OPT_COLS = ["TradDt", "TckrSymb", "XpryDt", "StrkPric", "OptnTp", "OpnPric", "HghPric", "LwPric", "ClsPric", "LastPric",
             "UndrlygPric", "SttlmPric", "OpnIntrst", "TtlTradgVol", "TtlNbOfTxsExctd", "NewBrdLotQty"]
+HIST_COLS = ["FinInstrmTp"] + OPT_COLS + ["TtlTrfVal"]
+OLD_COLS = {"SYMBOL": "TckrSymb", "STRIKE_PR": "StrkPric", "OPTION_TYP": "OptnTp", "OPEN": "OpnPric", "HIGH": "HghPric", "LOW": "LwPric",
+            "CLOSE": "ClsPric", "SETTLE_PR": "SttlmPric", "OPEN_INT": "OpnIntrst", "CONTRACTS": "TtlTradgVol"}
+
+
+def _url(d: date) -> str:
+    return BHAV_URL.format(d) if d >= UDIFF_FROM else OLD_URL.format(y=d.year, m=MONTHS[d.month - 1], d=d.day)
+
+
+def _from_old(df: pd.DataFrame) -> pd.DataFrame:
+    """Old-format stock F&O rows (FUTSTK / OPTSTK) with the UDiFF column names (CONTRACTS = TtlTradgVol, as in UDiFF)."""
+    df = df[df["INSTRUMENT"].isin(["FUTSTK", "OPTSTK"])]
+    out = df.rename(columns=OLD_COLS)
+    out["FinInstrmTp"] = df["INSTRUMENT"].map({"FUTSTK": "STF", "OPTSTK": "STO"})
+    out["TradDt"] = pd.to_datetime(df["TIMESTAMP"], format="%d-%b-%Y").dt.strftime("%Y-%m-%d")
+    out["XpryDt"] = pd.to_datetime(df["EXPIRY_DT"], format="%d-%b-%Y").dt.strftime("%Y-%m-%d")
+    out["TtlTrfVal"] = df["VAL_INLAKH"] * 1e5
+    out.loc[out["FinInstrmTp"] == "STF", ["StrkPric", "OptnTp"]] = [float("nan"), None]
+    for c in ("LastPric", "UndrlygPric", "TtlNbOfTxsExctd", "NewBrdLotQty"):
+        out[c] = float("nan")
+    return out
 
 
 def _futures(df: pd.DataFrame) -> pd.DataFrame:
@@ -50,6 +78,14 @@ def _index_options(df: pd.DataFrame) -> pd.DataFrame:
     return o[near3][OPT_COLS]
 
 
+def _stock_hist(df: pd.DataFrame) -> pd.DataFrame:
+    if "INSTRUMENT" in df:
+        df = _from_old(df)
+    o = df[(df["FinInstrmTp"] == "STO") & (df["TtlTradgVol"] > 0)]
+    near2 = o.groupby("TckrSymb")["XpryDt"].transform(lambda x: x.isin(sorted(x.unique())[:2]))
+    return pd.concat([df[df["FinInstrmTp"] == "STF"], o[near2]])[HIST_COLS]
+
+
 def bhav(start: date, end: date, folder=FNO_BHAV, keep=_futures):
     folder.mkdir(parents=True, exist_ok=True)
     saved, holidays, failed = 0, [], []
@@ -61,7 +97,7 @@ def bhav(start: date, end: date, folder=FNO_BHAV, keep=_futures):
             continue
         for attempt in range(4):
             try:
-                r = requests.get(BHAV_URL.format(d), headers=NSE_UA, timeout=60)
+                r = requests.get(_url(d), headers=NSE_UA, timeout=60)
             except requests.RequestException:
                 time.sleep(3 * (attempt + 1))
                 continue
@@ -101,7 +137,7 @@ def contract(symbols: list[str], start: date, end: date):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["bhav", "bhavopt", "bhavidx", "contract"])
+    ap.add_argument("what", choices=["bhav", "bhavopt", "bhavidx", "bhavhist", "contract"])
     ap.add_argument("symbols", nargs="*", help="contract: Fyers symbols, e.g. NSE:WIPRO26NOVFUT")
     ap.add_argument("--start", required=True)
     ap.add_argument("--end", default=str(date.today()))
@@ -110,5 +146,6 @@ if __name__ == "__main__":
     if a.what == "contract":
         contract(a.symbols, s, e)
     else:
-        keep = {"bhav": (FNO_BHAV, _futures), "bhavopt": (FNO_BHAV_OPT, _stock_options), "bhavidx": (FNO_BHAV_IDX, _index_options)}[a.what]
+        keep = {"bhav": (FNO_BHAV, _futures), "bhavopt": (FNO_BHAV_OPT, _stock_options), "bhavidx": (FNO_BHAV_IDX, _index_options),
+                "bhavhist": (FNO_BHAV_HIST, _stock_hist)}[a.what]
         bhav(s, e, *keep)

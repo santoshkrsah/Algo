@@ -26,6 +26,13 @@ Reads the Parquet store built by `python -m fyers_data.store build` (Algo_Histor
     python tools/run_rulebook.py --strategy orb --final --stop-atr 0.25 # FINAL 2024 -> latest, once per setting
 Rules: strategies/RULEBOOK.md. Run log: results/RULEBOOK_RUNS.csv.
 
+## Long daily history (2010 on)
+`data/daily/equity_daily.parquet` from `python -m fyers_data.download_daily` (Algo_Historical_Data): Fyers daily candles of every
+stock in the equity list + Nifty 50 / 200 / 500. Used by the gap breakout study:
+
+    python tools/run_gapbo.py               # gap breakout LONG baseline, Nifty 200 proxy, Sep 2011 -> latest (src/backtest/gapbo.py)
+    python tools/test_gapbo.py              # exit rules, TradingView EMA/RSI, setups vs plain code, look-ahead, sizing
+
 ## Running a backtest and the report
     python tools/run_backtest.py --start 2021-10-01 --end 2026-10-31 --name full_2021_2026
 Writes results/<name>/trades.csv and report.html (interactive dashboard: charts, every company, every trade) and

@@ -47,7 +47,7 @@ h1 { font: 800 clamp(26px, 4vw, 36px)/1.1 var(--f-display); margin: 0; color: va
 .hint { margin: 0; font-size: 13px; color: var(--muted) }
 
 .list { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden }
-.head, .row { display: grid; grid-template-columns: 52px minmax(0, 1fr) 124px 56px 68px 158px 92px; gap: 14px; align-items: center; padding: 14px 18px }
+.head, .row { display: grid; grid-template-columns: 52px minmax(0, 1fr) 124px 56px 68px 158px 128px; gap: 14px; align-items: center; padding: 14px 18px }
 .head { font: 600 11px var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--line); padding-block: 10px }
 .row + .row { border-top: 1px solid var(--line) }
 .row:hover { background: color-mix(in srgb, var(--accent) 5%, var(--card)) }
@@ -89,6 +89,7 @@ footer { font-size: 12.5px; color: var(--muted) }
 .vbar a { font: 600 14px var(--f-body); color: var(--accent); text-decoration: none; white-space: nowrap }
 .vbar a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 #vname { font: 700 15px var(--f-display); min-width: 0 }
+#vtested { font: 600 12px var(--f-mono); color: var(--muted); background: var(--chip); padding: 2px 8px; border-radius: 5px; white-space: nowrap }
 #vstate { font-size: 13px; color: var(--muted) }
 #vframe { width: 100%; height: 100%; border: 0; background: #fff }
 </style>
@@ -96,7 +97,7 @@ footer { font-size: 12.5px; color: var(--muted) }
 <div class="wrap">
   <header>
     <h1>Algo Backtest Reports</h1>
-    <p class="lede">Team ke saare backtest ek jagah. Khojo ya filter lagao, phir <b>Kholo</b> dabao: report nayi tab me khulegi.</p>
+    <p class="lede">Team ke saare backtest ek jagah. Khojo ya filter lagao, phir <b>Get Report</b> dabao: report nayi tab me khulegi.</p>
   </header>
   <div class="tally" id="tally"></div>
   <div class="controls">
@@ -120,7 +121,7 @@ footer { font-size: 12.5px; color: var(--muted) }
   <footer id="foot"></footer>
 </div>
 <div id="viewer" hidden>
-  <div class="vbar"><a href="#list" id="back">&larr; Saari reports</a><span id="vname"></span><span id="vstate"></span></div>
+  <div class="vbar"><a href="#list" id="back">&larr; Saari reports</a><span id="vname"></span><span id="vtested" title="Jis din ye backtest chala (result files bani)"></span><span id="vstate"></span></div>
   <iframe id="vframe" title="Report"></iframe>
 </div>
 
@@ -177,7 +178,7 @@ function render() {
       <span class="r c-pf"><span class="lbl">PF</span>${r.pf == null ? '<span class="dim">-</span>' : `<span class="${r.pf >= 1 ? "gain" : "loss"}">${r.pf.toFixed(2)}</span>`}</span>
       <span class="r c-tr"><span class="lbl">Trade</span>${r.trades == null ? '<span class="dim">-</span>' : r.trades.toLocaleString("en-IN")}</span>
       <span class="dates">Bana <b>${day(r.made)}</b><br>Update <b>${day(r.updated)}</b></span>
-      <a class="open" href="${esc(D.site ? D.site + "#" + r.hash : "#" + r.hash)}"${D.site ? ' target="_blank" rel="noopener"' : ""}>Kholo &#8599;</a>
+      <a class="open" href="${esc(D.site ? D.site + "#" + r.hash : "#" + r.hash)}"${D.site ? ' target="_blank" rel="noopener"' : ""}>Get Report &#8599;</a>
     </div>`).join("") : '<div class="empty">Is filter me koi report nahi mili. Filter hatao ya kuch aur khojo.</div>';
 }
 for (const id of ["q", "type", "verdict", "sort"]) $(id).addEventListener(id === "q" ? "input" : "change", render);
@@ -201,6 +202,7 @@ async function route() {
   shown = r.hash;
   document.title = `${String(r.num).padStart(2, "0")} ${r.name}`;
   $("vname").textContent = `${String(r.num).padStart(2, "0")} · ${r.name}`;
+  $("vtested").textContent = `Backtested ${day(r.tested)}`;
   $("vstate").textContent = `Report load ho rahi hai (${r.mb} MB)...`;
   try {
     const res = await fetch(r.href);
