@@ -178,5 +178,15 @@
   "pf": 2.73,
   "trades": 472,
   "verdict": "profit"
+ },
+ "20_vcp_swing": {
+  "name": "VCP Swing (Volatility Contraction)",
+  "type": "Swing",
+  "period": "Feb 2022 - Oct 2026",
+  "result": "Top 500 market cap, filter ON: 388 trade, win 31%, PF 0.75 (stop 2.5%, exit A). 720 setting me ek bhi verify (Dec 2024 - Oct 2026) me profit nahi; entry din 1-min se dekho to bhi -Rs 37k. Nifty 500 buy-hold +59%",
+  "net": -335678,
+  "pf": 0.75,
+  "trades": 388,
+  "verdict": "loss"
  }
 }

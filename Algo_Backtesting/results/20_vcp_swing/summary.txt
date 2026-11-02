@@ -1,0 +1,82 @@
+Baseline ON (poora): 388 trade, win 31%, net Rs -335,678 (-33.6%), CAGR -8.4%, PF 0.75, expectancy -0.27R, max DD -40.7%
+  fit: 250 trade, win 33%, net Rs -101,484 (-10.1%), CAGR -3.8%, PF 0.88, expectancy -0.14R, max DD -19.0%
+  verify: 138 trade, win 27%, net Rs -234,193 (-23.4%), CAGR -13.0%, PF 0.52, expectancy -0.49R, max DD -24.1%
+Baseline OFF (poora): 508 trade, win 31%, net Rs -598,457 (-59.8%), CAGR -17.7%, PF 0.68, expectancy -0.28R, max DD -61.4%
+Fit pe chuna [Exit D, stop 3% fixed, volume 3x, watch 30 din, base (50 EMA), filter ON] fit: 229 trade, win 31%, net Rs 436,298 (43.6%), CAGR 14.0%, PF 1.54, expectancy 0.21R, max DD -11.0%
+  verify: 131 trade, win 23%, net Rs -172,590 (-17.3%), CAGR -9.5%, PF 0.63, expectancy -0.55R, max DD -23.3%
+Nifty 500 buy-hold: 59.1% (CAGR 10.4%, max DD -18.8%); fit 64.8%, verify -4.1%
+Grid: 720 setting, fit me profit 17%, verify me profit 0%, dono me 0%, rank corr 0.44, chuna setting verify me rank 19/720; padosi 0/11 verify me profit
+
+Checks:
+Stop
+  Stop 2% [ON]: 415 trade, net Rs -531,741, PF 0.59, exp -0.41R, DD -53.2%, fit Rs -229,139, verify Rs -302,602
+  Stop 2% [OFF]: 544 trade, net Rs -867,201, PF 0.51, exp -0.45R, DD -86.7%, fit Rs -340,690, verify Rs -526,511
+  Stop 2.5% (baseline) [ON]: 388 trade, net Rs -335,678, PF 0.75, exp -0.27R, DD -40.7%, fit Rs -101,484, verify Rs -234,193
+  Stop 2.5% (baseline) [OFF]: 508 trade, net Rs -598,457, PF 0.68, exp -0.28R, DD -61.4%, fit Rs -147,748, verify Rs -450,709
+  Stop 3% [ON]: 356 trade, net Rs -184,534, PF 0.86, exp -0.24R, DD -30.9%, fit Rs 3,800, verify Rs -188,333
+  Stop 3% [OFF]: 472 trade, net Rs -365,681, PF 0.80, exp -0.26R, DD -45.7%, fit Rs 3,892, verify Rs -369,573
+  Candle-low stop (trigger bar ka low) [ON]: 401 trade, net Rs -269,752, PF 0.79, exp -0.30R, DD -33.1%, fit Rs -31,163, verify Rs -238,588
+  Candle-low stop (trigger bar ka low) [OFF]: 539 trade, net Rs -528,351, PF 0.71, exp -0.31R, DD -52.8%, fit Rs -148,859, verify Rs -379,492
+  Hybrid: 2.5% aur candle low me jo tight [ON]: 425 trade, net Rs -373,363, PF 0.71, exp -0.37R, DD -43.6%, fit Rs -76,890, verify Rs -296,473
+  Hybrid: 2.5% aur candle low me jo tight [OFF]: 562 trade, net Rs -752,789, PF 0.59, exp -0.41R, DD -75.3%, fit Rs -218,820, verify Rs -533,969
+Risk har trade
+  Risk 0.5% [ON]: 389 trade, net Rs -320,669, PF 0.76, exp -0.25R, DD -39.7%, fit Rs -90,346, verify Rs -230,323
+  Risk 0.5% [OFF]: 513 trade, net Rs -596,625, PF 0.67, exp -0.27R, DD -60.9%, fit Rs -151,805, verify Rs -444,820
+  Risk 0.75% (baseline) [ON]: 388 trade, net Rs -335,678, PF 0.75, exp -0.27R, DD -40.7%, fit Rs -101,484, verify Rs -234,193
+  Risk 0.75% (baseline) [OFF]: 508 trade, net Rs -598,457, PF 0.68, exp -0.28R, DD -61.4%, fit Rs -147,748, verify Rs -450,709
+  Risk 1% [ON]: 388 trade, net Rs -335,678, PF 0.75, exp -0.27R, DD -40.7%, fit Rs -101,484, verify Rs -234,193
+  Risk 1% [OFF]: 508 trade, net Rs -598,457, PF 0.68, exp -0.28R, DD -61.4%, fit Rs -147,748, verify Rs -450,709
+Volume multiple (expansion candle)
+  Volume 2x [ON]: 325 trade, net Rs -435,867, PF 0.63, exp -0.36R, DD -45.8%, fit Rs -185,305, verify Rs -250,561
+  Volume 2x [OFF]: 449 trade, net Rs -677,481, PF 0.60, exp -0.41R, DD -70.3%, fit Rs -326,797, verify Rs -350,685
+  Volume 3x (baseline) [ON]: 388 trade, net Rs -335,678, PF 0.75, exp -0.27R, DD -40.7%, fit Rs -101,484, verify Rs -234,193
+  Volume 3x (baseline) [OFF]: 508 trade, net Rs -598,457, PF 0.68, exp -0.28R, DD -61.4%, fit Rs -147,748, verify Rs -450,709
+  Volume 4x [ON]: 348 trade, net Rs -288,610, PF 0.77, exp -0.22R, DD -36.9%, fit Rs -56,936, verify Rs -231,673
+  Volume 4x [OFF]: 463 trade, net Rs -491,945, PF 0.71, exp -0.25R, DD -52.3%, fit Rs -91,361, verify Rs -400,584
+Watch din (base kitna lamba)
+  Watch 10 din [ON]: 341 trade, net Rs -301,756, PF 0.75, exp -0.29R, DD -35.5%, fit Rs -102,747, verify Rs -199,009
+  Watch 10 din [OFF]: 457 trade, net Rs -514,453, PF 0.69, exp -0.31R, DD -54.0%, fit Rs -110,426, verify Rs -404,028
+  Watch 20 din (baseline) [ON]: 388 trade, net Rs -335,678, PF 0.75, exp -0.27R, DD -40.7%, fit Rs -101,484, verify Rs -234,193
+  Watch 20 din (baseline) [OFF]: 508 trade, net Rs -598,457, PF 0.68, exp -0.28R, DD -61.4%, fit Rs -147,748, verify Rs -450,709
+  Watch 30 din [ON]: 398 trade, net Rs -337,495, PF 0.75, exp -0.27R, DD -40.1%, fit Rs -112,233, verify Rs -225,262
+  Watch 30 din [OFF]: 519 trade, net Rs -611,345, PF 0.67, exp -0.30R, DD -61.9%, fit Rs -170,255, verify Rs -441,089
+Extension limit (50 EMA se kitna upar)
+  Extension 10% [ON]: 279 trade, net Rs -223,305, PF 0.77, exp -0.17R, DD -28.7%, fit Rs -69,556, verify Rs -153,749
+  Extension 10% [OFF]: 373 trade, net Rs -472,841, PF 0.65, exp -0.27R, DD -48.2%, fit Rs -120,510, verify Rs -352,331
+  Extension 15% (baseline) [ON]: 388 trade, net Rs -335,678, PF 0.75, exp -0.27R, DD -40.7%, fit Rs -101,484, verify Rs -234,193
+  Extension 15% (baseline) [OFF]: 508 trade, net Rs -598,457, PF 0.68, exp -0.28R, DD -61.4%, fit Rs -147,748, verify Rs -450,709
+  Extension 20% [ON]: 431 trade, net Rs -413,542, PF 0.72, exp -0.29R, DD -44.5%, fit Rs -182,450, verify Rs -231,092
+  Extension 20% [OFF]: 563 trade, net Rs -721,384, PF 0.64, exp -0.33R, DD -72.1%, fit Rs -224,190, verify Rs -497,194
+Exit variant
+  A: 50% @ 2R, breakeven, 10 EMA trail (baseline) [ON]: 388 trade, net Rs -335,678, PF 0.75, exp -0.27R, DD -40.7%, fit Rs -101,484, verify Rs -234,193
+  A: 50% @ 2R, breakeven, 10 EMA trail (baseline) [OFF]: 508 trade, net Rs -598,457, PF 0.68, exp -0.28R, DD -61.4%, fit Rs -147,748, verify Rs -450,709
+  B: 50% @ 2R, breakeven, 20 EMA trail [ON]: 385 trade, net Rs -359,532, PF 0.73, exp -0.28R, DD -43.0%, fit Rs -95,876, verify Rs -263,656
+  B: 50% @ 2R, breakeven, 20 EMA trail [OFF]: 502 trade, net Rs -616,883, PF 0.66, exp -0.32R, DD -63.5%, fit Rs -133,934, verify Rs -482,949
+  C: 1/3 at T1 / T2 / T3 (E range x 1/2/3) [ON]: 377 trade, net Rs -427,748, PF 0.69, exp -0.35R, DD -46.3%, fit Rs -203,224, verify Rs -224,524
+  C: 1/3 at T1 / T2 / T3 (E range x 1/2/3) [OFF]: 485 trade, net Rs -511,377, PF 0.72, exp -0.25R, DD -53.8%, fit Rs -153,829, verify Rs -357,548
+  D: taakat me becho (8% din / 10 EMA se 10%) [ON]: 362 trade, net Rs -339,436, PF 0.75, exp -0.34R, DD -41.8%, fit Rs -106,665, verify Rs -232,771
+  D: taakat me becho (8% din / 10 EMA se 10%) [OFF]: 470 trade, net Rs -564,673, PF 0.69, exp -0.41R, DD -59.4%, fit Rs -111,896, verify Rs -452,777
+Entry ke variant
+  Trigger = expansion candle ka high [ON]: 275 trade, net Rs -322,084, PF 0.69, exp -0.24R, DD -32.3%, fit Rs -72,695, verify Rs -249,389
+  Trigger = expansion candle ka high [OFF]: 355 trade, net Rs -347,345, PF 0.74, exp -0.19R, DD -35.0%, fit Rs -26,932, verify Rs -320,413
+  Gap limit 1% [ON]: 377 trade, net Rs -297,721, PF 0.77, exp -0.27R, DD -39.3%, fit Rs -74,782, verify Rs -222,939
+  Gap limit 1% [OFF]: 493 trade, net Rs -545,013, PF 0.70, exp -0.25R, DD -57.9%, fit Rs -115,331, verify Rs -429,682
+  Base variant: 50 EMA ke upar rahe (20 EMA nahi) [ON]: 410 trade, net Rs -238,932, PF 0.82, exp -0.25R, DD -31.6%, fit Rs 4,481, verify Rs -243,414
+  Base variant: 50 EMA ke upar rahe (20 EMA nahi) [OFF]: 545 trade, net Rs -521,023, PF 0.73, exp -0.29R, DD -53.1%, fit Rs -61,830, verify Rs -459,193
+Doosre checks (rules ka hissa nahi)
+  Entry din stop sirf close pe (stop-pehle niyam ke bina) [ON]: 371 trade, net Rs -17,307, PF 0.99, exp -0.09R, DD -19.0%, fit Rs 75,719, verify Rs -93,026
+  Entry din stop sirf close pe (stop-pehle niyam ke bina) [OFF]: 488 trade, net Rs -252,947, PF 0.85, exp -0.14R, DD -35.8%, fit Rs 77,236, verify Rs -330,182
+  Entry din 1-min data se (asli order: fill ke baad stop / target) [ON]: 378 trade, net Rs -37,497, PF 0.97, exp -0.12R, DD -21.0%, fit Rs 87,304, verify Rs -124,800
+  Entry din 1-min data se (asli order: fill ke baad stop / target) [OFF]: 497 trade, net Rs -296,198, PF 0.83, exp -0.17R, DD -39.0%, fit Rs 67,372, verify Rs -363,570
+  Slippage 0 [ON]: 387 trade, net Rs -261,590, PF 0.80, exp -0.31R, DD -36.1%, fit Rs -51,137, verify Rs -210,452
+  Slippage 0 [OFF]: 512 trade, net Rs -511,388, PF 0.71, exp -0.30R, DD -54.1%, fit Rs -99,166, verify Rs -412,222
+  Slippage 2x (0.1% har fill) [ON]: 388 trade, net Rs -406,560, PF 0.71, exp -0.33R, DD -45.4%, fit Rs -149,768, verify Rs -256,792
+  Slippage 2x (0.1% har fill) [OFF]: 508 trade, net Rs -691,803, PF 0.64, exp -0.32R, DD -69.4%, fit Rs -202,302, verify Rs -489,500
+  Compounding ON (booked profit se size) [ON]: 386 trade, net Rs -299,155, PF 0.75, exp -0.35R, DD -36.2%, fit Rs -118,079, verify Rs -181,076
+  Compounding ON (booked profit se size) [OFF]: 509 trade, net Rs -465,469, PF 0.69, exp -0.30R, DD -47.3%, fit Rs -157,126, verify Rs -308,343
+  Position cap 30% (asli risk 0.75% tak) [ON]: 351 trade, net Rs -300,626, PF 0.80, exp -0.44R, DD -40.0%, fit Rs -62,178, verify Rs -238,447
+  Position cap 30% (asli risk 0.75% tak) [OFF]: 461 trade, net Rs -697,359, PF 0.68, exp -0.38R, DD -71.8%, fit Rs -132,770, verify Rs -564,589
+  Saare stocks (top 500 nahi), liquidity Rs 5 Cr [ON]: 569 trade, net Rs -639,112, PF 0.68, exp -0.41R, DD -63.9%, fit Rs -415,187, verify Rs -223,925
+  Saare stocks (top 500 nahi), liquidity Rs 5 Cr [OFF]: 782 trade, net Rs -1,146,169, PF 0.60, exp -0.38R, DD -114.6%, fit Rs -483,811, verify Rs -662,359
+  Liquidity Rs 10 Cr [ON]: 369 trade, net Rs -308,018, PF 0.76, exp -0.27R, DD -39.1%, fit Rs -86,209, verify Rs -221,809
+  Liquidity Rs 10 Cr [OFF]: 479 trade, net Rs -563,310, PF 0.68, exp -0.27R, DD -59.0%, fit Rs -110,694, verify Rs -452,616

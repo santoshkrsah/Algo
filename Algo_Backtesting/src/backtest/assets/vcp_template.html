@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>try { const t = localStorage.getItem("bt_theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<title>__TITLE__</title>
+__CSS__
+<style>
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:0 10px 10px 0}
+.seg button{background:var(--card);border:0;border-right:1px solid var(--line);padding:7px 12px;cursor:pointer;font-size:13px;color:var(--muted)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--soft);color:var(--ink);font-weight:650}
+.seglbl{font-size:12px;color:var(--muted);margin-right:6px}
+.chk td.l{white-space:normal;max-width:440px}
+.card.cp{position:relative}
+.card.cp h3{padding-right:120px}
+.copy{position:absolute;top:14px;right:14px}
+.warnbox{border-left:4px solid var(--warn);background:var(--soft);padding:10px 14px;border-radius:8px;margin:0 0 12px;font-size:14px}
+.ch.mid{height:260px}
+</style>
+<style>__VIEWER_CSS__</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 17l5-6 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <div><h1>__TITLE__</h1><div class="sub">Nifty 500 jaisa (top 500 market cap) &middot; VCP swing &middot; daily candles</div></div>
+  </div>
+  <div class="actions"><span class="chip" id="range"></span><button class="btn" id="theme">Dark / Light</button></div>
+</div>
+<div class="wrap">
+<div class="sub" id="subtitle" style="margin:14px 0 0"></div>
+<div class="verdict" id="verdict"></div>
+<div class="setrow" id="settings"></div>
+<div class="segrow"><div class="sg"><span class="seglbl">Setup:</span><div class="seg" id="seg_v"></div></div></div>
+<div class="kpis" id="kpis"></div>
+<div class="tabs" id="tabs">
+  <button class="tab on" data-p="sum">Saransh</button>
+  <button class="tab" data-p="bd">Breakdown</button>
+  <button class="tab" data-p="months">Mahine ke hisaab se</button>
+  <button class="tab" data-p="stocks">Har stock</button>
+  <button class="tab" data-p="viewer">Trade viewer</button>
+  <button class="tab" data-p="trades">Saare trades</button>
+  <button class="tab" data-p="rules">Rules</button>
+</div>
+
+<section class="panel on" id="sum">
+  <div class="card"><h3>Fit (in-sample) aur verify (out-of-sample)</h3><div class="hint">Setting sirf fit hisse pe chuni gayi; verify hisse ko chhua nahi. Dono me result mile tabhi bharosa. Aakhri column: usi period me Nifty 500 kharid ke rakhte to.</div><div class="scroll" style="max-height:none"><table id="split"></table></div></div>
+  <div class="card"><h3>Equity curve (mark-to-market) vs Nifty 500</h3><div class="hint">Roz ke close pe: Rs 10 lakh + band trades ka net + khule trades ka P&amp;L. Doosri line: Rs 10 lakh Nifty 500 me lagate to (dividend ke bina).</div><div class="ch tall"><canvas id="c_eq"></canvas></div></div>
+  <div class="card"><h3>Drawdown</h3><div class="hint">Equity apne sabse uche level se kitna neeche (%).</div><div class="ch mid"><canvas id="c_dd"></canvas></div></div>
+  <div class="card"><h3>R multiple distribution</h3><div class="hint">Har trade ka net / shuru ka risk. -1 ke paas = stop laga; daayi taraf ki lambi poonch = bade jeet.</div><div class="ch mid"><canvas id="c_r"></canvas></div></div>
+  <div class="card"><h3>Saare numbers</h3><div class="kv" id="kv"></div></div>
+  <div class="card"><h3>Extra checks</h3><div class="hint">Kitne trade jaldi stop hue, kya poora profit kuch hi trades se aaya, aur Nifty 500 se tulna.</div><div class="kv" id="xk"></div></div>
+  <div class="card"><h3>Trade kaise band hue</h3><div class="scroll" style="max-height:none"><table id="exits"></table></div></div>
+  <div class="card"><h3>Paisa kaise lagaya (investment)</h3><div class="hint">Return % hamesha shuruaati capital (Rs 10 lakh) pe hai.</div><div class="kv" id="inv"></div></div>
+  <div class="card"><h3>Saare setup ek saath</h3><div class="hint">Upar "Setup" ke saare options. Fit = Feb 2022 - Nov 2024, verify = Dec 2024 - Oct 2026.</div><div class="scroll" style="max-height:none"><table id="grid"></table></div></div>
+</section>
+
+<section class="panel" id="bd">
+  <div class="card"><h3>Alag runs: exit variant, stop %, volume multiple (filter ON aur OFF)</h3><div class="hint">Har line ek poora alag backtest (baaki sab baseline jaisa). Net = poora period.</div><div class="scroll" style="max-height:none"><table id="runs"></table></div></div>
+  <div class="card"><h3>Market filter (signal ke din)</h3><div class="hint">Filter OFF wale setup me dikhata hai ki Nifty 500 kamzor tha tab trade kaise gaye. Filter ON setup me sab "ON" hi honge.</div><div class="scroll" style="max-height:none"><table id="b_mkt"></table></div></div>
+  <div class="card"><h3>Early vs late stage</h3><div class="hint">Early = E se pehle 250 din me koi aur expansion candle nahi (pehla base). Late = 91-250 din pehle bhi tha.</div><div class="scroll" style="max-height:none"><table id="b_stage"></table></div></div>
+  <div class="card"><h3>Expansion candle ka volume multiple</h3><div class="scroll" style="max-height:none"><table id="b_vm"></table></div></div>
+  <div class="card"><h3>E ke din 50 EMA se doori</h3><div class="scroll" style="max-height:none"><table id="b_dist"></table></div></div>
+  <div class="card"><h3>Base length (E se entry tak din)</h3><div class="scroll" style="max-height:none"><table id="b_base"></table></div></div>
+  <div class="card"><h3>Entry kaise hui</h3><div class="scroll" style="max-height:none"><table id="b_open"></table></div></div>
+</section>
+
+<section class="panel" id="months">
+  <div class="card"><h3>Har mahine ka net profit</h3><div class="ch"><canvas id="c_m"></canvas></div></div>
+  <div class="card"><h3>Saal ke hisaab se</h3><div class="hint">Trade band hone ke saal ke hisaab se. Return % = net / Rs 10 lakh.</div><div class="scroll" style="max-height:none"><table id="ytable"></table></div></div>
+  <div class="card"><h3>Mahine ki table</h3><div class="scroll" style="max-height:none"><table id="mtable"></table></div></div>
+</section>
+
+<section class="panel" id="stocks">
+  <div class="card"><h3>Har stock</h3>
+    <div class="bar"><input id="sq" placeholder="Stock khojo"><button class="btn" id="sdl">Download CSV</button><span class="note" id="scount"></span></div>
+    <div class="scroll"><table id="stable"><thead></thead><tbody></tbody></table></div><div class="pager" id="spager"></div></div>
+</section>
+
+<section class="panel" id="viewer"><div id="tv"></div></section>
+
+<section class="panel" id="trades">
+  <div class="card"><h3>Har ek trade</h3>
+    <div class="bar"><input id="tq" placeholder="Stock khojo"><select id="te"><option value="">Saare exit</option></select>
+      <button class="btn" id="tdl">Download CSV</button><span class="note" id="tcount"></span></div>
+    <div class="scroll"><table id="ttable"><thead></thead><tbody></tbody></table></div><div class="pager" id="tpager"></div></div>
+</section>
+
+<section class="panel" id="rules">
+  <div class="card cp"><button class="btn copy" data-copy="rules">Copy karo</button><h3>Rules</h3><ul class="rules" id="rulelist"></ul></div>
+  <div class="card"><h3>Jo baat rules me clear nahi thi, wahan hamne kya maana</h3><ul class="rules" id="notelist"></ul></div>
+  <div class="card"><h3>Data</h3><div class="scroll" style="max-height:none"><table id="dinfo" class="chk"></table></div></div>
+  <div class="card"><h3>Overfitting check (720 setting)</h3><div class="hint">Exit 4 x stop 5 x volume 3 x watch 3 x EMA 2 x filter 2. Setting fit hisse pe chuni, verify pe sirf dekhi.</div>
+    <div id="owarn"></div><div class="kv" id="rob"></div>
+    <h3 style="margin-top:16px">Fit hisse ke top 15 setting, aur verify me unka haal</h3><div class="scroll" style="max-height:none"><table id="top" class="chk"></table></div></div>
+  <div class="card"><h3>Extra checks (ye rules ka hissa NAHI hai)</h3><div class="hint">Baseline se ek baar me sirf ek cheez badli; har line filter ON aur OFF dono. Fit = Feb 2022 - Nov 2024, verify = Dec 2024 - Oct 2026.</div>
+    <div class="scroll" style="max-height:none"><table id="chk" class="chk"></table></div></div>
+  <div class="card cp"><button class="btn copy" data-copy="formulas">Copy karo</button><h3>Formulas</h3><div class="hint">Is backtest me har number in formulas se nikala gaya hai.</div>
+    <div class="scroll" style="max-height:none"><table id="fml" class="chk"></table></div></div>
+</section>
+<footer id="foot"></footer>
+</div>
+<script>__CHARTJS__</script>
+<script>__LWC__</script>
+<script>__VIEWER_JS__</script>
+<script>
+const D = __DATA__;
+const $ = s => document.querySelector(s);
+const sgn = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
+const rs = (v, plus) => v === null || v === undefined || isNaN(v) ? "n/a" : (v < 0 ? "-" : plus && v > 0 ? "+" : "") + "Rs " + Math.round(Math.abs(v)).toLocaleString("en-IN");
+const f2 = v => v === null || v === undefined || isNaN(v) ? "n/a" : Number(v).toFixed(2);
+const pct = v => v === null || v === undefined || isNaN(v) ? "n/a" : f2(v) + "%";
+const sum = a => a.reduce((x, y) => x + y, 0);
+const cs = v => `<span class="${sgn(v)}">${rs(v, true)}</span>`;
+const cp = v => `<span class="${sgn(v)}">${pct(v)}</span>`;
+const row = cells => "<tr>" + cells.map((c, i) => `<td${i === 0 ? ' class="l"' : ""}>${c}</td>`).join("") + "</tr>";
+const head = cols => "<thead><tr>" + cols.map((c, i) => `<th${i === 0 ? " class='l'" : ""}>${c}</th>`).join("") + "</tr></thead>";
+function group(a, keyf){ const m = {}; a.forEach(r => { const k = keyf(r); (m[k] = m[k] || []).push(r); }); return m; }
+const cap = "Rs " + D.capital.toLocaleString("en-IN");
+let V = D.views[0], X = [], months = [], eqs = [];
+
+$("#range").innerHTML = `Data <b>${D.data_range[0]}</b> &rarr; <b>${D.data_range[1]}</b>`; $("#range").title = D.data_note;
+$("#foot").textContent = "Purane result se aage ki guarantee nahi hoti. Daily data; stock list Jun 2026 ki (survivorship bias, Rules tab dekho).";
+const li = (sel, arr) => arr.forEach(r => { const e = document.createElement("li"); e.textContent = r; $(sel).appendChild(e); });
+li("#rulelist", D.rules); li("#notelist", D.notes);
+$("#fml").innerHTML = "<thead><tr><th class='l'>Kya</th><th class='l'>Formula</th></tr></thead><tbody>" + D.formulas.map(f => `<tr><td class="l">${f[0]}</td><td class="l"><code>${f[1]}</code></td></tr>`).join("") + "</tbody>";
+$("#dinfo").innerHTML = "<tbody>" + D.data_info.map(r => `<tr><td class="l">${r[0]}</td><td class="l">${r[1]}</td></tr>`).join("") + "</tbody>";
+const chkRow = c => row([c[0], c[1], c[2], pct(c[3]), cs(c[4]), cp(c[5]), cp(c[6]), f2(c[7]), f2(c[8]), cp(c[9]), cs(c[10]), f2(c[11]), cs(c[12]), f2(c[13])]);
+const chkHead = head(["Kya badla", "Filter", "Trade", "Win %", "Net", "Return %", "CAGR", "Profit factor", "Expectancy (R)", "Max DD", "Net (fit)", "PF (fit)", "Net (verify)", "PF (verify)"]);
+$("#chk").innerHTML = chkHead + "<tbody>" + D.checks.map(c => c.length === 1 ? `<tr><td class="l" colspan="14"><b>${c[0]}</b></td></tr>` : chkRow(c)).join("") + "</tbody>";
+const RUNG = {exit: "Exit variant", stop: "Stop", vol: "Volume multiple"};
+$("#runs").innerHTML = chkHead + "<tbody>" + Object.keys(RUNG).map(g => `<tr><td class="l" colspan="14"><b>${RUNG[g]}</b></td></tr>` + D.checks.filter(c => c[15] === g).map(chkRow).join("")).join("") + "</tbody>";
+// robustness
+const RB = D.robust;
+$("#rob").innerHTML = [["Setting jo fit hisse me profit me", pct(RB.is_pos)], ["Setting jo verify hisse me profit me", pct(RB.oos_pos)], ["Dono hisson me profit", pct(RB.both_pos)],
+  ["Median profit factor: fit / verify", f2(RB.is_pf_med) + " / " + f2(RB.oos_pf_med)], ["Fit rank vs verify rank (correlation, 1 = same order)", f2(RB.rank_corr)],
+  ["Fit pe chuna setting", RB.fit_label], ["Uska fit hissa", `${RB.fit_is.trades} trade, ${rs(RB.fit_is.net, true)}, PF ${f2(RB.fit_is.pf)}, ${f2(RB.fit_is.exp_r)} R`],
+  ["Uska verify hissa", `${RB.fit_oos.trades} trade, ${rs(RB.fit_oos.net, true)}, PF ${f2(RB.fit_oos.pf)}, ${f2(RB.fit_oos.exp_r)} R (720 me rank ${RB.oos_rank})`],
+  ["Padosi setting (ek cheez alag) jo verify me profit me", `${RB.neigh_oos_pos} / ${RB.neigh_n} (fit me ${RB.neigh_is_pos} / ${RB.neigh_n})`],
+  ["Verify me sabse accha (sirf dekhne ke liye, chuna nahi)", RB.best_oos]].map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+const warns = [];
+if (RB.fit_oos.net <= 0) warns.push("Fit pe chuni setting verify hisse me loss me hai: edge naye data pe nahi tika.");
+if (RB.both_pos < 25) warns.push(`Sirf ${f2(RB.both_pos)}% setting dono hisson me profit me: result kuch hi settings pe tika hai (overfitting ka khatra).`);
+if (RB.rank_corr < 0.3) warns.push(`Fit aur verify ka rank correlation ${f2(RB.rank_corr)} hai: fit me jo accha tha, wo verify me accha rahe, iski guarantee nahi.`);
+if (RB.neigh_n && RB.neigh_oos_pos < RB.neigh_n / 2) warns.push("Chuni setting ke aas-paas ki aadhi se zyada settings verify me loss me: ye ek patli (narrow) setting hai.");
+$("#owarn").innerHTML = warns.length ? `<div class="warnbox"><b>Overfitting warning:</b> ${warns.join(" ")}</div>` : `<div class="warnbox">Fit pe chuni setting aur uske aas-paas ki settings verify me bhi theek hain.</div>`;
+$("#top").innerHTML = head(["Setting", "Trade (fit)", "Net (fit)", "PF (fit)", "Trade (verify)", "Net (verify)", "PF (verify)"]) + "<tbody>"
+  + RB.top.map(r => row([r[0], r[1], cs(r[2]), f2(r[3]), r[4], cs(r[5]), f2(r[6])])).join("") + "</tbody>";
+const copyText = {
+  rules: () => "Rules - " + D.title + "\n" + D.rules.map((r, i) => (i + 1) + ". " + r).join("\n"),
+  formulas: () => "Formulas - " + D.title + "\n" + D.formulas.map(f => f[0] + ": " + f[1]).join("\n"),
+};
+function copyOld(txt){ const ta = document.createElement("textarea"); ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; }
+document.querySelectorAll(".copy").forEach(b => b.onclick = async () => {
+  const txt = copyText[b.dataset.copy]();
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) { ok = copyOld(txt); }
+  b.textContent = ok ? "Copy ho gaya ✓" : "Copy nahi hua"; setTimeout(() => b.textContent = "Copy karo", 1500);
+});
+$("#seg_v").innerHTML = D.views.map(v => `<button data-k="${v.key}">${v.label}</button>`).join("");
+$("#seg_v").onclick = e => { const k = e.target.dataset.k; if (k) { V = D.views.find(v => v.key === k); render(); } };
+$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); const t = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("bt_theme", t); } catch (e) {} drawCharts(); TV.restyle(); };
+
+function tstats(tr){
+  const n = tr.map(t => t.net), w = n.filter(v => v > 0), l = n.filter(v => v <= 0), gw = sum(w), gl = -sum(l), net = sum(n);
+  return {n: tr.length, net: net, win: tr.length ? w.length / tr.length * 100 : null, pf: gl > 0 ? gw / gl : null, avgR: tr.length ? sum(tr.map(t => t.R)) / tr.length : null,
+    worst: n.length ? Math.min(...n) : 0, best: n.length ? Math.max(...n) : 0, hold: tr.length ? sum(tr.map(t => t.hold)) / tr.length : null, ret: net / D.capital * 100};
+}
+const monthsOf = (a, b) => { const out = []; let y = +a.slice(0, 4), m = +a.slice(5, 7); const ey = +b.slice(0, 4), em = +b.slice(5, 7); while (y < ey || (y === ey && m <= em)) { out.push(y + "-" + String(m).padStart(2, "0")); m++; if (m > 12) { m = 1; y++; } } return out; };
+const bdRow = (label, tr) => { const s = tstats(tr); return row([label, s.n, pct(s.win), cs(s.net), cp(s.ret), f2(s.pf), f2(s.avgR), f2(s.hold)]); };
+const bdHead = first => head([first, "Trade", "Win %", "Net", "Return %", "Profit factor", "Average R", "Average din"]);
+function bucket(sel, first, tr, f, bins){
+  $(sel).innerHTML = bdHead(first) + "<tbody>" + bins.map(b => bdRow(b[0], tr.filter(t => f(t) >= b[1] && f(t) < b[2]))).join("") + bdRow("<b>Saare</b>", tr) + "</tbody>";
+}
+
+let charts = [];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ax = (fmt) => ({x: {grid: {display: false}, ticks: {color: css("--muted"), maxTicksLimit: 8, maxRotation: 0}}, y: {grid: {color: css("--line")}, border: {display: false}, ticks: {color: css("--muted"), callback: fmt || (v => Math.round(v / 1000) + "k")}}});
+const tip = f => ({backgroundColor: css("--ink"), titleColor: css("--card"), bodyColor: css("--card"), padding: 10, displayColors: true, callbacks: {label: f}});
+function drawCharts(){
+  charts.forEach(c => c.destroy()); charts = [];
+  charts.push(new Chart($("#c_eq"), {type: "line", data: {labels: D.dates, datasets: [
+      {label: "Strategy", data: V.eq, borderColor: css("--accent"), borderWidth: 2, pointRadius: 0},
+      {label: "Nifty 500 buy-hold", data: D.bh, borderColor: css("--muted"), borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false}, plugins: {legend: {display: true, labels: {color: css("--muted"), boxWidth: 14}}, tooltip: tip(c => c.dataset.label + ": " + rs(c.parsed.y))}, scales: ax()}}));
+  charts.push(new Chart($("#c_dd"), {type: "line", data: {labels: D.dates, datasets: [{data: eqs, borderColor: css("--neg"), borderWidth: 1.5, pointRadius: 0, fill: {target: "origin", below: css("--neg-soft")}}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false}, plugins: {legend: {display: false}, tooltip: tip(c => pct(c.parsed.y))}, scales: ax(v => v + "%")}}));
+  const edges = []; for (let x = -2; x < 6; x += 0.5) edges.push(x);
+  const cnt = edges.map((e, i) => X.filter(t => (i === 0 ? t.R < e + 0.5 : i === edges.length - 1 ? t.R >= e : t.R >= e && t.R < e + 0.5)).length);
+  charts.push(new Chart($("#c_r"), {type: "bar", data: {labels: edges.map((e, i) => i === 0 ? "< -1.5" : i === edges.length - 1 ? ">= 5.5" : e.toFixed(1) + " se " + (e + 0.5).toFixed(1)), datasets: [{data: cnt, backgroundColor: edges.map(e => e >= 0 ? css("--pos") : css("--neg")), borderRadius: 3}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => c.parsed.y + " trade")}, scales: ax(v => v)}}));
+  const mv = months.map(m => m[1]);
+  charts.push(new Chart($("#c_m"), {type: "bar", data: {labels: months.map(m => m[0]), datasets: [{data: mv, backgroundColor: mv.map(x => x >= 0 ? css("--pos") : css("--neg")), borderRadius: 3, maxBarThickness: 40}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => rs(c.parsed.y, true))}, scales: ax()}}));
+}
+function table(o){
+  let rws = o.rows, sortCol = o.sort[0], dir = o.sort[1], page = 0, view = rws;
+  const thead = $(o.id + " thead"), tbody = $(o.id + " tbody");
+  thead.innerHTML = "<tr>" + o.cols.map((c, i) => `<th class="s ${i === 0 ? "l" : ""}" data-i="${i}">${c.h}</th>`).join("") + "</tr>";
+  function apply(){
+    const q = o.q ? $(o.q).value.trim().toLowerCase() : "";
+    view = rws.filter(r => (!q || String(r[o.qcol]).toLowerCase().includes(q)) && o.filters.every(f => !$(f.el).value || String(r[f.col]) === $(f.el).value));
+    view.sort((a, b) => { const x = a[sortCol], y = b[sortCol]; return (x < y ? -1 : x > y ? 1 : 0) * dir; });
+    thead.querySelectorAll("th").forEach((th, i) => th.className = "s" + (i === 0 ? " l" : "") + (i === sortCol ? (dir > 0 ? " asc" : " desc") : ""));
+    page = Math.min(page, Math.max(0, Math.ceil(view.length / 50) - 1)); draw();
+  }
+  function draw(){
+    tbody.innerHTML = view.slice(page * 50, page * 50 + 50).map(r => "<tr>" + o.cols.map((c, i) => `<td class="${i === 0 ? "l " : ""}${c.color ? sgn(r[i]) : ""}">${c.f ? c.f(r[i], r) : (r[i] === null ? "-" : r[i])}</td>`).join("") + "</tr>").join("");
+    const pages = Math.max(1, Math.ceil(view.length / 50));
+    $(o.count).textContent = view.length.toLocaleString("en-IN") + " line";
+    $(o.pager).innerHTML = `<button class="btn" ${page ? "" : "disabled"} data-d="-1">Pichhla</button> Page ${page + 1} / ${pages} <button class="btn" ${page < pages - 1 ? "" : "disabled"} data-d="1">Agla</button>`;
+  }
+  thead.onclick = e => { const th = e.target.closest("th"); if (!th || !rws.length) return; const i = +th.dataset.i; dir = i === sortCol ? -dir : (typeof rws[0][i] === "number" ? -1 : 1); sortCol = i; page = 0; apply(); };
+  $(o.pager).onclick = e => { const d = e.target.dataset.d; if (d) { page += +d; draw(); } };
+  [o.q, ...o.filters.map(f => f.el)].filter(Boolean).forEach(el => $(el).oninput = () => { page = 0; apply(); });
+  $(o.dl).onclick = () => { const esc = v => '"' + String(v === null ? "" : v).replace(/"/g, '""') + '"'; const csv = [o.cols.map(c => esc(c.h)).join(",")].concat(view.map(r => r.slice(0, o.cols.length).map(esc).join(","))).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = o.file; a.click(); };
+  apply();
+}
+const fill = (sel, first, vals) => { $(sel).innerHTML = `<option value="">${first}</option>`; [...new Set(vals)].sort().forEach(v => { const op = document.createElement("option"); op.value = op.textContent = v; $(sel).appendChild(op); }); };
+
+function render(){
+  document.querySelectorAll("#seg_v button").forEach(b => b.classList.toggle("on", b.dataset.k === V.key));
+  X = V.trades.slice().sort((a, b) => a.entry_date < b.entry_date ? -1 : a.entry_date > b.entry_date ? 1 : 0);
+  const S = V.stats.all, B = D.bh_stats.all;
+  $("#subtitle").textContent = `${V.sub} | capital ${cap} ${V.compound ? "compounding ON" : "fixed, compounding nahi"} | ${D.data_range[0]} se ${D.data_range[1]} | report bana: ${D.generated}`;
+  const chips = D.settings.concat(V.chips).concat([["Setup", V.label, 1]]);
+  $("#settings").innerHTML = `<span class="st">Test ki settings</span>` + chips.map(c => `<span class="sc${c[2] ? " hl" : ""}">${c[0]}: <b>${c[1]}</b></span>`).join("");
+  $("#verdict").className = "verdict " + (S.net > 0 ? "good" : "bad");
+  $("#verdict").innerHTML = S.trades ? `"${V.label}": <b>${S.trades}</b> trade, <b>${pct(S.win_pct)}</b> jeete, net <b class="${sgn(S.net)}">${rs(S.net, true)}</b> (${cap} par ${pct(S.ret_pct)}, CAGR ${pct(S.cagr)}), profit factor <b>${f2(S.pf)}</b>, expectancy <b>${f2(S.exp_r)} R</b>, max drawdown <b>${pct(S.max_dd_pct)}</b>. Verify hissa: <b class="${sgn(V.stats.oos.net)}">${rs(V.stats.oos.net, true)}</b>. Nifty 500 buy-hold isi period me <b>${pct(B.ret_pct)}</b>.` : "Koi trade nahi.";
+  const cards = [["Net profit", rs(S.net, true), sgn(S.net), cap + " par " + pct(S.ret_pct)], ["CAGR", pct(S.cagr), sgn(S.cagr), "Nifty 500: " + pct(B.cagr)], ["Max drawdown", pct(S.max_dd_pct), "neg", rs(S.max_dd) + " (mark-to-market)"],
+    ["Win rate", pct(S.win_pct), "", S.trades + " trade"], ["Profit factor", f2(S.pf), S.pf >= 1 ? "pos" : "neg", "1.00 se upar = profit"], ["Expectancy", f2(S.exp_r) + " R", sgn(S.exp_r), "har trade ka average R"]];
+  $("#kpis").innerHTML = cards.map(c => `<div class="kpi"><div class="l">${c[0]}</div><div class="v ${c[2]}">${c[1]}</div><div class="n">${c[3]}</div></div>`).join("");
+  // fit / verify
+  const P3 = [["Fit (in-sample): " + D.data_range[0] + " se " + D.split + " se pehle", V.stats.is, D.bh_stats.is], ["Verify (out-of-sample): " + D.split + " se " + D.data_range[1], V.stats.oos, D.bh_stats.oos], ["Poora period", V.stats.all, D.bh_stats.all]];
+  $("#split").innerHTML = head(["Hissa", "Trade", "Win %", "Net", "Return %", "CAGR", "Profit factor", "Expectancy (R)", "Max DD", "Nifty 500 buy-hold"]) + "<tbody>"
+    + P3.map(p => row([p[0], p[1].trades, pct(p[1].win_pct), cs(p[1].net), cp(p[1].ret_pct), cp(p[1].cagr), f2(p[1].pf), f2(p[1].exp_r), cp(p[1].max_dd_pct), cp(p[2].ret_pct)])).join("") + "</tbody>";
+  // drawdown series
+  let pk = -Infinity; eqs = V.eq.map(v => { pk = Math.max(pk, v, D.capital); return +((v / pk - 1) * 100).toFixed(2); });
+  // numbers
+  $("#kv").innerHTML = [["Total return", pct(S.ret_pct) + " (" + rs(S.net, true) + ")"], ["CAGR", pct(S.cagr)], ["Max drawdown", pct(S.max_dd_pct) + " (" + rs(S.max_dd) + ")"], ["Win rate", pct(S.win_pct)],
+    ["Average jeet (R)", f2(S.avg_win_r)], ["Average haar (R)", f2(S.avg_loss_r)], ["Expectancy (har trade ka average R)", f2(S.exp_r)], ["Profit factor", f2(S.pf)], ["Kul trade", S.trades],
+    ["Average din trade me", f2(S.avg_hold)], ["Exposure (average paisa laga / equity)", pct(S.exposure)], ["Market me time (kam se kam 1 position)", pct(S.in_mkt)],
+    ["Sabse accha / bura trade", rs(S.best, true) + " / " + rs(S.worst)], ["Bina slippage, bina kharche ka profit", rs(S.gross + S.slip, true)], ["Slippage", rs(-S.slip, true)], ["Kharcha", rs(-S.costs, true)]]
+    .map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+  $("#xk").innerHTML = [["3 din ke andar stop hue", pct(S.stop3_pct) + " trade"], ["Sabse acche 5% trades ka net", rs(S.top5_net, true) + (S.top5_share !== null ? " (kul net ka " + pct(S.top5_share) + ")" : "")],
+    ["Baaki 95% trades ka net", rs(S.rest_net, true)], ["Nifty 500 buy-hold: return / CAGR / max DD", `${pct(B.ret_pct)} / ${pct(B.cagr)} / ${pct(B.max_dd_pct)}`],
+    ["Strategy: return / CAGR / max DD", `${pct(S.ret_pct)} / ${pct(S.cagr)} / ${pct(S.max_dd_pct)}`], ["Strategy minus Nifty 500 (return)", cp(S.ret_pct - B.ret_pct)]]
+    .map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+  const ex = group(X, t => t.reason);
+  $("#exits").innerHTML = head(["Exit", "Trade", "Win %", "Net", "Average R", "Average din"]) + "<tbody>" + Object.keys(ex).sort().map(k => { const s = tstats(ex[k]); return row([k, s.n, pct(s.win), cs(s.net), f2(s.avgR), f2(s.hold)]); }).join("") + "</tbody>";
+  $("#inv").innerHTML = V.inv.map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+  $("#grid").innerHTML = head(["Setup", "Trade", "Win %", "Net", "Return %", "CAGR", "Profit factor", "Expectancy (R)", "Max DD", "Net (fit)", "Net (verify)"]) + "<tbody>"
+    + D.views.map(v => { const s = v.stats.all; return row([v.label, s.trades, pct(s.win_pct), cs(s.net), cp(s.ret_pct), cp(s.cagr), f2(s.pf), f2(s.exp_r), cp(s.max_dd_pct), cs(v.stats.is.net), cs(v.stats.oos.net)]); }).join("") + "</tbody>";
+  // breakdowns
+  $("#b_mkt").innerHTML = bdHead("Nifty 500 filter (signal din)") + "<tbody>" + ["ON", "OFF"].map(k => bdRow(k === "ON" ? "ON (market mazboot)" : "OFF (market kamzor)", X.filter(t => t.mkt_t === k))).join("") + "</tbody>";
+  $("#b_stage").innerHTML = bdHead("Stage") + "<tbody>" + [["early", "Early (pehla base)"], ["late", "Late (pehle bhi expansion)"]].map(k => bdRow(k[1], X.filter(t => t.stage === k[0]))).join("") + "</tbody>";
+  bucket("#b_vm", "Volume multiple", X, t => t.vm, [["2x - 3x", 2, 3], ["3x - 4x", 3, 4], ["4x - 6x", 4, 6], ["6x - 10x", 6, 10], ["10x se zyada", 10, 1e9]]);
+  bucket("#b_dist", "50 EMA se upar", X, t => t.dist50, [["0 - 5%", -1e9, 5], ["5 - 10%", 5, 10], ["10 - 15%", 10, 15], ["15 - 20%", 15, 1e9]]);
+  bucket("#b_base", "Base length", X, t => t.base_len, [["2 - 5 din", 0, 6], ["6 - 10 din", 6, 11], ["11 - 15 din", 11, 16], ["16 - 20 din", 16, 21], ["21+ din", 21, 1e9]]);
+  $("#b_open").innerHTML = bdHead("Entry") + "<tbody>" + bdRow("Open pe (gap up, 2% ke andar)", X.filter(t => t.at_open)) + bdRow("Din me trigger pe", X.filter(t => !t.at_open)) + "</tbody>";
+  // months / years
+  const bym = group(X, t => t.exit_date.slice(0, 7));
+  months = monthsOf(D.data_range[0], D.data_range[1]).map(m => { const a = bym[m] || []; const n = a.map(t => t.net); return [m, sum(n), a.length, n.length ? n.filter(v => v > 0).length / n.length * 100 : null]; });
+  const byy = group(X, t => t.exit_date.slice(0, 4));
+  $("#ytable").innerHTML = head(["Saal", "Trade", "Win %", "Net", "Return %", "Profit factor", "Average R", "Sabse bura trade"]) + "<tbody>"
+    + Object.keys(byy).sort().map(k => { const s = tstats(byy[k]); return row([k, s.n, pct(s.win), cs(s.net), cp(s.ret), f2(s.pf), f2(s.avgR), rs(s.worst)]); }).join("") + "</tbody>";
+  $("#mtable").innerHTML = head(["Mahina", "Net profit", "Return %", "Trade", "Win %"]) + "<tbody>" + months.map(m => row([m[0], cs(m[1]), cp(m[1] / D.capital * 100), m[2], pct(m[3])])).join("") + "</tbody>";
+  // stocks
+  const bys = group(X, t => t.symbol);
+  const srows = Object.keys(bys).map(k => { const s = tstats(bys[k]); return [k, s.n, s.win, s.net, s.avgR, s.worst, s.best]; });
+  table({id: "#stable", rows: srows, sort: [3, -1], q: "#sq", qcol: 0, filters: [], count: "#scount", pager: "#spager", dl: "#sdl", file: `stocks_${V.key}.csv`,
+    cols: [{h: "Stock"}, {h: "Trade"}, {h: "Win %", f: pct}, {h: "Net", color: 1, f: v => rs(v, true)}, {h: "Average R", f: f2}, {h: "Sabse bura", f: rs}, {h: "Sabse accha", f: rs}]});
+  // all trades
+  const tr = X.map(t => [t.symbol, t.exp_date, t.entry_date, t.vm, t.base_len, t.dist50, t.mkt_t, t.stage, t.trigger_type, t.entry, t.stop, t.exit_date, t.exit_avg, t.reason, t.hold, t.qty, t.notional, t.costs, t.net, t.R]);
+  const cols = [{h: "Stock"}, {h: "Expansion din"}, {h: "Entry din"}, {h: "Volume x", f: f2}, {h: "Base din"}, {h: "50 EMA se %", f: f2}, {h: "Filter (signal din)"}, {h: "Stage"}, {h: "Trigger"},
+    {h: "Entry", f: f2}, {h: "Stop", f: f2}, {h: "Exit din"}, {h: "Exit (average)", f: f2}, {h: "Exit kaise"}, {h: "Din"}, {h: "Qty"}, {h: "Position", f: rs}, {h: "Kharcha", f: rs},
+    {h: "Net", color: 1, f: v => rs(v, true)}, {h: "R", color: 1, f: f2}];
+  fill("#te", "Saare exit", tr.map(r => r[13]));
+  table({id: "#ttable", rows: tr, sort: [2, -1], q: "#tq", qcol: 0, filters: [{el: "#te", col: 13}], count: "#tcount", pager: "#tpager", dl: "#tdl", file: `trades_${V.key}.csv`, cols: cols});
+  TV.setTrades(viewerTrades());
+  drawCharts();
+}
+const rs2 = v => v === null || v === undefined ? "n/a" : (v < 0 ? "-" : "") + "Rs " + Math.abs(v).toFixed(2);
+function viewerTrades(){
+  return X.map(t => {
+    const ser = D.series[t.symbol] || [];
+    const si = Math.max(0, ser.findIndex(x => x[0] >= t.exp_date) - 20), ei = ser.findIndex(x => x[0] >= t.exit_date);
+    const focus = ser.length ? [ser[si][0], ser[Math.min(ser.length - 1, (ei < 0 ? ser.length - 1 : ei) + 5)][0]] : null;
+    const mk = [{time: t.exp_date, position: "belowBar", shape: "arrowUp", color: "--warn", text: "E"}, {time: t.cb_date, position: "aboveBar", shape: "circle", color: "--muted", text: "Trigger bar"},
+      {time: t.entry_date, position: "belowBar", shape: "arrowUp", color: "--accent", text: "Buy"}];
+    t.legs.forEach((g, i) => mk.push({time: g[0], position: "aboveBar", shape: "arrowDown", color: i === t.legs.length - 1 ? (t.net > 0 ? "--pos" : "--neg") : "--pos", text: (i === t.legs.length - 1 ? "Sell " : "Part ") + g[1]}));
+    const seen = new Set(), markers = mk.filter(m => { const k = m.time + m.text; if (seen.has(k)) return false; seen.add(k); return true; }).sort((a, b) => a.time < b.time ? -1 : a.time > b.time ? 1 : 0);
+    const lines = [{price: t.trigger, color: "--accent", style: 3, title: "Trigger"}, {price: t.stop, color: "--neg", title: "Stop"}].concat((t.targets || []).map((p, i) => ({price: p, color: "--pos", style: 2, title: "Target " + (i + 1)})));
+    const charts = ser.length ? [{title: `${t.symbol} (daily candle, split adjusted)`, kind: "candle", intraday: false, focus: focus,
+      data: ser.map(x => ({time: x[0], open: x[1], high: x[2], low: x[3], close: x[4]})), markers: markers, lines: lines,
+      legend: [["--warn", "Expansion (E)"], ["--muted", "Trigger bar"], ["--accent", "Buy"], ["--pos", "Profit exit"], ["--neg", "Loss exit / stop"]]}] : [];
+    const meta = [["Stock", t.symbol], ["Expansion (E)", `${t.exp_date} (volume ${f2(t.vm)}x, range ${f2(t.rm)}x, 50 EMA se ${f2(t.dist50)}%, ${t.stage})`],
+      ["Trigger bar", `${t.cb_date}: high ${f2(t.cb_high)}, low ${f2(t.cb_low)} (${t.n_cb} contraction bar)`], ["Signal / filter", `${t.signal_date}, Nifty 500 filter ${t.mkt_t}`],
+      ["Entry", `${t.entry_date} @ ${f2(t.entry)} (${t.at_open ? "open pe" : "trigger pe"}, fill ${f2(t.entry_fill)})`], ["Stop / R", `${f2(t.stop)} / ${f2(t.entry - t.stop)} har share`],
+      ["Qty / position", `${t.qty} / ${rs(t.notional)} (risk ${rs(t.risk_rs)})`], ["Exit", t.legs.map(g => `${g[0]}: ${g[1]} @ ${f2(g[2])} (${g[3]})`).join("; ")],
+      ["Din trade me", t.hold], ["Net P&L", `${rs2(t.net)} (${f2(t.R)} R)`, sgn(t.net)]];
+    const cost = [["Gross P&L (slippage ke baad)", rs2(t.gross), sgn(t.gross)], ["Slippage (upar shamil)", rs2(t.slip)], ["STT", rs2(-t.c_stt)], ["Exchange + SEBI", rs2(-t.c_exch)],
+      ["Stamp", rs2(-t.c_stamp)], ["GST", rs2(-t.c_gst)], ["DP charge", rs2(-t.c_dp)], ["Net P&L", rs2(t.net), sgn(t.net), true]];
+    return {id: t.id, date: t.entry_date, title: `${t.symbol} long`, sub: t.reason, pnl: t.net, tag: t.reason, meta: meta, charts: charts, cost: cost,
+      note: "Candles split / bonus adjusted. Daily data: ek din me stop aur target dono chhue to stop maana."};
+  }).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+}
+TradeViewer.stickyHeader(".top");
+const TV = TradeViewer(document.querySelector("#tv"), {labels: {stock: "Stock khojo", stockLabel: "Stock", exit: "Exit ka karan", trades: "Trade", outcome: "Nateeja"}});
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => { document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.p)); charts.forEach(c => c.resize()); if (b.dataset.p === "viewer") TV.show(); });
+render();
+</script>
+</body>
+</html>
