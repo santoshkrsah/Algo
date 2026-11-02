@@ -6,6 +6,7 @@ rulebook.py - NSE intraday rulebook strategies (reference engine), wired to the 
 Strategies (strategies/RULEBOOK.md has the exact rules in Hinglish):
   orb    ORB-5 "Stocks in Play"             noise  Noise-band intraday momentum
   vwap   VWAP trend (India version)         fh     First half-hour -> last half-hour
+  gapfade  Gap fade with reversal confirmation (OR15 break against the gap, target back towards prev close)
 
 Normal use is through tools/run_rulebook.py (result_dir, Telegram, run log, DEV/FINAL guard).
 Direct use:
@@ -88,6 +89,11 @@ class Params:
     # first half-hour
     fh_k_sigma: float = 0.5
     fh_entry: str = "14:45"
+    # gap fade
+    g_min: float = 0.5                 # gap_atr = |open - prev_close| / ATR14 >= g_min
+    g_max: float = 2.0                 # ... <= g_max
+    rvol_max: float = 1.5              # RVOL5 <= rvol_max
+    tp_frac: float = 0.75              # target = entry + tp_frac * (prev_close - entry)
     # exit + costs (Zerodha, Nov 2026)
     exit_time: str = "15:15"
     slippage_pct: float = 0.03         # per side
@@ -122,7 +128,11 @@ STRATEGY_DEFAULTS = {
     "noise": dict(top_n=10, min_atr_pct=1.5, max_leverage=5.0),
     "vwap": dict(top_n=5, min_atr_pct=1.0, max_leverage=5.0),
     "fh": dict(top_n=10, min_atr_pct=1.0, max_leverage=3.0),
+    "gapfade": dict(top_n=5, min_atr_pct=1.0, max_leverage=5.0),
 }
+STOP_STRATEGIES = {"orb", "gapfade"}     # risk-based sizing from the stop, R per trade
+# gapfade fixed constants (strategies/RULEBOOK.md 7a)
+GF_OR, GF_LAST_ENTRY, GF_STOP_BUF, GF_RISK_MIN, GF_RISK_MAX, GF_MIN_RR = 15, 120, 0.1, 0.15, 1.0, 1.0
 
 
 def with_defaults(p: Params) -> Params:
@@ -296,7 +306,7 @@ def daily_features(O, H, L, C, V, p: Params):
     cpr_w = np.r_[np.nan, (2 * np.abs(piv - bc) / piv * 100)[:-1]]
     return dict(d_open=d_open, prev_close=prev_close, atr=atr, sigma=sigma, avg_to=avg_to,
                 adv=adv, rvol=rvol, ok=ok, n_bad_gaps=len(bad), nr4=narrowest(4), nr7=narrowest(7),
-                cpr_w=cpr_w, gap_abs_pct=np.abs(gap) * 100)
+                cpr_w=cpr_w, gap_abs_pct=np.abs(gap) * 100, gap_atr=np.abs(d_open - prev_close) / atr)
 
 
 def session_vwap(H, L, C, V):
@@ -469,7 +479,69 @@ def gen_fh(O, H, L, C, V, f, p: Params):
                              exit_px=O[idx, ex].astype(np.float64), reason="eod"))
 
 
-GENERATORS = {"orb": gen_orb, "noise": gen_noise, "vwap": gen_vwap, "fh": gen_fh}
+def gen_gapfade(O, H, L, C, V, f, p: Params):
+    D = O.shape[0]
+    n = GF_OR
+    ex = m_of(p.exit_time)
+    rows = np.arange(D)
+    cols = np.arange(MINUTES)[None, :]
+    or_high = H[:, :n].max(axis=1).astype(np.float64)
+    or_low = L[:, :n].min(axis=1).astype(np.float64)
+    pc = f["prev_close"]
+    atr = f["atr"]
+    gap = f["d_open"] - pc
+    win = (cols >= n) & (cols < GF_LAST_ENTRY)
+    out = []
+    for side in (1, -1):                      # gap down -> long, gap up -> short
+        if side == 1:
+            trig = (H >= or_high[:, None]) & win
+        else:
+            trig = (L <= or_low[:, None]) & win
+        has = trig.any(axis=1)
+        em = trig.argmax(axis=1)
+        bar_open = O[rows, em].astype(np.float64)
+        if side == 1:
+            entry = np.maximum(or_high, bar_open)
+            stop = or_low - GF_STOP_BUF * atr
+        else:
+            entry = np.minimum(or_low, bar_open)
+            stop = or_high + GF_STOP_BUF * atr
+        target = entry + p.tp_frac * (pc - entry)
+        risk = np.abs(entry - stop)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            rr = side * (target - entry) / risk
+        swin = (cols >= em[:, None]) & (cols < ex)
+        if side == 1:
+            s_hit = (L <= stop[:, None]) & swin
+            t_hit = (H >= target[:, None]) & swin
+        else:
+            s_hit = (H >= stop[:, None]) & swin
+            t_hit = (L <= target[:, None]) & swin
+        s_has, t_has = s_hit.any(axis=1), t_hit.any(axis=1)
+        sm, tm = s_hit.argmax(axis=1), t_hit.argmax(axis=1)
+        s_open, t_open = O[rows, sm].astype(np.float64), O[rows, tm].astype(np.float64)
+        if side == 1:
+            stop_fill = np.where(sm == em, stop, np.minimum(stop, s_open))
+            tgt_fill = np.where(tm == em, target, np.maximum(target, t_open))
+        else:
+            stop_fill = np.where(sm == em, stop, np.maximum(stop, s_open))
+            tgt_fill = np.where(tm == em, target, np.minimum(target, t_open))
+        by_stop = s_has & (~t_has | (sm <= tm))           # same candle -> stop
+        by_tgt = t_has & ~by_stop
+        exit_px = np.where(by_stop, stop_fill, np.where(by_tgt, tgt_fill, O[:, ex].astype(np.float64)))
+        exit_m = np.where(by_stop, sm, np.where(by_tgt, tm, ex))
+        take = (has & (np.sign(gap) == -side) & np.isfinite(atr) & (atr > 0) & f["ok"]
+                & (risk >= GF_RISK_MIN * atr) & (risk <= GF_RISK_MAX * atr) & (rr >= GF_MIN_RR))
+        idx = np.nonzero(take)[0]
+        if len(idx):
+            out.append(pd.DataFrame(dict(
+                day=idx, side=side, entry_m=em[idx], entry_px=entry[idx], stop_px=stop[idx],
+                exit_m=exit_m[idx], exit_px=exit_px[idx], target_px=target[idx],
+                reason=np.where(by_stop[idx], "stop", np.where(by_tgt[idx], "target", "eod")))))
+    return pd.concat(out, ignore_index=True) if out else None
+
+
+GENERATORS = {"orb": gen_orb, "noise": gen_noise, "vwap": gen_vwap, "fh": gen_fh, "gapfade": gen_gapfade}
 
 
 def _tables(files, cache_dir, p: Params, progress=None):
@@ -487,7 +559,7 @@ def _tables(files, cache_dir, p: Params, progress=None):
             date=dates, symbol=sym, price=f["d_open"], avg_to_cr=f["avg_to"] / 1e7,
             atr_pct=f["atr"] / f["d_open"] * 100, rvol=f["rvol"], sigma=f["sigma"],
             adv=f["adv"], atr=f["atr"], ok=f["ok"], nr4=f["nr4"], nr7=f["nr7"],
-            cpr_w=f["cpr_w"], gap_abs_pct=f["gap_abs_pct"]))
+            cpr_w=f["cpr_w"], gap_abs_pct=f["gap_abs_pct"], gap_atr=f["gap_atr"]))
         unis.append(uni)
         t = gen(O, H, L, C, V, f, p)
         if t is not None and len(t):
@@ -634,9 +706,12 @@ def select_universe(uni, p: Params):
     elif p.strategy == "vwap":
         elig &= u.rvol >= p.vwap_rvol_min
         key = "rvol"
+    elif p.strategy == "gapfade":
+        elig &= (u.gap_atr >= p.g_min) & (u.gap_atr <= p.g_max) & (u.rvol <= p.rvol_max)
+        key = "gap_atr"
     else:
         key = "avg_to_cr"
-    sel = u[elig].sort_values(["date", key], ascending=[True, False], kind="mergesort").groupby("date").head(p.top_n)
+    sel = u[elig].sort_values(["date", key, "symbol"], ascending=[True, False, True], kind="mergesort").groupby("date").head(p.top_n)
     cols = ["date", "symbol", "sigma", "adv", "atr"] + (["nifty_below"] if "nifty_below" in sel else [])
     return sel[cols]
 
@@ -650,6 +725,7 @@ def simulate(uni, tr, p: Params):
         t = t[(t.side == 1) | t.nifty_below]
     t = t.sort_values(["date", "entry_m", "symbol"], kind="mergesort").reset_index(drop=True)
     slip = p.slippage_pct / 100.0
+    has_tgt = "target_px" in t
     E = p.capital
     eq_rows, out = [], []
     groups = {d: g for d, g in t.groupby("date")}
@@ -668,7 +744,7 @@ def simulate(uni, tr, p: Params):
                 ent = float(r.entry_px)
                 if not (np.isfinite(ent) and ent > 0 and np.isfinite(r.exit_px)):
                     continue
-                if p.strategy == "orb":
+                if p.strategy in STOP_STRATEGIES:
                     risk_ps = abs(ent - float(r.stop_px))
                     if not (risk_ps > 0):
                         continue
@@ -694,7 +770,7 @@ def simulate(uni, tr, p: Params):
                 slip_cost = abs(e_fill - ent) * sh + abs(x_fill - float(r.exit_px)) * sh
                 fees = trade_costs(buy_val, sell_val, p)
                 net = gross - slip_cost - fees
-                R = net / (abs(ent - float(r.stop_px)) * sh) if p.strategy == "orb" else np.nan
+                R = net / (abs(ent - float(r.stop_px)) * sh) if p.strategy in STOP_STRATEGIES else np.nan
                 closed.append((int(r.exit_m), net))
                 day_pnl += net
                 n_tr += 1
@@ -704,7 +780,8 @@ def simulate(uni, tr, p: Params):
                                 shares=sh, notional=round(ent * sh, 2), gross_pnl=round(gross, 2),
                                 slippage=round(slip_cost, 2), fees=round(fees, 2), net_pnl=round(net, 2),
                                 ret_pct=net / (ent * sh) * 100, gross_pct=gross / (ent * sh) * 100,
-                                R=R, reason=r.reason))
+                                R=R, reason=r.reason,
+                                **({"target_px": round(float(r.target_px), 2)} if has_tgt else {})))
         E = E0 + day_pnl
         eq_rows.append(dict(date=pd.Timestamp(d), equity=E, day_pnl=day_pnl, ret=day_pnl / E0 if E0 > 0 else 0.0, trades=n_tr))
         if E <= 0:

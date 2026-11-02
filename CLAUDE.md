@@ -33,7 +33,7 @@
 - In backtest code: `from backtest import fast` -> `fast.read_day(day, ("1m","15m"))` (same columns as the daily CSV), `fast.day_1m(day)`, `fast.symbol_1m(sym, start, end)`, `fast.panel(start, end)` + `fast.add_features()`. Pick stocks on the panel first, load minutes only for them. No new `pd.read_csv` loops over data/equity.
 - fast.* applies data/store/adjustments.csv (split/bonus factors). Mention in reports if a strategy used adjust=False.
 
-## Rulebook strategies (orb, noise, vwap, fh) - honest-testing rules
+## Rulebook strategies (orb, noise, vwap, fh, gapfade) - honest-testing rules
 - Spec: Algo_Backtesting/strategies/RULEBOOK.md. Engine: src/backtest/rulebook.py (change rules only together with the spec). Runner: tools/run_rulebook.py.
 - DEV = 2021-10-01 -> 2023-12-31 (2023 = validation) is the default; FINAL = 2024 -> latest only with `--final`, once per frozen setting (the runner refuses repeats). Tuning, filters and new ideas only on DEV.
 - Costs + slippage always on (never lower them to improve a result); every report shows build vs validation/FINAL vs stress (2x slippage), year by year, long vs short, pass/fail.

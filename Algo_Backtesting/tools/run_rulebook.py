@@ -1,4 +1,4 @@
-"""Rulebook strategies (orb / noise / vwap / fh) on the fast data store, the project way:
+"""Rulebook strategies (orb / noise / vwap / fh / gapfade) on the fast data store, the project way:
 results/NN_<name>/, Telegram (start, every 10 min, finish), run log, DEV / FINAL protocol.
 
     python tools/run_rulebook.py --strategy orb                        # DEV 2021-10-01 -> 2023-12-31 (2023 = validation)
@@ -38,7 +38,8 @@ FINAL_START = "2024-01-01"
 RUN_LOG = RESULTS / "RULEBOOK_RUNS.csv"
 LOG_COLS = ["when", "name", "strategy", "mode", "params", "is_sharpe", "oos_sharpe", "oos_trades", "oos_return_pct",
             "stress_return_pct", "all_pass", "folder"]
-NAMES = {"orb": "ORB-5 Stocks in Play", "noise": "Noise-band momentum", "vwap": "VWAP trend", "fh": "First half-hour momentum"}
+NAMES = {"orb": "ORB-5 Stocks in Play", "noise": "Noise-band momentum", "vwap": "VWAP trend", "fh": "First half-hour momentum",
+         "gapfade": "Gap fade (reversal confirm)"}
 
 
 # ------------------------------------------------------------------------------------------------- Hinglish texts
@@ -78,6 +79,23 @@ def rules_text(p: rb.Params, mode: str, data_range: tuple[str, str]) -> list[str
                f"|r| >= {p.fh_k_sigma:g} x daily sigma ho to r ki direction me trade: entry {p.fh_entry} candle ke open par, "
                f"exit {p.exit_time} candle ke open par.",
                size_vol],
+        "gapfade": [uni,
+                    f"Gap = aaj ka open - kal ka close. gap_atr = |gap| / ATR14. Sirf woh stocks jinka gap_atr {p.g_min:g} se "
+                    f"{p.g_max:g} ke beech ho aur RVOL (9:15-9:20 volume / pichhle 14 din ka average) <= {p.rvol_max:g} ho. "
+                    f"Inme se top {p.top_n} (sabse bada gap_atr pehle).",
+                    "OR15 = 9:15-9:30 (pehli 15 candles) ka high aur low.",
+                    "Gap up -> sirf SELL: 9:30 se 11:15 ke beech pehli candle jiska low OR15 low ko chhue -> entry OR15 low par "
+                    "(candle neeche khule to us candle ke open par). Gap down -> sirf BUY: high OR15 high ko chhue -> entry OR15 high "
+                    "(upar khule to open). Ek stock me din me ek trade.",
+                    "Stop-loss: SELL = OR15 high + 0.1 x ATR14; BUY = OR15 low - 0.1 x ATR14. Agar entry se SL ki doori "
+                    "0.15 x ATR14 se kam ya 1.0 x ATR14 se zyada ho to trade nahi.",
+                    f"Target = entry + {p.tp_frac:g} x (kal ka close - entry), yaani gap ka {p.tp_frac * 100:g}% wapas bharne tak. "
+                    "Target ka fayda SL ki doori se kam ho (reward/risk < 1) to trade nahi.",
+                    f"Exit: entry wali candle se check. Pehle SL dekho (ek hi candle me SL aur target dono = SL). SL ke paar gap se "
+                    f"khule to us candle ke open par. Target limit order: candle target ke paar khule to us open par (behtar). "
+                    f"Kuch na lage to {p.exit_time} candle ke open par.",
+                    f"Qty = min(equity ka {p.risk_pct:g}% risk / SL doori, {p.max_leverage:g} x equity / ({p.top_n} x entry)); "
+                    f"20-din average volume ka max {p.liq_cap_pct:g}%."],
     }[p.strategy]
     period = (f"Period: {data_range[0]} -> {data_range[1]}. " + (
         "DEV test: 2021-22 par rules dekhe, 2023 = validation (out-of-sample). 2024 ke baad ka data is test me nahi."
@@ -99,7 +117,7 @@ def formulas_text(p: rb.Params) -> list[str]:
     f = ["TR = max(H - L, |H - kal close|, |L - kal close|); ATR14 = pichhle 14 din ke TR ka average",
          "Avg turnover20 = pichhle 20 din ke (close x volume) ka average",
          "Daily sigma = pichhle 14 din ke daily return (close / kal close - 1) ka standard deviation"]
-    if p.strategy in ("orb", "vwap"):
+    if p.strategy in ("orb", "vwap", "gapfade"):
         f.append("RVOL = aaj 9:15-9:20 volume / pichhle 14 din ka 9:15-9:20 average volume")
     if p.strategy == "orb":
         f += [f"Entry (BUY) = max(OR high, candle open); SL = entry - {p.stop_atr:g} x ATR14 (SELL ulta)",
@@ -112,9 +130,19 @@ def formulas_text(p: rb.Params) -> list[str]:
     elif p.strategy == "vwap":
         f += [f"BUY jab bar close > VWAP x (1 + {p.vwap_buffer_pct / 100:g}); SELL jab < VWAP x (1 - {p.vwap_buffer_pct / 100:g})",
               "VWAP = sum(typical price x volume) / sum(volume), typical = (H+L+C)/3"]
+    elif p.strategy == "gapfade":
+        f += ["gap = aaj open - kal close; gap_atr = |gap| / ATR14",
+              "OR15 high / low = 9:15-9:29 candles ka max high / min low",
+              "Entry (SELL, gap up) = min(OR15 low, candle open); Entry (BUY, gap down) = max(OR15 high, candle open)",
+              "SL (SELL) = OR15 high + 0.1 x ATR14; SL (BUY) = OR15 low - 0.1 x ATR14; trade tabhi jab 0.15 x ATR14 <= |entry - SL| <= 1.0 x ATR14",
+              f"Target = entry + {p.tp_frac:g} x (kal close - entry); reward / risk = |target - entry| / |entry - SL| >= 1.0",
+              "SL exit = SL price (entry candle me) ya SL aur candle open me se jo bura ho; target exit = target ya candle open me se jo "
+              "behtar ho; warna exit = 15:15 open",
+              f"Qty = floor(min({p.risk_pct:g}% x equity / |entry - SL|, {p.max_leverage:g} x equity / ({p.top_n} x entry)))",
+              "R = net P&L / (|entry - SL| x qty)"]
     else:
         f += ["r = close(9:44 candle) / kal close - 1; trade jab |r| >= k x daily sigma aur 30-min volume >= 14-din average"]
-    if p.strategy != "orb":
+    if p.strategy not in rb.STOP_STRATEGIES:
         f.append(f"Qty = floor(equity x min({p.max_leverage:g}, {p.sigma_target:g} / daily sigma) / {p.top_n} / entry)")
     f += [f"Max qty = {p.liq_cap_pct:g}% x 20-din average volume",
           f"Fill: BUY = price x (1 + {p.slippage_pct / 100:g}), SELL = price x (1 - {p.slippage_pct / 100:g})",
@@ -145,6 +173,11 @@ def settings_chips(p: rb.Params, mode: str, n_stocks: int) -> list[list]:
     elif p.strategy == "vwap":
         s += [["Buffer", f"{p.vwap_buffer_pct:g}%", True], ["Bar", f"{p.vwap_bar} min", False], ["Max entries", str(p.vwap_max_entries), False],
               ["RVOL min", f"{p.vwap_rvol_min:g}", False]]
+    elif p.strategy == "gapfade":
+        s += [["Risk / trade", f"{p.risk_pct:g}%", True], ["gap_atr", f"{p.g_min:g} - {p.g_max:g}", True],
+              ["RVOL max", f"{p.rvol_max:g}", True], ["Target", f"gap ka {p.tp_frac * 100:g}% fill", True],
+              ["SL", "OR15 ke paar + 0.1 x ATR14", False], ["Entry window", "9:30 - 11:15", False],
+              ["Side", "gap up -> SELL, gap down -> BUY", False]]
     else:
         s += [["k x sigma", f"{p.fh_k_sigma:g}", True], ["Entry", p.fh_entry, False]]
     if p.filters:
@@ -167,8 +200,9 @@ def months_table(eq: pd.DataFrame, trades: pd.DataFrame) -> list[list]:
 
 
 def investment(p: rb.Params, eq: pd.DataFrame, trades: pd.DataFrame) -> dict:
-    out = {"capital": p.capital, "risk_per_trade": f"{p.risk_pct:g}% of equity" if p.strategy == "orb" else "vol target",
-           "qty_rule": ("min(risk / SL doori, leverage cap)" if p.strategy == "orb" else "equity x min(L, target/sigma) / N"),
+    stop_based = p.strategy in rb.STOP_STRATEGIES
+    out = {"capital": p.capital, "risk_per_trade": f"{p.risk_pct:g}% of equity" if stop_based else "vol target",
+           "qty_rule": ("min(risk / SL doori, leverage cap)" if stop_based else "equity x min(L, target/sigma) / N"),
            "max_per_stock": f"{p.max_leverage:g} x equity / {p.top_n}, aur {p.liq_cap_pct:g}% of avg volume",
            "max_open_positions": p.top_n}
     if len(trades):

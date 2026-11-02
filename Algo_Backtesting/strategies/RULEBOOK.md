@@ -1,10 +1,10 @@
-# Rulebook strategies — exact spec (orb, noise, vwap, fh)
+# Rulebook strategies — exact spec (orb, noise, vwap, fh, gapfade)
 
 Engine: `src/backtest/rulebook.py` (reference). Runner: `tools/run_rulebook.py`. If this file and the code ever disagree, stop and ask which one is intended; a rule change updates both in the same edit.
 Research background (Hinglish rulebook with sources): the "Intraday Rulebook" Claude doc.
 
 ## 0. Seedhi baat (Hinglish)
-- 4 strategies research papers se: **ORB-5 Stocks in Play** (Zarattini–Barbon–Aziz 2024), **Noise-band momentum** ("Beat the Market", 2024), **VWAP trend** (India version), **First half-hour → last half-hour** (Gao et al.).
+- 4 strategies research papers se: **ORB-5 Stocks in Play** (Zarattini–Barbon–Aziz 2024), **Noise-band momentum** ("Beat the Market", 2024), **VWAP trend** (India version), **First half-hour → last half-hour** (Gao et al.). 5th: **gapfade** — overnight gap ke ulta trade, sirf jab opening range toot kar reversal confirm ho (team spec, Nov 2026).
 - Har din point-in-time universe: sirf liquid stocks (turnover, price, ATR) — aaj ki list purane din par nahi lagti.
 - Saare charges + slippage hamesha on. Pehle **DEV** (2021-10 → 2023-12) par test/tune, phir **FINAL** (2024 → aaj) sirf ek baar.
 - Stock list AMFI Jun-2026 wali hai (1,386): jo stocks beech me delist/merge hue (jaise HDFC Ltd, Jul 2023) ya chhote ho gaye woh data me nahi → survivorship bias. Report me hamesha likhna hai.
@@ -32,6 +32,7 @@ Research background (Hinglish rulebook with sources): the "Intraday Rulebook" Cl
 - Eligible: day open ≥ ₹100, AvgTurnover20 ≥ ₹50 crore, ATR14 / day open ≥ min_atr_pct.
 - orb: min_atr_pct 1.0; RVOL ≥ 1.0; top 5 by RVOL.  vwap: min_atr_pct 1.0; RVOL ≥ 1.5; top 5 by RVOL.
 - noise: min_atr_pct 1.5; top 10 by AvgTurnover20.  fh: min_atr_pct 1.0; top 10 by AvgTurnover20.
+- gapfade: min_atr_pct 1.0; g_min ≤ gap_atr ≤ g_max (0.5, 2.0); RVOL ≤ rvol_max (1.5); top 5 by gap_atr (largest first). gap_atr = |DayOpen − prev_close| / ATR14.
 - Ties are broken by symbol name (stable sort). A selected stock without a signal leaves its slot empty.
 - Speed-up (same result): `prefilter_symbols()` skips stocks that never reach 70% of the turnover rule / 90% of the price rule in the period.
 
@@ -57,9 +58,22 @@ Research background (Hinglish rulebook with sources): the "Intraday Rulebook" Cl
 - r_FH = Close[29] / prev_close − 1. RVOL30 = volume of m = 0..29 ÷ its mean over the previous 14 days.
 - Trade if |r_FH| ≥ 0.5 · sigma_daily and RVOL30 ≥ 1; side = sign(r_FH). Entry Open[330] (14:45), exit Open[360].
 
+## 7a. gapfade (gap fade with reversal confirmation)
+- gap = DayOpen − prev_close. Selection features (gap_atr, RVOL = RVOL5, ATR14, AvgTurnover20, ADV20) are known by the close of m = 4; universe/selection in Section 3.
+- OR15 = m = 0..14 → OR_high, OR_low. One trade per stock per day; gap = 0 → no trade.
+- Gap up → SHORT only: first m in [15, 120) with Low[m] ≤ OR_low → entry = min(OR_low, Open[m]).
+- Gap down → LONG only: first m in [15, 120) with High[m] ≥ OR_high → entry = max(OR_high, Open[m]).
+- Stop: short = OR_high + 0.1·ATR14; long = OR_low − 0.1·ATR14. Skip the trade if |entry − stop| < 0.15·ATR14 or > 1.0·ATR14.
+- Target = entry + tp_frac·(prev_close − entry); tp_frac = 0.75. reward = side·(target − entry); skip if reward / |entry − stop| < 1.0.
+- Exit check from the entry candle (inclusive) to m = 359, stop first (stop and target in the same candle = stop).
+  Stop: hit in the entry candle → stop price; later → min(stop, Open) for longs, max(stop, Open) for shorts (gap-through fills at the open).
+  Target (limit): hit in the entry candle → target price; later → max(target, Open) for longs, min(target, Open) for shorts (a candle that opens past the target fills at its open).
+  Nothing hit → Open[360] (15:15).
+- Fixed constants: OR 15 min, entry window [15, 120), stop buffer 0.1·ATR14, risk band 0.15–1.0·ATR14, min reward/risk 1.0. Params: g_min, g_max, rvol_max, tp_frac.
+
 ## 8. Sizing and risk
 - E = equity at the start of the day (compounded daily). L = max leverage (5; fh 3). N = top_n.
-- orb: shares = floor(min(1% · E / |entry − stop|, L·E / (N · entry))).
+- orb, gapfade: shares = floor(min(1% · E / |entry − stop|, L·E / (N · entry))).
 - noise, vwap, fh: shares = floor(E · min(L, 0.02 / sigma_daily) / N / entry).
 - Cap: shares ≤ 1% of ADV20. Daily loss limit: no new entries once trades already closed that day lost ≥ 3% of E.
 
@@ -75,5 +89,5 @@ nr4, nr7, cpr (yesterday's CPR width < 0.2%), gap (|gap| ≥ 0.5%), noexpiry (Ni
 ## 11. Protocol and pass criteria
 - DEV = 2021-10-01 → 2023-12-31, OOS from 2023-01-01 (2021-22 build, 2023 validate). Default of `tools/run_rulebook.py`; the runner refuses a DEV run that touches 2024.
 - FINAL = 2024-01-01 → latest (`--final`), once per frozen parameter set; the runner refuses a repeat (`--force-final` is logged).
-- Pass (OOS part): Sharpe ≥ 1.0; max drawdown ≤ 20%; profit factor ≥ 1.3; expectancy ≥ +0.10R (orb); ≥ 300 trades and t-stat ≥ 2; average gross trade ÷ average cost ≥ 2; OOS Sharpe ≥ 0.5 × in-sample Sharpe; still profitable with slippage 2x.
+- Pass (OOS part): Sharpe ≥ 1.0; max drawdown ≤ 20%; profit factor ≥ 1.3; expectancy ≥ +0.10R (orb, gapfade); ≥ 300 trades and t-stat ≥ 2; average gross trade ÷ average cost ≥ 2; OOS Sharpe ≥ 0.5 × in-sample Sharpe; still profitable with slippage 2x.
 - Any single FAIL → not ready for paper trading. Every run (good or bad) is a row in `results/RULEBOOK_RUNS.csv`; always say how many variants were tried.

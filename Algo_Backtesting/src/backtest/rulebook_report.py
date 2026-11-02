@@ -96,12 +96,13 @@ def write_html(out_dir, data: dict) -> Path:
     if len(tr):
         tr = tr.sort_values(["date", "entry_time"], kind="stable").reset_index(drop=True)
     candles, step = _candles(tr)
-    rows = tr[TRADE_COLS].astype(object).where(tr[TRADE_COLS].notna(), None).values.tolist() if len(tr) else []
+    cols = TRADE_COLS + (["target_px"] if "target_px" in tr else [])
+    rows = tr[cols].astype(object).where(tr[cols].notna(), None).values.tolist() if len(tr) else []
     for i, r in enumerate(rows):
         r.append(candles.get(i))
     equity = ([[str(d)[:10], round(float(e), 2), round(float(p), 2)] for d, e, p in zip(eq["date"], eq["equity"], eq["day_pnl"])]
               if len(eq) else [])
-    blob = {**data, "capital": cap, "trade_cols": TRADE_COLS + ["candles"], "trades": rows, "candle_step": step, "equity": equity,
+    blob = {**data, "capital": cap, "trade_cols": cols + ["candles"], "trades": rows, "candle_step": step, "equity": equity,
             "yearly": yr.astype(object).where(yr.notna(), None).values.tolist(), "yearly_cols": list(yr.columns),
             "breakdown": bd.astype(object).where(bd.notna(), None).values.tolist(), "breakdown_cols": list(bd.columns)}
     css = re.search(r"<style>.*?</style>", (ASSETS / "report_template.html").read_text(encoding="utf-8"), re.S).group(0)

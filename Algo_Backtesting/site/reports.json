@@ -188,5 +188,15 @@
   "pf": 0.31,
   "trades": 429,
   "verdict": "loss"
+ },
+ "21_rb_gapfade_dev": {
+  "name": "Gap fade reversal (DEV)",
+  "type": "Intraday",
+  "period": "Oct 2021 - Dec 2023",
+  "result": "Sirf 38 trade 2.25 saal me (reward/risk >= 1 rule zyada trade kaat deta hai); build +3.4% par 2023 me -3.8%, PF 0.44; 1/8 checks PASS. 9-setting grid me bhi koi pass nahi",
+  "net": -19864,
+  "pf": 0.44,
+  "trades": 13,
+  "verdict": "loss"
  }
 }

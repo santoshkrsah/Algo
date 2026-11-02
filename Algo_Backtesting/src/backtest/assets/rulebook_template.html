@@ -205,13 +205,14 @@ function viewerTrades(){
     const tt = s => base + Math.floor(hm(s) / step) * step * 60;
     const lines = [{price: g("entry_px"), color: "--accent", style: 3, title: "Entry"}, {price: g("exit_px"), color: g("net_pnl") >= 0 ? "--pos" : "--neg", style: 3, title: "Exit"}];
     if (g("stop_px")) lines.push({price: g("stop_px"), color: "--neg", title: "SL"});
+    if (C.target_px !== undefined && g("target_px")) lines.push({price: g("target_px"), color: "--pos", title: "Target"});
     const mk = [{time: tt(g("entry_time")), position: long ? "belowBar" : "aboveBar", shape: long ? "arrowUp" : "arrowDown", color: "--accent", text: g("side") + " " + g("entry_px").toFixed(2)},
       {time: tt(g("exit_time")), position: long ? "aboveBar" : "belowBar", shape: long ? "arrowDown" : "arrowUp", color: g("net_pnl") >= 0 ? "--pos" : "--neg", text: "Exit " + g("exit_px").toFixed(2)}];
     const bv = g("notional"), gross = g("gross_pnl"), net_ = g("net_pnl");
     return {
       id: `${day}|${g("symbol")}|${g("entry_time")}`, date: day, title: `${g("symbol")} ${g("side")}`, sub: `${g("entry_time")} ${g("entry_px").toFixed(2)} → ${g("exit_time")} ${g("exit_px").toFixed(2)} · ${g("reason")}`, pnl: net_, tag: g("reason"),
       meta: [["Stock / side", `${g("symbol")} ${g("side")}`], ["Din", day], ["Entry", `${g("entry_time")} @ ${g("entry_px").toFixed(2)}`], ["Exit", `${g("exit_time")} @ ${g("exit_px").toFixed(2)} · ${g("reason")}`],
-        ["Stop-loss", g("stop_px") ? g("stop_px").toFixed(2) : "nahi"], ["Qty / position", `${g("shares")} / ${rs(bv)}`], ["R (net P&L / risk)", g("R") === null ? "n/a" : f2(g("R"))],
+        ["Stop-loss", g("stop_px") ? g("stop_px").toFixed(2) : "nahi"], ...(C.target_px !== undefined ? [["Target", g("target_px") ? g("target_px").toFixed(2) : "nahi"]] : []), ["Qty / position", `${g("shares")} / ${rs(bv)}`], ["R (net P&L / risk)", g("R") === null ? "n/a" : f2(g("R"))],
         ["Return %", pct(g("ret_pct")), sgn(g("ret_pct"))], ["Net P&L", rs2(net_), sgn(net_)]],
       charts: g("candles") ? [{title: `Price (${step}-min candle)`, kind: "candle", intraday: true, data: decode(day, g("candles")), markers: mk, lines: lines,
         legend: [["--accent", "Entry"], ["--pos", "Exit (profit)"], ["--neg", "SL / loss"]]}] : [],
