@@ -1,0 +1,488 @@
+{
+ "strategy": "fh",
+ "strategy_name": "First half-hour momentum",
+ "mode": "DEV",
+ "data_range": [
+  "2021-10-01",
+  "2023-12-29"
+ ],
+ "oos_start": "2023-01-01",
+ "params": {
+  "strategy": "fh",
+  "start": "2021-10-01",
+  "end": "2023-12-31",
+  "oos_start": "2023-01-01",
+  "capital": 500000.0,
+  "min_price": 100.0,
+  "min_turnover_cr": 50.0,
+  "min_atr_pct": 1.0,
+  "top_n": 10,
+  "or_minutes": 5,
+  "rvol_min": 1.0,
+  "stop_atr": 0.25,
+  "entry_cutoff": "14:30",
+  "risk_pct": 1.0,
+  "max_leverage": 3.0,
+  "vm": 1.0,
+  "lookback": 14,
+  "sigma_target": 0.02,
+  "vwap_buffer_pct": 0.2,
+  "vwap_bar": 5,
+  "vwap_max_entries": 3,
+  "vwap_rvol_min": 1.5,
+  "fh_k_sigma": 0.5,
+  "fh_entry": "14:45",
+  "exit_time": "15:15",
+  "slippage_pct": 0.03,
+  "brokerage_pct": 0.03,
+  "brokerage_cap": 20.0,
+  "stt_pct": 0.025,
+  "exch_pct": 0.00307,
+  "sebi_per_cr": 10.0,
+  "stamp_pct": 0.003,
+  "gst_pct": 18.0,
+  "cost_mult": 1.0,
+  "daily_loss_limit_pct": 3.0,
+  "liq_cap_pct": 1.0,
+  "gap_skip_pct": 25.0,
+  "filters": "",
+  "gap_min_pct": 0.5,
+  "cpr_max_pct": 0.2,
+  "vix_file": null,
+  "nifty_file": null,
+  "skip_dates_file": null
+ },
+ "changed": "",
+ "compounding": true,
+ "settings": [
+  [
+   "Strategy",
+   "First half-hour momentum",
+   true
+  ],
+  [
+   "Test",
+   "DEV",
+   true
+  ],
+  [
+   "Universe",
+   "turnover >= Rs 50 Cr, price >= Rs 100, ATR >= 1%",
+   true
+  ],
+  [
+   "Stocks checked",
+   "617",
+   false
+  ],
+  [
+   "Top N / din",
+   "10",
+   false
+  ],
+  [
+   "Capital",
+   "Rs 500,000",
+   false
+  ],
+  [
+   "Compounding",
+   "haan (roz)",
+   true
+  ],
+  [
+   "Leverage max",
+   "3x",
+   false
+  ],
+  [
+   "Slippage",
+   "0.03% / side (stress 0.06%)",
+   true
+  ],
+  [
+   "Charges",
+   "Zerodha/Fyers intraday",
+   false
+  ],
+  [
+   "Daily loss limit",
+   "3%",
+   false
+  ],
+  [
+   "Max qty",
+   "1% of avg volume",
+   false
+  ],
+  [
+   "Exit",
+   "15:15",
+   false
+  ],
+  [
+   "k x sigma",
+   "0.5",
+   true
+  ],
+  [
+   "Entry",
+   "14:45",
+   false
+  ]
+ ],
+ "rules": [
+  "Universe (har din, sirf pichhle din tak ka data): pichhle 20 din ka average turnover >= Rs 50 Cr, aaj ka open >= Rs 100, ATR14 >= 1% of price. Top 10 sabse zyada turnover wale.",
+  "r = 9:45 ka close / kal ka close - 1. 9:15-9:45 ki volume >= uska 14-din average.",
+  "|r| >= 0.5 x daily sigma ho to r ki direction me trade: entry 14:45 candle ke open par, exit 15:15 candle ke open par.",
+  "Qty: har stock ko equity x min(3, 0.02 / daily sigma) / 10 rupaye; 20-din average volume ka max 1%.",
+  "Daily loss limit: din ka realized loss 3% equity tak pahunche to us din naya trade nahi.",
+  "Profit compound hota hai: har din ki position size us din ki shuruati equity se (start Rs 500,000).",
+  "Charges: brokerage min(Rs 20, 0.03%) har order, STT 0.025% sell, NSE 0.00307%, SEBI Rs 10/Cr, stamp 0.003% buy, GST 18%. Slippage 0.03% har side; stress test me 0.06%.",
+  "Koi lookahead nahi: din ke features sirf pichhle din tak ke; signal candle ke baad agli candle ke open par fill.",
+  "Bade gap (> 25%) ke baad us stock ko 21 din skip (shayad unadjusted split).",
+  "Period: 2021-10-01 -> 2023-12-29. DEV test: 2021-22 par rules dekhe, 2023 = validation (out-of-sample). 2024 ke baad ka data is test me nahi.",
+  "Stock list = AMFI Jun-2026 list (1,386 stocks): jo stocks 2021-26 me delist/merge hue ya chhote ho gaye woh data me nahi (survivorship bias) - results thode optimistic ho sakte hain."
+ ],
+ "formulas": [
+  "TR = max(H - L, |H - kal close|, |L - kal close|); ATR14 = pichhle 14 din ke TR ka average",
+  "Avg turnover20 = pichhle 20 din ke (close x volume) ka average",
+  "Daily sigma = pichhle 14 din ke daily return (close / kal close - 1) ka standard deviation",
+  "r = close(9:44 candle) / kal close - 1; trade jab |r| >= k x daily sigma aur 30-min volume >= 14-din average",
+  "Qty = floor(equity x min(3, 0.02 / daily sigma) / 10 / entry)",
+  "Max qty = 1% x 20-din average volume",
+  "Fill: BUY = price x (1 + 0.0003), SELL = price x (1 - 0.0003)",
+  "Brokerage = min(20, 0.03% x order value) har order; STT = 0.025% x sell; NSE = 0.00307% x (buy + sell); SEBI = 10 / 1 Cr x (buy + sell); stamp = 0.003% x buy; GST = 18% x (brokerage + NSE + SEBI)",
+  "Net P&L = side x (exit - entry) x qty - slippage - charges",
+  "Return % = net / us din ki shuruati equity x 100 (equity compound hoti hai)",
+  "Win rate = profit wale trades / total trades x 100",
+  "Profit factor = total profit / total loss",
+  "Max drawdown = equity ki pichhli peak se sabse badi % girawat",
+  "Sharpe = average(daily return) / std(daily return) x sqrt(252)",
+  "t-stat = average(trade return) / std(trade return) x sqrt(trades)"
+ ],
+ "metrics": {
+  "full": {
+   "days": 553,
+   "total_return_pct": -20.674323013895513,
+   "cagr_pct": -10.016424725735229,
+   "sharpe": -6.479665099010106,
+   "max_dd_pct": 20.73208667978634,
+   "trades": 960,
+   "win_rate_pct": 30.520833333333336,
+   "profit_factor": 0.34324289123313506,
+   "avg_net_pnl_rs": -107.67888541666666,
+   "avg_net_pct": -0.15843861671712017,
+   "avg_gross_pct": -0.000528191616023053,
+   "avg_cost_pct": 0.15791052836970784,
+   "gross_to_cost": -0.003344879036731642,
+   "t_stat": -9.583372044141546,
+   "total_fees_rs": 61141.28,
+   "total_slippage_rs": 38988.409999999996,
+   "long_trades": 564,
+   "long_net_rs": -75439.22,
+   "short_trades": 396,
+   "short_net_rs": -27932.510000000002
+  },
+  "in_sample": {
+   "days": 308,
+   "total_return_pct": -11.276724235886215,
+   "cagr_pct": -9.325476299247393,
+   "sharpe": -5.721011441787112,
+   "max_dd_pct": 11.276724235886215,
+   "trades": 531,
+   "win_rate_pct": 31.63841807909605,
+   "profit_factor": 0.3674368411764554,
+   "avg_net_pnl_rs": -106.18389830508474,
+   "avg_net_pct": -0.16808360847287174,
+   "avg_gross_pct": -0.007342506926819224,
+   "avg_cost_pct": 0.16074116358885318,
+   "gross_to_cost": -0.04567907039418993,
+   "t_stat": -7.2683300250217036,
+   "total_fees_rs": 31489.6,
+   "total_slippage_rs": 19362.66,
+   "long_trades": 290,
+   "long_net_rs": -43405.08,
+   "short_trades": 241,
+   "short_net_rs": -12978.570000000002
+  },
+  "out_of_sample": {
+   "days": 245,
+   "total_return_pct": -10.592033146966351,
+   "cagr_pct": -10.877580506816987,
+   "sharpe": -7.573584399175643,
+   "max_dd_pct": 10.657138572113634,
+   "trades": 429,
+   "win_rate_pct": 29.13752913752914,
+   "profit_factor": 0.311650890927733,
+   "avg_net_pnl_rs": -109.529324009324,
+   "avg_net_pct": -0.1465004101383227,
+   "avg_gross_pct": 0.007906310551885495,
+   "avg_cost_pct": 0.1544068749865699,
+   "gross_to_cost": 0.05120439457487353,
+   "t_stat": -6.245717241367571,
+   "total_fees_rs": 29651.68,
+   "total_slippage_rs": 19625.75,
+   "long_trades": 274,
+   "long_net_rs": -32034.140000000003,
+   "short_trades": 155,
+   "short_net_rs": -14953.94
+  },
+  "stress_oos": {
+   "days": 245,
+   "total_return_pct": -14.866333158165956,
+   "cagr_pct": -15.256921851435234,
+   "sharpe": -9.840018787343327,
+   "max_dd_pct": 14.905035450855209,
+   "trades": 429,
+   "win_rate_pct": 22.61072261072261,
+   "profit_factor": 0.19553684825161985,
+   "avg_net_pnl_rs": -147.47193473193474,
+   "avg_net_pct": -0.2087644456230329,
+   "avg_gross_pct": 0.007906310551885495,
+   "avg_cost_pct": 0.21667113936311994,
+   "gross_to_cost": 0.03648991081657295,
+   "t_stat": -8.89971504620658,
+   "total_fees_rs": 28585.25,
+   "total_slippage_rs": 36743.07,
+   "long_trades": 274,
+   "long_net_rs": -42031.880000000005,
+   "short_trades": 155,
+   "short_net_rs": -21233.58
+  }
+ },
+ "checks": [
+  [
+   "Sharpe >= 1.0",
+   false
+  ],
+  [
+   "Max drawdown <= 20%",
+   true
+  ],
+  [
+   "Profit factor >= 1.3",
+   false
+  ],
+  [
+   "Trades >= 300 aur t-stat >= 2",
+   false
+  ],
+  [
+   "Avg gross trade / cost >= 2",
+   false
+  ],
+  [
+   "OOS Sharpe / IS Sharpe >= 0.5",
+   false
+  ],
+  [
+   "Stress (slippage 2x) profitable",
+   false
+  ]
+ ],
+ "verdict": "FAIL",
+ "months": [
+  [
+   "2021-10",
+   0.0,
+   0.0,
+   0,
+   null
+  ],
+  [
+   "2021-11",
+   -4630.94,
+   -0.926,
+   28,
+   28.6
+  ],
+  [
+   "2021-12",
+   -2271.88,
+   -0.459,
+   19,
+   36.8
+  ],
+  [
+   "2022-01",
+   -6641.23,
+   -1.347,
+   64,
+   35.9
+  ],
+  [
+   "2022-02",
+   1483.69,
+   0.305,
+   37,
+   48.6
+  ],
+  [
+   "2022-03",
+   -6365.65,
+   -1.305,
+   45,
+   20.0
+  ],
+  [
+   "2022-04",
+   -5805.71,
+   -1.206,
+   53,
+   35.8
+  ],
+  [
+   "2022-05",
+   -2486.59,
+   -0.523,
+   40,
+   35.0
+  ],
+  [
+   "2022-06",
+   -5212.89,
+   -1.101,
+   35,
+   17.1
+  ],
+  [
+   "2022-07",
+   -3759.91,
+   -0.803,
+   43,
+   37.2
+  ],
+  [
+   "2022-08",
+   -2501.18,
+   -0.539,
+   30,
+   23.3
+  ],
+  [
+   "2022-09",
+   -4854.06,
+   -1.051,
+   48,
+   33.3
+  ],
+  [
+   "2022-10",
+   -1134.14,
+   -0.248,
+   25,
+   48.0
+  ],
+  [
+   "2022-11",
+   -4336.62,
+   -0.951,
+   27,
+   25.9
+  ],
+  [
+   "2022-12",
+   -7866.5,
+   -1.742,
+   37,
+   16.2
+  ],
+  [
+   "2023-01",
+   -4153.45,
+   -0.936,
+   46,
+   32.6
+  ],
+  [
+   "2023-02",
+   -1615.6,
+   -0.368,
+   22,
+   31.8
+  ],
+  [
+   "2023-03",
+   -5839.32,
+   -1.334,
+   49,
+   28.6
+  ],
+  [
+   "2023-04",
+   -4307.39,
+   -0.997,
+   33,
+   24.2
+  ],
+  [
+   "2023-05",
+   -3312.6,
+   -0.775,
+   31,
+   29.0
+  ],
+  [
+   "2023-06",
+   -4352.13,
+   -1.026,
+   36,
+   30.6
+  ],
+  [
+   "2023-07",
+   -4994.33,
+   -1.189,
+   41,
+   26.8
+  ],
+  [
+   "2023-08",
+   -6324.34,
+   -1.524,
+   41,
+   24.4
+  ],
+  [
+   "2023-09",
+   -490.52,
+   -0.12,
+   30,
+   50.0
+  ],
+  [
+   "2023-10",
+   -6254.55,
+   -1.532,
+   36,
+   19.4
+  ],
+  [
+   "2023-11",
+   -1358.71,
+   -0.338,
+   26,
+   30.8
+  ],
+  [
+   "2023-12",
+   -3985.06,
+   -0.995,
+   38,
+   26.3
+  ]
+ ],
+ "investment": {
+  "capital": 500000.0,
+  "risk_per_trade": "vol target",
+  "qty_rule": "equity x min(L, target/sigma) / N",
+  "max_per_stock": "3 x equity / 10, aur 1% of avg volume",
+  "max_open_positions": 10,
+  "avg_position": 67704.0,
+  "biggest_position": 145314.0,
+  "peak_deployed": 590879.0
+ },
+ "data_note": "Fyers 1-min data; stock list = AMFI Jun-2026 (survivorship bias). Prices adjusted with data/store/adjustments.csv.",
+ "generated": "02 Nov 2026 13:47"
+}
