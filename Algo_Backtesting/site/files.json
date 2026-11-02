@@ -13,10 +13,5 @@
  "reports/13_gap_rsi_ema.html": "results/13_gap_rsi_ema/report.html",
  "reports/14_gap_rsi_ema_smallcap.html": "results/14_gap_rsi_ema_smallcap/report.html",
  "reports/15_call_fut_intraday.html": "results/15_call_fut_intraday/report.html",
- "reports/16_layered_straddle.html": "results/16_layered_straddle/report.html",
- "reports/17_rb_orb_dev.html": "results/17_rb_orb_dev/report.html",
- "reports/18_rb_noise_dev.html": "results/18_rb_noise_dev/report.html",
- "reports/19_rb_vwap_dev.html": "results/19_rb_vwap_dev/report.html",
- "reports/20_rb_fh_dev.html": "results/20_rb_fh_dev/report.html",
- "reports/21_rb_gapfade_dev.html": "results/21_rb_gapfade_dev/report.html"
+ "reports/16_layered_straddle.html": "results/16_layered_straddle/report.html"
 }
