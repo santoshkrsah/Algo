@@ -188,5 +188,15 @@
   "pf": 0.75,
   "trades": 388,
   "verdict": "loss"
+ },
+ "21_r3s3_optbuy_2024_2026": {
+  "name": "R3/S3 Option Buying (BTST, daily)",
+  "type": "Options",
+  "period": "Nov 2024 - Oct 2026",
+  "result": "1,188 setting me sirf 17% profit me (out-of-sample 7%). Sirf 'agle din 9:15 open pe becho' kaam karta hai: index camarilla C 2 OTM 688 trade, win 44%, out-of-sample +Rs 5.7 L PF 1.52, random se behtar. Close / SL-target wale exit loss. Intraday setups ka data nahi",
+  "net": 1166538,
+  "pf": 1.6,
+  "trades": 688,
+  "verdict": "study"
  }
 }
