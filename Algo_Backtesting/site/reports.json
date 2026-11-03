@@ -198,5 +198,15 @@
   "pf": 1.6,
   "trades": 688,
   "verdict": "study"
+ },
+ "22_pdh_pdl_nifty_2021_2026": {
+  "name": "NIFTY PDH / PDL trend (3-min intraday)",
+  "type": "Intraday",
+  "period": "Oct 2021 - Oct 2026",
+  "result": "3,360 setting, kharche ke baad in-sample me ek bhi profit me nahi. In-sample best (A breakout 9:30, S3, half 1R) 492 trade, win 28.5%, out-of-sample -Rs 2.5 L. 60-65% win rate galat (max 49.5%), PDH/PDL random level se behtar nahi, 11:00 9:30 se behtar nahi",
+  "net": -348606,
+  "pf": 0.67,
+  "trades": 492,
+  "verdict": "loss"
  }
 }
