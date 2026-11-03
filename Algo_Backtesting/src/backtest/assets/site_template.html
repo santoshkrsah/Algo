@@ -47,7 +47,7 @@ h1 { font: 800 clamp(26px, 4vw, 36px)/1.1 var(--f-display); margin: 0; color: va
 .hint { margin: 0; font-size: 13px; color: var(--muted) }
 
 .list { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden }
-.head, .row { display: grid; grid-template-columns: 52px minmax(0, 1fr) 124px 56px 68px 158px 128px; gap: 14px; align-items: center; padding: 14px 18px }
+.head, .row { display: grid; grid-template-columns: 52px minmax(0, 1fr) 124px 56px 68px 184px 128px; gap: 14px; align-items: center; padding: 14px 18px }
 .head { font: 600 11px var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-bottom: 1px solid var(--line); padding-block: 10px }
 .row + .row { border-top: 1px solid var(--line) }
 .row:hover { background: color-mix(in srgb, var(--accent) 5%, var(--card)) }
@@ -107,7 +107,7 @@ footer { font-size: 12.5px; color: var(--muted) }
       <option value="">Sab</option><option value="profit">Profit</option><option value="loss">Loss</option><option value="study">Study (P&amp;L nahi)</option>
     </select></label>
     <label>Sort<select id="sort">
-      <option value="made">Naya pehle (bana)</option><option value="updated">Haal me update</option>
+      <option value="made">Naya pehle (generate)</option><option value="updated">Haal me update</option>
       <option value="num">Number (01, 02 ...)</option><option value="name">Naam (A-Z)</option>
       <option value="net">Net profit (zyada pehle)</option><option value="pf">Profit factor (zyada pehle)</option>
     </select></label>
@@ -115,7 +115,7 @@ footer { font-size: 12.5px; color: var(--muted) }
   </div>
   <p class="hint">Har report ka capital aur trade size alag hai (jaise 01-03 me Rs 2 Cr har trade), isliye Net ko aapas me seedha compare na karein. Profit factor (PF) 1 se upar = profit.</p>
   <div class="list" role="table" aria-label="Reports">
-    <div class="head" role="row"><span>#</span><span>Report</span><span class="r">Net P&amp;L</span><span class="r">PF</span><span class="r">Trade</span><span>Bana / Update</span><span></span></div>
+    <div class="head" role="row"><span>#</span><span>Report</span><span class="r">Net P&amp;L</span><span class="r">PF</span><span class="r">Trade</span><span>Generate / Last Update</span><span></span></div>
     <div id="rows"></div>
   </div>
   <footer id="foot"></footer>
@@ -177,7 +177,7 @@ function render() {
       <span class="r c-net"><span class="lbl">Net</span>${rs(r.net)}</span>
       <span class="r c-pf"><span class="lbl">PF</span>${r.pf == null ? '<span class="dim">-</span>' : `<span class="${r.pf >= 1 ? "gain" : "loss"}">${r.pf.toFixed(2)}</span>`}</span>
       <span class="r c-tr"><span class="lbl">Trade</span>${r.trades == null ? '<span class="dim">-</span>' : r.trades.toLocaleString("en-IN")}</span>
-      <span class="dates">Bana <b>${day(r.made)}</b><br>Update <b>${day(r.updated)}</b></span>
+      <span class="dates">Generate : <b>${day(r.made)}</b><br>Last Update : <b>${day(r.updated)}</b></span>
       <a class="open" href="${esc(D.site ? D.site + "#" + r.hash : "#" + r.hash)}"${D.site ? ' target="_blank" rel="noopener"' : ""}>Get Report &#8599;</a>
     </div>`).join("") : '<div class="empty">Is filter me koi report nahi mili. Filter hatao ya kuch aur khojo.</div>';
 }
