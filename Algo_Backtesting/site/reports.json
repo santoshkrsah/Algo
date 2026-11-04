@@ -208,5 +208,15 @@
   "pf": 0.67,
   "trades": 492,
   "verdict": "loss"
+ },
+ "23_gap_breakout_long": {
+  "name": "Gap Breakout Long (EMA21 + RSI + monthly trend)",
+  "type": "Swing",
+  "period": "Sep 2011 - Nov 2026",
+  "result": "Nifty 200 jaisa (top 200 market cap), sirf LONG baseline, daily 2010 se: 404 trade, win 33%, PF 1.35, CAGR 3.8% vs Nifty 50 buy-hold 10.7%. Pehla 60% (2011-2020) loss PF 0.91, aakhri 40% (2020-2026) profit PF 1.86. Daave galat: win 33% (50% bola), bull me 33% (80-85% bola); top 5% trades = 195% net",
+  "net": 756391,
+  "pf": 1.35,
+  "trades": 404,
+  "verdict": "study"
  }
 }

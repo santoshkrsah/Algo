@@ -27,7 +27,11 @@ CORP_CSV = DATA / "reference" / "corporate_actions.csv"
 START = "2010-01-01"
 # Demergers that Fyers' daily history does not adjust for (a one-day fake fall). NSE's corporate actions (Oct 2021 on) are read from
 # CORP_CSV; older ones were found by the one-day-jump health check and are listed by hand here.
-CA_MANUAL = [("ADANIENT", "2015-06-03")]           # Adani Transmission demerger: 617 -> 106
+CA_MANUAL = [("STAR", "2013-12-19"),               # Strides Arcolab Rs 500 special dividend: 882 -> 351
+             ("ADANIENT", "2015-06-03"),           # Adani Transmission demerger: 617 -> 106
+             ("NIACL", "2018-06-27"),              # New India Assurance 1:1 bonus not adjusted: 652 -> 325
+             ("TATACOMM", "2019-09-17"),           # Hemisphere Properties demerger: 427 -> 265
+             ("TATACHEM", "2020-03-04")]           # consumer business demerger (to Tata Consumer): 724 -> 315
 CA_BLOCK = 60                                     # no new setup from the day before an ex-date until 60 trading days after it
 EXITS = {"ema": "21 EMA trail (sirf stop, koi target nahi)", "rr2": "Target 2R", "rr3": "Target 3R", "rr5": "Target 5R",
          "monthly": "Monthly trend toote tab (21 EMA stop nahi)", "t20": "Time stop 20 din", "t40": "Time stop 40 din", "t60": "Time stop 60 din"}
@@ -85,12 +89,15 @@ def load(start: str = START, end: str | None = None, path=None) -> dict:
     df = pd.read_parquet(path or DAILY / "equity_daily.parquet")
     df = df[(df.date >= start) & (df.date <= (end or "9999-12-31"))]
     W = {k: df.pivot(index="date", columns="symbol", values=k).astype(float) for k in ("open", "high", "low", "close", "volume")}
+    n = W["close"].notna().sum(axis=1)
+    odd = n < 0.2 * n.rolling(21, center=True, min_periods=1).median()          # e.g. Sat 13 Aug 2022: one stock, a stray candle
+    W = {k: v[~odd] for k, v in W.items()}
     bad = clean(W)
     idx = {n: pd.read_csv(DAILY / "index" / f"{n}.csv", dtype={"date": str}).set_index("date").close for n in ("NIFTY50", "NIFTY200")}
     u = pd.read_csv(UNIVERSE_CSV)
     u["sym"] = u.symbol.str.replace(r"^NSE:|-(EQ|BE|BZ|SM|ST)$", "", regex=True)
     D = {"W": W, "cal": [str(d) for d in W["close"].index], "syms": [str(s) for s in W["close"].columns], "idx": idx,
-         "mcap": dict(zip(u.sym, u.mcap_cr)), "cat": dict(zip(u.sym, u.category)), "bad_rows": bad}
+         "mcap": dict(zip(u.sym, u.mcap_cr)), "cat": dict(zip(u.sym, u.category)), "bad_rows": bad, "odd_days": [str(d) for d in n.index[odd]]}
     D["shares"] = shares(D)
     D["ca"], D["ca_list"] = corp_events(D)
     return D

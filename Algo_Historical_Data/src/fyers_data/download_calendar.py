@@ -15,6 +15,9 @@ bhavhist: STOCK futures (STF, every expiry) + STOCK options (STO, two nearest tr
 folders above, into fno/bhavcopy_hist/ (columns FinInstrmTp + the bhavcopy_opt columns + TtlTrfVal). Before 8 Jul 2024
 NSE only has the old format (fo<DD><MON><YYYY>bhav.csv): it is renamed to the UDiFF columns; it has no lot size, underlying
 price, last price or trade count (left empty: lot = turnover / (contracts x price) of the futures, spot = futures close).
+bhavidxhist: NIFTY / BANKNIFTY INDEX OPTION rows (three nearest traded expiries) for the years before bhavcopy_idx/, into
+fno/bhavcopy_idx_hist/. Same old-format gap as bhavhist: before 8 Jul 2024 there is no lot size and no trade count
+(CONTRACTS = TtlTradgVol, same meaning as UDiFF; left empty: TtlNbOfTxsExctd, NewBrdLotQty, LastPric, UndrlygPric).
 contract: Fyers 1m candles of ONE contract (cont_flag=0, not the continuous series) into fno/1m/contracts/.
 Fyers has no expired contracts, so only contracts still listed today can be fetched.
 """
@@ -29,7 +32,7 @@ import requests
 
 from fyers_data.download_fno import CHUNK_DAYS, fetch_chunk
 from fyers_data.download_reference import NSE_UA
-from fyers_data.paths import FNO_BHAV, FNO_BHAV_HIST, FNO_BHAV_IDX, FNO_BHAV_OPT, FNO_CONTRACTS
+from fyers_data.paths import FNO_BHAV, FNO_BHAV_HIST, FNO_BHAV_IDX, FNO_BHAV_IDX_HIST, FNO_BHAV_OPT, FNO_CONTRACTS
 
 BHAV_URL = "https://nsearchives.nseindia.com/content/fo/BhavCopy_NSE_FO_0_0_0_{:%Y%m%d}_F_0000.csv.zip"
 OLD_URL = "https://nsearchives.nseindia.com/content/historical/DERIVATIVES/{y}/{m}/fo{d:02d}{m}{y}bhav.csv.zip"
@@ -86,6 +89,26 @@ def _stock_hist(df: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([df[df["FinInstrmTp"] == "STF"], o[near2]])[HIST_COLS]
 
 
+def _from_old_idx(df: pd.DataFrame) -> pd.DataFrame:
+    """Old-format NIFTY/BANKNIFTY index option rows (OPTIDX) with the UDiFF option column names. No lot size or trade count
+    in this format; TtlTrfVal (old-format turnover = (strike + premium) x quantity) is kept so the lot size and a liquidity
+    proxy can be derived the same way breakout2.lot_sizes() does for stock options."""
+    o = df[(df["INSTRUMENT"] == "OPTIDX") & df["SYMBOL"].isin(IDX_OPT_SYMBOLS) & (df["CONTRACTS"] > 0)]
+    out = o.rename(columns=OLD_COLS)
+    out["TradDt"] = pd.to_datetime(o["TIMESTAMP"], format="%d-%b-%Y").dt.strftime("%Y-%m-%d")
+    out["XpryDt"] = pd.to_datetime(o["EXPIRY_DT"], format="%d-%b-%Y").dt.strftime("%Y-%m-%d")
+    out["TtlTrfVal"] = o["VAL_INLAKH"] * 1e5
+    for c in ("LastPric", "UndrlygPric", "TtlNbOfTxsExctd", "NewBrdLotQty"):
+        out[c] = float("nan")
+    return out
+
+
+def _index_options_hist(df: pd.DataFrame) -> pd.DataFrame:
+    o = _from_old_idx(df) if "INSTRUMENT" in df else df[(df["FinInstrmTp"] == "IDO") & df["TckrSymb"].isin(IDX_OPT_SYMBOLS) & (df["TtlTradgVol"] > 0)]
+    near3 = o.groupby("TckrSymb")["XpryDt"].transform(lambda x: x.isin(sorted(x.unique())[:3]))
+    return o[near3][OPT_COLS + ["TtlTrfVal"]]
+
+
 def bhav(start: date, end: date, folder=FNO_BHAV, keep=_futures):
     folder.mkdir(parents=True, exist_ok=True)
     saved, holidays, failed = 0, [], []
@@ -137,7 +160,7 @@ def contract(symbols: list[str], start: date, end: date):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["bhav", "bhavopt", "bhavidx", "bhavhist", "contract"])
+    ap.add_argument("what", choices=["bhav", "bhavopt", "bhavidx", "bhavhist", "bhavidxhist", "contract"])
     ap.add_argument("symbols", nargs="*", help="contract: Fyers symbols, e.g. NSE:WIPRO26NOVFUT")
     ap.add_argument("--start", required=True)
     ap.add_argument("--end", default=str(date.today()))
@@ -147,5 +170,5 @@ if __name__ == "__main__":
         contract(a.symbols, s, e)
     else:
         keep = {"bhav": (FNO_BHAV, _futures), "bhavopt": (FNO_BHAV_OPT, _stock_options), "bhavidx": (FNO_BHAV_IDX, _index_options),
-                "bhavhist": (FNO_BHAV_HIST, _stock_hist)}[a.what]
+                "bhavhist": (FNO_BHAV_HIST, _stock_hist), "bhavidxhist": (FNO_BHAV_IDX_HIST, _index_options_hist)}[a.what]
         bhav(s, e, *keep)

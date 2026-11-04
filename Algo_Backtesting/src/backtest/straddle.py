@@ -113,14 +113,21 @@ def years(day: str, expiry: str, t):
 
 
 # ---------------------------------------------------------------- costs
+STT_SLABS = (                               # (from date, option STT %, futures STT %) on the sell side, oldest first
+    ("2021-01-01", 0.0005, 0.0001),         # till 31 Mar 2023
+    ("2023-04-01", 0.000625, 0.000125),     # Finance Act 2023 (+25%)
+    ("2024-10-01", 0.001, 0.0002),          # Budget 2024 (options x1.6, futures x1.6)
+    ("2026-04-01", 0.0015, 0.0005),         # Budget 2026
+)
+
+
 def fill_cost(value: float, buy: bool, fut: bool, day: str) -> dict:
-    """Fyers / NSE charges for one order of Rs <value>. STT: Budget 2026 rates from 1 Apr 2026 (options 0.15%, futures 0.05% on
-    the sell side), before that 0.1% / 0.02%."""
-    new = day >= "2026-04-01"
+    """Fyers / NSE charges for one order of Rs <value>. STT (sell side only) changed slabs over the years: STT_SLABS."""
+    opt_stt, fut_stt = next((o, f) for d, o, f in reversed(STT_SLABS) if day >= d)
     brokerage = 20.0
     exch = (0.0000173 if fut else 0.0003503) * value
     sebi = 0.000001 * value
-    stt = 0.0 if buy else ((0.0005 if new else 0.0002) if fut else (0.0015 if new else 0.001)) * value
+    stt = 0.0 if buy else (fut_stt if fut else opt_stt) * value
     stamp = ((0.00002 if fut else 0.00003) * value) if buy else 0.0
     gst = 0.18 * (brokerage + exch + sebi)
     return {"brokerage": brokerage, "stt": stt, "exch": exch + sebi, "stamp": stamp, "gst": gst, "total": brokerage + exch + sebi + stt + stamp + gst}
@@ -144,25 +151,56 @@ def _minutes(path, start: str, end: str) -> dict:
     return out
 
 
+MIN_VOL = 20                                # old-format days (pre 8 Jul 2024) have no trade count: contracts traded instead
+LOT_STEP = (100, 25), (20, 5), (0, 1)       # NSE lots are round numbers; snap an estimate to the nearest valid step
+
+
 def load_chain(index: str, start: str, end: str) -> pd.DataFrame:
+    """bhavcopy_idx (Nov 2024 on, lot size + trade count from NSE) + bhavcopy_idx_hist (Oct 2021 - Oct 2024: old NSE
+    format before 8 Jul 2024 has neither; turnover is kept there so the lot size can be estimated, same quirk as
+    breakout2.lot_sizes() for stock options: old-format turnover = (strike + premium) x quantity)."""
     cols = {"TradDt": "date", "XpryDt": "expiry", "StrkPric": "strike", "OptnTp": "type", "OpnPric": "open", "ClsPric": "close",
-            "TtlNbOfTxsExctd": "trades", "NewBrdLotQty": "lot", "TckrSymb": "symbol"}
-    files = [p for p in sorted((FNO / "bhavcopy_idx").glob("*.csv")) if start <= p.stem <= end]
-    c = pd.concat([pd.read_csv(p, usecols=list(cols)) for p in files], ignore_index=True).rename(columns=cols)
+            "TtlNbOfTxsExctd": "trades", "NewBrdLotQty": "lot", "TckrSymb": "symbol", "TtlTradgVol": "vol"}
+    hist_cols = {**cols, "TtlTrfVal": "turnover"}
+    parts = []
+    for folder, mapping in ((FNO / "bhavcopy_idx_hist", hist_cols), (FNO / "bhavcopy_idx", cols)):
+        files = [p for p in sorted(folder.glob("*.csv")) if start <= p.stem <= end]
+        if files:
+            parts.append(pd.concat([pd.read_csv(p, usecols=list(mapping)) for p in files], ignore_index=True).rename(columns=mapping))
+    c = pd.concat(parts, ignore_index=True)
+    if "turnover" not in c:
+        c["turnover"] = np.nan
     return c[c.symbol == index].drop(columns="symbol")
+
+
+def _lot_from_turnover(g: pd.DataFrame) -> int | None:
+    """Old-format lot size (no NewBrdLotQty): turnover / (contracts x (strike + day's average premium))."""
+    o = g[(g.vol > 0) & g.turnover.notna() & (g.turnover > 0)]
+    if not len(o):
+        return None
+    est = o.turnover / (o.vol * (o.strike + (o.open + o.close) / 2))
+    val = float(np.median(est))
+    step = next(s for lo, s in LOT_STEP if val >= lo)
+    snapped = round(val / step) * step
+    return int(snapped if snapped > 0 and abs(snapped / val - 1) < 0.05 else round(val))
 
 
 class Smile:
     """One expiry on one day: basis and IV per strike at the open (9:15) and at the close (~15:15)."""
 
-    def __init__(self, day: str, expiry: str, g: pd.DataFrame, s_open: float, s_close: float, step: int):
+    def __init__(self, day: str, expiry: str, g: pd.DataFrame, s_open: float, s_close: float, step: int, prev_lot: int | None = None):
         self.expiry, self.days = expiry, (pd.Timestamp(expiry) - pd.Timestamp(day)).days
-        self.lot = int(g.lot.mode().iloc[0])
+        if g.lot.notna().any():
+            self.lot = int(g.lot.mode().iloc[0])
+        else:
+            self.lot = _lot_from_turnover(g) or prev_lot
+        has_trades = g.trades.notna().any()                      # old format (pre 8 Jul 2024): no trade count, use volume
+        liq_col, min_liq = ("trades", MIN_TRADES) if has_trades else ("vol", MIN_VOL)
         To, Tc = years(day, expiry, 0), years(day, expiry, CLOSE_T)
-        p = g.pivot_table(index="strike", columns="type", values=["open", "close", "trades"], aggfunc="first")
+        p = g.pivot_table(index="strike", columns="type", values=["open", "close", liq_col], aggfunc="first")
         ok = pd.Series(True, index=p.index)
         for side in ("CE", "PE"):
-            ok &= p.get(("trades", side), pd.Series(0, index=p.index)).fillna(0) >= MIN_TRADES
+            ok &= p.get((liq_col, side), pd.Series(0, index=p.index)).fillna(0) >= min_liq
         both = p[ok]
         self.basis_o = self.basis_c = 0.0
         if len(both):
@@ -179,7 +217,7 @@ class Smile:
             row = []
             for px, F, T in (("open", Fo, To), ("close", Fc, Tc)):
                 side = "CE" if k >= F else "PE"           # OTM side gives the cleaner IV
-                if r.get(("trades", side), 0) >= MIN_TRADES and r.get((px, side), 0) > 0.05:
+                if r.get((liq_col, side), 0) >= min_liq and r.get((px, side), 0) > 0.05:
                     row.append((r[(px, side)], F, T, side))
                 else:
                     row.append(None)
@@ -189,7 +227,7 @@ class Smile:
         ks = np.array(ks, float)
         self.k_o, self.iv_o = self._fit(ks, ivo)
         self.k_c, self.iv_c = self._fit(ks, ivc)
-        self.ok = len(self.k_o) >= 3 and len(self.k_c) >= 3
+        self.ok = len(self.k_o) >= 3 and len(self.k_c) >= 3 and self.lot is not None
         self.step = step
 
     @staticmethod
@@ -221,7 +259,7 @@ class Day:
     """One index on one day: 1-minute index (t = 0 ... 375), VIX, smiles of the nearest expiries, contract prices on demand."""
 
     def __init__(self, index: str, date: str, bars: np.ndarray, prev_close: float, vix: np.ndarray | None, vix_prev: float | None,
-                 chain: pd.DataFrame, macd: dict):
+                 chain: pd.DataFrame, macd: dict, prev_lot: int | None = None):
         self.index, self.date, self.step = index, date, STEP[index]
         self.S = np.concatenate([[bars[0, 0]], bars[:, 3]])          # t = 0 open, t >= 1 close of bar t - 1
         self.H = np.concatenate([[bars[0, 0]], bars[:, 1]])
@@ -232,12 +270,16 @@ class Day:
         self.macd = macd                                              # {tf: histogram per completed bar of the day}
         s_close = float(bars[345:375, 3].mean())
         self.smiles = {}
+        lot = prev_lot                                                # carried across days: old format needs it when a day's own turnover estimate fails
         for e, g in chain.groupby("expiry"):
             if e < date:
                 continue
-            sm = Smile(date, e, g, float(bars[0, 0]), s_close, self.step)
+            sm = Smile(date, e, g, float(bars[0, 0]), s_close, self.step, prev_lot=lot)
+            if sm.lot is not None:
+                lot = sm.lot
             if sm.ok:
                 self.smiles[e] = sm
+        self.last_lot = lot
         self.expiries = sorted(self.smiles)
         self._cache = {}
         t = np.arange(N)
@@ -277,6 +319,7 @@ class Market:
         self.chain = {d: g for d, g in load_chain(index, start, end).groupby("date")}
         self.all_days = sorted(set(self.bars) & set(self.chain))
         self.macd = {tf: self._macd(tf) for tf in (2, 3)}
+        self._last_lot = None
 
     def _macd(self, tf: int) -> dict:
         """MACD (12, 26, 9) histogram of tf-minute bars of the index, EMAs running across days; {date: hist per bar}."""
@@ -301,8 +344,11 @@ class Market:
         prev = [d for d in sorted(self.bars) if d < date]
         pc = float(self.bars[prev[-1]][-1, 3]) if prev else float("nan")
         vprev = [d for d in sorted(self.vix) if d < date]
-        return Day(self.index, date, self.bars[date], pc, self.vix.get(date), float(self.vix[vprev[-1]][-1, 3]) if vprev else None,
-                   self.chain[date], {tf: m.get(date) for tf, m in self.macd.items()})
+        d = Day(self.index, date, self.bars[date], pc, self.vix.get(date), float(self.vix[vprev[-1]][-1, 3]) if vprev else None,
+                self.chain[date], {tf: m.get(date) for tf, m in self.macd.items()}, prev_lot=self._last_lot)
+        if d.last_lot is not None:
+            self._last_lot = d.last_lot
+        return d
 
 
 # ---------------------------------------------------------------- simulation

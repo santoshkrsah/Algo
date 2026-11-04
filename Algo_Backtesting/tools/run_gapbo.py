@@ -212,7 +212,8 @@ def run(args, status) -> int:
     funnel = S.why.replace("", "entry").value_counts().to_dict()
     ever = int((I["uni"][a:b + 1]).any(axis=0).sum())
     data_info = [["Stock data", f"Fyers daily candles (split / bonus adjusted), {cal[0]} se {END}; {len(D['syms'])} stocks (NSE list Jun 2026, market cap >= Rs 1,000 Cr); "
-                                f"{D['bad_rows']} galat candle (high < low waghera) hata diye"],
+                                f"{D['bad_rows']} galat candle (high < low waghera) hata diye; ajeeb din hataye (lagbhag koi stock trade nahi hua): "
+                                + (", ".join(D["odd_days"]) or "koi nahi")],
                  ["Stock list", f"har mahine top {P.top_n} market cap; test me kabhi na kabhi top {P.top_n} me rahe: {ever} stocks"],
                  ["Nifty 50", f"Fyers daily index (2005 se); 200 DMA ke upar {np.nanmean(I['bull'][a:b + 1]) * 100:.0f}% din (test period)"],
                  ["Setups (baseline)", f"{len(S)} gap din jo saare rules pass kiye: " + ", ".join(f"{k} {v}" for k, v in funnel.items())],

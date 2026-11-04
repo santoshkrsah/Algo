@@ -1,0 +1,17 @@
+Poora (fixed capital): 404 trade, win 33%, net Rs 756,391 (76%), CAGR 3.8%, PF 1.35, avg trade Rs 1,872 (0.19R of 1%), max DD -23.5%
+  fit 60%: 203 trade, win 28%, net Rs -99,754 (-10%), CAGR -0.6%, PF 0.91, avg trade Rs -491 (-0.05R of 1%), max DD -21.9%
+  verify 40%: 201 trade, win 39%, net Rs 856,145 (86%), CAGR 10.3%, PF 1.86, avg trade Rs 4,259 (0.43R of 1%), max DD -10.9%
+Compounding ON: 408 trade, win 33%, net Rs 735,084 (74%), CAGR 3.7%, PF 1.29, avg trade Rs 1,802 (0.18R of 1%), max DD -24.8%
+Nifty 50 buy-hold: 365% (CAGR 10.7%, max DD -38.4%)
+Daave: win 33% (daava ~50%); Nifty 200 DMA ke neeche: 49 trade win 37%, Nifty 200 DMA ke upar: 355 trade win 33% (daava 80-85% / 40-45%)
+R: jeete trades ka median 1.7R, 15R+ sirf 10 trade, sabse bada 316.4R (daava 1:15 - 1:100); top 5% trades = kul net ka 195%
+Stop ke paar: 167 trade, extra nuksaan Rs 667,788; -1R se bura 184 trade (sabse bura -11.8R)
+
+Checks:
+  Baseline (koi badlav nahi): 404 trade, win 33%, net Rs 756,391, CAGR 3.8%, PF 1.35, DD -23.5%, fit Rs -99,754, verify Rs 856,145
+  Slippage 0 (sirf kharcha): 403 trade, win 33%, net Rs 970,739, CAGR 4.6%, PF 1.48, DD -16.9%, fit Rs 12,152, verify Rs 958,587
+  Slippage 2x (0.3% har fill): 405 trade, win 32%, net Rs 536,602, CAGR 2.9%, PF 1.24, DD -30.9%, fit Rs -209,268, verify Rs 745,870
+  Risk 0.5% har trade: 439 trade, win 34%, net Rs 827,777, CAGR 4.1%, PF 1.48, DD -16.3%, fit Rs -94,602, verify Rs 922,379
+  Max 5 position: 368 trade, win 33%, net Rs 751,002, CAGR 3.8%, PF 1.38, DD -22.7%, fit Rs -88,372, verify Rs 839,374
+  Max 10 position: 405 trade, win 33%, net Rs 748,906, CAGR 3.8%, PF 1.35, DD -23.5%, fit Rs -99,754, verify Rs 848,660
+  Compounding ON (booked profit se size): 408 trade, win 33%, net Rs 735,084, CAGR 3.7%, PF 1.29, DD -24.8%, fit Rs -127,075, verify Rs 862,159

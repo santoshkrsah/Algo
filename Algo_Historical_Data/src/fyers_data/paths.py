@@ -15,6 +15,7 @@ FNO_BHAV = FNO / "bhavcopy"                         # bhavcopy/<YYYY-MM-DD>.csv 
 FNO_BHAV_OPT = FNO / "bhavcopy_opt"                 # bhavcopy_opt/<YYYY-MM-DD>.csv  NSE stock option rows, 2 nearest expiries
 FNO_BHAV_IDX = FNO / "bhavcopy_idx"                 # bhavcopy_idx/<YYYY-MM-DD>.csv  NSE NIFTY / BANKNIFTY option rows, 3 nearest expiries
 FNO_BHAV_HIST = FNO / "bhavcopy_hist"               # bhavcopy_hist/<YYYY-MM-DD>.csv  stock futures + options (2 nearest), Oct 2021 - Oct 2024
+FNO_BHAV_IDX_HIST = FNO / "bhavcopy_idx_hist"       # bhavcopy_idx_hist/<YYYY-MM-DD>.csv  NIFTY/BANKNIFTY option rows (3 nearest), Oct 2021 - Oct 2024
 EQUITY = DATA / "equity"                            # equity/<YYYY-MM-DD>.csv  (all stocks, all timeframes)
 STORE = DATA / "store"                              # fast Parquet copy of equity/ + daily panel (fyers_data.store); always rebuildable
 REFERENCE = DATA / "reference"                      # lists that define what is downloaded
