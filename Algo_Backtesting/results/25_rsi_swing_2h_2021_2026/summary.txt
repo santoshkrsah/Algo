@@ -1,0 +1,18 @@
+NIFTY 50 A: 51 trade, win 25.5%, return -9.4% (CAGR -1.68%), PF 0.79, exp -0.17R, max DD -13.6%, Sharpe -0.29 | IS 33 tr -7.7% PF 0.74 | OOS 18 tr -1.8% PF 0.89 | random entry rank 45% | padosi 0/36 profit
+NIFTY 50 B: 14 trade, win 28.6%, return 1.0% (CAGR 0.17%), PF 1.09, exp 0.05R, max DD -7.3%, Sharpe 0.07 | IS 13 tr 2.1% PF 1.20 | OOS 1 tr -1.0% PF 0.00 | random entry rank 76% | padosi 9/36 profit
+NIFTY 50 buy-hold: 64.1% (CAGR 8.88%), max DD -17.8%, Sharpe 0.69 | IS 64.0% | OOS 0.1%
+RELIANCE A: 55 trade, win 30.9%, return -1.7% (CAGR -0.30%), PF 0.96, exp -0.02R, max DD -11.8%, Sharpe -0.03 | IS 38 tr 3.0% PF 1.06 | OOS 17 tr -4.6% PF 0.75 | random entry rank 81% | padosi 15/36 profit
+RELIANCE B: 7 trade, win 14.3%, return -4.3% (CAGR -0.76%), PF 0.33, exp -0.62R, max DD -6.0%, Sharpe -0.49 | IS 7 tr -4.3% PF 0.33 | OOS 0 tr 0.0% PF n/a | random entry rank 29% | padosi 0/36 profit
+RELIANCE buy-hold: 31.7% (CAGR 4.84%), max DD -27.9%, Sharpe 0.33 | IS 38.5% | OOS -4.9%
+
+Faisla: Kisi bhi instrument / version me pakka edge nahi mila.
+
+NIFTY 50 A: 51 trade (33 in-sample, 18 out-of-sample), return -9.4% (CAGR -1.68%) vs buy-hold +64.1% (CAGR +8.88%); PF 0.79, win 25%, max DD -13.6%. Har trade ka average -0.18% (95% range -0.65% se +0.34%). Random entry ke 300 run me se 45% se behtar.
+NIFTY 50 B: 14 trade (13 in-sample, 1 out-of-sample), return +1.0% (CAGR +0.17%) vs buy-hold +64.1% (CAGR +8.88%); PF 1.09, win 29%, max DD -7.3%. Har trade ka average +0.09% (95% range -0.89% se +1.23%). Random entry ke 300 run me se 76% se behtar.
+RELIANCE A: 55 trade (38 in-sample, 17 out-of-sample), return -1.7% (CAGR -0.30%) vs buy-hold +31.7% (CAGR +4.84%); PF 0.96, win 31%, max DD -11.8%. Har trade ka average -0.02% (95% range -0.45% se +0.45%). Random entry ke 300 run me se 81% se behtar.
+RELIANCE B: 7 trade (7 in-sample, 0 out-of-sample), return -4.3% (CAGR -0.76%) vs buy-hold +31.7% (CAGR +4.84%); PF 0.33, win 14%, max DD -6.0%. Har trade ka average -0.62% (95% range -1.13% se +0.36%). Random entry ke 300 run me se 29% se behtar.
+Kyun nahi chala: NIFTY 50 A: 75% trade stop pe band (stop average sirf 1.4% door, RSI 70 tak ~9 din lagte hain); win 25% pe profit ke liye win 30% chahiye tha (payoff 2.30); market me sirf 32% time; RELIANCE A: 69% trade stop pe band (stop average sirf 2.4% door, RSI 70 tak ~10 din lagte hain); win 31% pe profit ke liye win 32% chahiye tha (payoff 2.15); market me sirf 37% time. Isliye bull market ka bada hissa chhoot gaya aur buy-and-hold se kaafi peeche.
+Ek idea (sabit nahi): stop hata ke sirf RSI 70 exit pe: NIFTY 50 A +11.1% (PF 1.47, out-of-sample +8.1%), RELIANCE A +2.6% (PF 1.11, out-of-sample -4.7%). Ye result dekh ke nikala gaya hai (hindsight), isliye naye data pe alag se test karna hoga; aur tab bhi buy-and-hold se neeche, aur bina stop ka risk bahut zyada.
+Trade kam hain: version A me dono instrument mila ke 106, version B me sirf 21 trade (1 out-of-sample). B ke number par koi bhi faisla statistically kamzor hai.
+Overfitting: koi parameter tune nahi kiya (sab brief se). Padosi settings (Extra checks tab) sirf dikhane ke liye; unme se best chunna out-of-sample ko dekh ke chunna hota, isliye nahi chuna.
+Data ki seema: sirf 2 instrument, ~5.8 saal (ek hi bada bull + sideways daur). NIFTY index ko ETF jaisa maana (tracking error nahi, STT poora lagaya jo ETF pe kam hota hai). RELIANCE demerger khud adjust kiya. Close = aakhri trade ka price, official close nahi.

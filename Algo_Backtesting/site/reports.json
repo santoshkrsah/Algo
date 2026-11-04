@@ -218,5 +218,25 @@
   "pf": 1.35,
   "trades": 404,
   "verdict": "study"
+ },
+ "24_straddle_risk_2021_2026": {
+  "name": "Straddle + Risk Layer (2021 - 2026 retest)",
+  "type": "Options",
+  "period": "Nov 2021 - Nov 2026",
+  "result": "Report 17 ka setup (NIFTY weekly 9:20 ATM straddle SELL + risk layer) ab jitna data mila (2021 se) chalaya: 1,232 din, win 68%, PF 2.24, max DD Rs -1.5L, sabse bura din Rs -66.6k. Fit (purana SEBI regime, 2021 - Oct 2024) Rs 45.2L, verify (naya regime, Nov 2024 se - yahi report 17 ka period tha) Rs 35.4L, report 17 ke asli Rs 33.7L ke kaafi paas. 2021-2024 ka purana NSE format (lot size / trade count turnover se nikala) - approximation note Rules tab me",
+  "net": 8060019,
+  "pf": 2.24,
+  "trades": 1232,
+  "verdict": "profit"
+ },
+ "25_rsi_swing_2h_2021_2026": {
+  "name": "RSI Swing 2-hour (NIFTY 50 + RELIANCE)",
+  "type": "Swing",
+  "period": "Jan 2021 - Oct 2026",
+  "result": "RSI(14) 30 cross buy / 70 cross sell, SL 2xATR, risk 1%, 2-hour candle, kharche ke baad. Version A: NIFTY -9.4% (51 trade, PF 0.79), RELIANCE -1.7% (55 trade, PF 0.96); B (close > EMA200): NIFTY +1.0% (14 trade), RELIANCE -4.3% (7 trade). Buy-hold NIFTY +64.1%, RELIANCE +31.7%. In-sample / out-of-sample dono me edge nahi; ~70-75% trade SL pe band. Net / PF / trade = version A dono instrument mila ke (Rs 10L + Rs 10L)",
+  "net": -111276,
+  "pf": 0.88,
+  "trades": 106,
+  "verdict": "loss"
  }
 }

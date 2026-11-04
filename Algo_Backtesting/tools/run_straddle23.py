@@ -56,7 +56,7 @@ SETTINGS = R.SETTINGS[:2] + [["Period", "1 Nov 2021 se 3 Nov 2026 (fit = purane 
 
 RULES = [
     "Index: NIFTY (weekly expiry) main test; BANKNIFTY alag check (weekly expiry Nov 2024 se pehle, uske baad sirf monthly - SEBI ne har exchange me "
-    "ek hi weekly-expiry index rakhne ka rule banaya, NSE ne NIFTY rakha). Period 1 Nov 2021 se 2 Nov 2026 - jitna data abhi download ho chuka hai. "
+    "ek hi weekly-expiry index rakhne ka rule banaya, NSE ne NIFTY rakha). Period 1 Nov 2021 se 3 Nov 2026 - jitna data abhi download ho chuka hai. "
     "Fit = 2021 - Oct 2024 (purane niyam, purana format), verify = Nov 2024 se (naya SEBI daur - yahi report 17 ka poora period tha).",
     RR.RULES[1], RR.RULES[2], RR.RULES[3], RR.RULES[4], RR.RULES[5], RR.RULES[6], RR.RULES[7],
     "Kharcha: STT 4 baar badla (Finance Act 2023, Budget 2024, Budget 2026) - exact % aur dates Formulas tab me. Baaki kharcha (brokerage, exchange, stamp, GST) saal bhar same maana.",

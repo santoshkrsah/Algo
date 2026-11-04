@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>try { const t = localStorage.getItem("bt_theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<title>__TITLE__</title>
+__CSS__
+<style>
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:0 10px 10px 0}
+.seg button{background:var(--card);border:0;border-right:1px solid var(--line);padding:7px 12px;cursor:pointer;font-size:13px;color:var(--muted)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--soft);color:var(--ink);font-weight:650}
+.seglbl{font-size:12px;color:var(--muted);margin-right:6px}
+.chk td.l{white-space:normal;max-width:440px}
+.card.cp{position:relative}
+.card.cp h3{padding-right:120px}
+.copy{position:absolute;top:14px;right:14px}
+.warnbox{border-left:4px solid var(--warn);background:var(--soft);padding:10px 14px;border-radius:8px;margin:0 0 12px;font-size:14px}
+.ch.mid{height:260px}
+ul.concl li{margin:0 0 8px;line-height:1.5}
+tr.base td{background:var(--soft);font-weight:650}
+</style>
+<style>__VIEWER_CSS__</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 17l5-6 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <div><h1>__TITLE__</h1><div class="sub">RSI(14) swing &middot; 2-hour candle &middot; sirf long &middot; version A aur B vs buy-and-hold</div></div>
+  </div>
+  <div class="actions"><span class="chip" id="range"></span><button class="btn" id="theme">Dark / Light</button></div>
+</div>
+<div class="wrap">
+<div class="sub" id="subtitle" style="margin:14px 0 0"></div>
+<div class="verdict" id="verdict"></div>
+<div class="setrow" id="settings"></div>
+<div class="segrow">
+  <div class="sg"><span class="seglbl">Instrument:</span><div class="seg" id="seg_i"></div></div>
+  <div class="sg"><span class="seglbl">Version:</span><div class="seg" id="seg_v"></div></div>
+</div>
+<div class="kpis" id="kpis"></div>
+<div class="tabs" id="tabs">
+  <button class="tab on" data-p="sum">Saransh</button>
+  <button class="tab" data-p="months">Saal / Mahine</button>
+  <button class="tab" data-p="xchk">Extra checks</button>
+  <button class="tab" data-p="viewer">Trade viewer</button>
+  <button class="tab" data-p="trades">Saare trades</button>
+  <button class="tab" data-p="rules">Rules</button>
+</div>
+
+<section class="panel on" id="sum">
+  <div class="card"><h3>Nateeja: kya is strategy me asli edge hai?</h3><div id="owarn"></div><ul class="rules concl" id="concl"></ul></div>
+  <div class="card"><h3>In-sample vs out-of-sample (aur buy-and-hold)</h3><div class="hint">In-sample = pehle 70% din, out-of-sample = aakhri 30%. Koi parameter tune nahi kiya, isliye ye sirf "kya naye data pe bhi wahi chala" ka test hai. Trade entry ke din se gine.</div><div class="scroll" style="max-height:none"><table id="split"></table></div></div>
+  <div class="card"><h3>Equity curve vs buy-and-hold</h3><div class="hint" id="eqhint"></div><div class="ch tall"><canvas id="c_eq"></canvas></div></div>
+  <div class="card"><h3>Drawdown</h3><div class="hint">Equity apne sabse uche level se kitna neeche (%). Strategy aur buy-and-hold dono.</div><div class="ch mid"><canvas id="c_dd"></canvas></div></div>
+  <div class="card"><h3>Saare numbers (kharche ke baad)</h3><div class="kv" id="kv"></div></div>
+  <div class="card"><h3>Edge ka test</h3><div class="hint">Bootstrap: trades ko 10,000 baar dobara chun ke average trade ka 95% range. Range 0 ke dono taraf = edge pakka nahi. Random entry: utne hi buy random candles pe, baaki sab same (300 baar).</div><div class="kv" id="edge"></div></div>
+  <div class="card"><h3>R multiple distribution</h3><div class="hint">Har trade ka net / shuru ka risk. -1 ke paas = stop laga; daayi taraf = bade jeet.</div><div class="ch mid"><canvas id="c_r"></canvas></div></div>
+  <div class="card"><h3>Trade kaise band hue</h3><div class="scroll" style="max-height:none"><table id="exits"></table></div></div>
+  <div class="card"><h3>Signal jo trade nahi bane</h3><div class="hint">Buy signal aaya par entry nahi hui, kyun.</div><div class="scroll" style="max-height:none"><table id="skips"></table></div></div>
+  <div class="card"><h3>Paisa kaise lagaya (investment)</h3><div class="hint">Return % shuru ki capital (Rs 10 lakh) pe; compounding ON (har trade abhi ki equity pe size).</div><div class="kv" id="inv"></div></div>
+  <div class="card"><h3>Sab ek saath</h3><div class="hint">Dono instrument, dono version aur buy-and-hold, poora period + dono hisse.</div><div class="scroll" style="max-height:none"><table id="grid"></table></div></div>
+</section>
+
+<section class="panel" id="months">
+  <div class="card"><h3>Saal ke hisaab se</h3><div class="hint">Return % = us saal ka equity badlav / saal shuru ki equity (mark-to-market). Trade / win / PF = us saal me entry wale trade. Aakhri do column: usi saal buy-and-hold.</div><div class="scroll" style="max-height:none"><table id="ytable"></table></div></div>
+  <div class="card"><h3>Har mahine ka return</h3><div class="ch"><canvas id="c_m"></canvas></div></div>
+  <div class="card"><h3>Mahine ki table</h3><div class="scroll" style="max-height:none"><table id="mtable"></table></div></div>
+</section>
+
+<section class="panel" id="xchk">
+  <div class="card"><h3>Ek baar me ek cheez badal ke (ye rules ka hissa NAHI hai)</h3><div class="hint">Har line ek poora alag backtest; baaki sab base jaisa. Sirf samajhne ke liye, kisi line ko chuna nahi.</div><div class="scroll" style="max-height:none"><table id="chk" class="chk"></table></div></div>
+  <div class="card"><h3>Padosi settings (36): buy level x sell level x stop</h3><div class="hint">Agar edge asli hai to aas-paas ki settings bhi theek chalni chahiye. Highlight = brief wali setting (30 / 70 / 2 ATR). Kisi ko chuna NAHI.</div>
+    <div class="kv" id="nsum"></div><div class="scroll" style="max-height:none;margin-top:12px"><table id="neigh" class="chk"></table></div></div>
+</section>
+
+<section class="panel" id="viewer"><div id="tv"></div></section>
+
+<section class="panel" id="trades">
+  <div class="card"><h3>Har ek trade (trade log)</h3>
+    <div class="bar"><select id="tp"><option value="">IS + OOS</option><option value="IS">In-sample</option><option value="OOS">Out-of-sample</option></select><select id="te"><option value="">Saare exit</option></select>
+      <button class="btn" id="tdl">Download CSV</button><span class="note" id="tcount"></span></div>
+    <div class="scroll"><table id="ttable"><thead></thead><tbody></tbody></table></div><div class="pager" id="tpager"></div></div>
+</section>
+
+<section class="panel" id="rules">
+  <div class="card cp"><button class="btn copy" data-copy="rules">Copy karo</button><h3>Rules</h3><ul class="rules" id="rulelist"></ul></div>
+  <div class="card"><h3>Jo baat rules me clear nahi thi, wahan hamne kya maana</h3><ul class="rules" id="notelist"></ul></div>
+  <div class="card"><h3>Data</h3><div class="scroll" style="max-height:none"><table id="dinfo" class="chk"></table></div></div>
+  <div class="card cp"><button class="btn copy" data-copy="formulas">Copy karo</button><h3>Formulas</h3><div class="hint">Is backtest me har number in formulas se nikala gaya hai.</div>
+    <div class="scroll" style="max-height:none"><table id="fml" class="chk"></table></div></div>
+</section>
+<footer id="foot"></footer>
+</div>
+<script>__CHARTJS__</script>
+<script>__LWC__</script>
+<script>__VIEWER_JS__</script>
+<script>
+const D = __DATA__;
+const $ = s => document.querySelector(s);
+const sgn = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
+const nv = v => v === null || v === undefined || (typeof v === "number" && isNaN(v));
+const rs = (v, plus) => nv(v) ? "n/a" : (v < 0 ? "-" : plus && v > 0 ? "+" : "") + "Rs " + Math.round(Math.abs(v)).toLocaleString("en-IN");
+const rs2 = v => nv(v) ? "n/a" : (v < 0 ? "-" : "") + "Rs " + Math.abs(v).toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const f2 = v => nv(v) ? "n/a" : Number(v).toFixed(2);
+const f1 = v => nv(v) ? "n/a" : Number(v).toFixed(1);
+const pct = v => nv(v) ? "n/a" : f2(v) + "%";
+const sum = a => a.reduce((x, y) => x + y, 0);
+const cs = v => `<span class="${sgn(v)}">${rs(v, true)}</span>`;
+const cp = v => `<span class="${sgn(v)}">${pct(v)}</span>`;
+const row = (cells, cls) => `<tr${cls ? ` class="${cls}"` : ""}>` + cells.map((c, i) => `<td${i === 0 ? ' class="l"' : ""}>${c}</td>`).join("") + "</tr>";
+const head = cols => "<thead><tr>" + cols.map((c, i) => `<th${i === 0 ? " class='l'" : ""}>${c}</th>`).join("") + "</tr></thead>";
+const kv = rows => rows.map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+function group(a, keyf){ const m = {}; a.forEach(r => { const k = keyf(r); (m[k] = m[k] || []).push(r); }); return m; }
+const cap = "Rs " + D.capital.toLocaleString("en-IN");
+let SYM = D.views[0].sym, VER = "A", V = D.views[0], I = D.instr[SYM], X = [], charts = [], dds = [], ddb = [];
+
+$("#range").innerHTML = `Data <b>${D.data_range[0]}</b> &rarr; <b>${D.data_range[1]}</b>`; $("#range").title = D.data_note;
+$("#foot").textContent = "Purane result se aage ki guarantee nahi hoti. Sirf 2 instrument, ~5.8 saal ka data (Rules tab dekho).";
+const li = (sel, arr) => arr.forEach(r => { const e = document.createElement("li"); e.textContent = r; $(sel).appendChild(e); });
+li("#rulelist", D.rules); li("#notelist", D.notes);
+$("#concl").innerHTML = D.conclusion.map(c => `<li>${c}</li>`).join("");
+$("#owarn").innerHTML = `<div class="warnbox"><b>Faisla:</b> ${D.verdict}</div>`;
+$("#fml").innerHTML = "<thead><tr><th class='l'>Kya</th><th class='l'>Formula</th></tr></thead><tbody>" + D.formulas.map(f => `<tr><td class="l">${f[0]}</td><td class="l"><code>${f[1]}</code></td></tr>`).join("") + "</tbody>";
+$("#dinfo").innerHTML = "<tbody>" + D.data_info.map(r => `<tr><td class="l">${r[0]}</td><td class="l">${r[1]}</td></tr>`).join("") + "</tbody>";
+const copyText = {
+  rules: () => "Rules - " + D.title + "\n" + D.rules.map((r, i) => (i + 1) + ". " + r).join("\n"),
+  formulas: () => "Formulas - " + D.title + "\n" + D.formulas.map(f => f[0] + ": " + f[1]).join("\n"),
+};
+function copyOld(txt){ const ta = document.createElement("textarea"); ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; }
+document.querySelectorAll(".copy").forEach(b => b.onclick = async () => {
+  const txt = copyText[b.dataset.copy]();
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) { ok = copyOld(txt); }
+  b.textContent = ok ? "Copy ho gaya ✓" : "Copy nahi hua"; setTimeout(() => b.textContent = "Copy karo", 1500);
+});
+const syms = [...new Set(D.views.map(v => v.sym))];
+$("#seg_i").innerHTML = syms.map(s => `<button data-k="${s}">${D.instr[s].label}</button>`).join("");
+$("#seg_v").innerHTML = [["A", "A: base"], ["B", "B: close > EMA200"]].map(v => `<button data-k="${v[0]}">${v[1]}</button>`).join("");
+const pick = () => { V = D.views.find(v => v.sym === SYM && v.ver === VER); I = D.instr[SYM]; render(); };
+$("#seg_i").onclick = e => { const k = e.target.dataset.k; if (k) { SYM = k; pick(); } };
+$("#seg_v").onclick = e => { const k = e.target.dataset.k; if (k) { VER = k; pick(); } };
+$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); const t = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("bt_theme", t); } catch (e) {} drawCharts(); TV.restyle(); };
+
+function tstats(tr){
+  const n = tr.map(t => t.net), w = n.filter(v => v > 0), l = n.filter(v => v <= 0), gl = -sum(l);
+  return {n: tr.length, net: sum(n), win: tr.length ? w.length / tr.length * 100 : null, pf: gl > 0 ? sum(w) / gl : null, avgR: tr.length ? sum(tr.map(t => t.R)) / tr.length : null,
+    days: tr.length ? sum(tr.map(t => t.days)) / tr.length : null};
+}
+const ddOf = a => { let pk = -Infinity; return a.map(v => { pk = Math.max(pk, v, D.capital); return +((v / pk - 1) * 100).toFixed(2); }); };
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ax = (fmt) => ({x: {grid: {display: false}, ticks: {color: css("--muted"), maxTicksLimit: 8, maxRotation: 0}}, y: {grid: {color: css("--line")}, border: {display: false}, ticks: {color: css("--muted"), callback: fmt || (v => Math.round(v / 1000) + "k")}}});
+const tip = f => ({backgroundColor: css("--ink"), titleColor: css("--card"), bodyColor: css("--card"), padding: 10, displayColors: true, callbacks: {label: f}});
+const lineOpts = (fmt, tf) => ({responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false}, plugins: {legend: {display: true, labels: {color: css("--muted"), boxWidth: 14}}, tooltip: tip(tf)}, scales: ax(fmt)});
+function drawCharts(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const other = D.views.find(v => v.sym === SYM && v.ver !== VER);
+  charts.push(new Chart($("#c_eq"), {type: "line", data: {labels: I.days, datasets: [
+      {label: "Version " + VER, data: V.eq, borderColor: css("--accent"), borderWidth: 2, pointRadius: 0},
+      {label: "Version " + other.ver, data: other.eq, borderColor: css("--warn"), borderWidth: 1.2, pointRadius: 0},
+      {label: I.label + " buy-and-hold", data: I.bh, borderColor: css("--muted"), borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0}]},
+    options: lineOpts(null, c => c.dataset.label + ": " + rs(c.parsed.y))}));
+  charts.push(new Chart($("#c_dd"), {type: "line", data: {labels: I.days, datasets: [
+      {label: "Version " + VER, data: dds, borderColor: css("--neg"), borderWidth: 1.5, pointRadius: 0, fill: {target: "origin", below: css("--neg-soft")}},
+      {label: "Buy-and-hold", data: ddb, borderColor: css("--muted"), borderWidth: 1.2, borderDash: [5, 4], pointRadius: 0}]},
+    options: lineOpts(v => v + "%", c => c.dataset.label + ": " + pct(c.parsed.y))}));
+  const edges = []; for (let x = -2; x < 4; x += 0.5) edges.push(x);
+  const cnt = edges.map((e, i) => X.filter(t => (i === 0 ? t.R < e + 0.5 : i === edges.length - 1 ? t.R >= e : t.R >= e && t.R < e + 0.5)).length);
+  charts.push(new Chart($("#c_r"), {type: "bar", data: {labels: edges.map((e, i) => i === 0 ? "< -1.5" : i === edges.length - 1 ? ">= 3.5" : e.toFixed(1) + " se " + (e + 0.5).toFixed(1)), datasets: [{data: cnt, backgroundColor: edges.map(e => e >= 0 ? css("--pos") : css("--neg")), borderRadius: 3}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => c.parsed.y + " trade")}, scales: ax(v => v)}}));
+  const mv = V.months.map(m => m[1]);
+  charts.push(new Chart($("#c_m"), {type: "bar", data: {labels: V.months.map(m => m[0]), datasets: [{data: mv, backgroundColor: mv.map(x => x >= 0 ? css("--pos") : css("--neg")), borderRadius: 3, maxBarThickness: 40}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => pct(c.parsed.y))}, scales: ax(v => v + "%")}}));
+}
+function table(o){
+  let rws = o.rows, sortCol = o.sort[0], dir = o.sort[1], page = 0, view = rws;
+  const thead = $(o.id + " thead"), tbody = $(o.id + " tbody");
+  thead.innerHTML = "<tr>" + o.cols.map((c, i) => `<th class="s ${i === 0 ? "l" : ""}" data-i="${i}">${c.h}</th>`).join("") + "</tr>";
+  function apply(){
+    view = rws.filter(r => o.filters.every(f => !$(f.el).value || String(r[f.col]) === $(f.el).value));
+    view.sort((a, b) => { const x = a[sortCol], y = b[sortCol]; return (x < y ? -1 : x > y ? 1 : 0) * dir; });
+    thead.querySelectorAll("th").forEach((th, i) => th.className = "s" + (i === 0 ? " l" : "") + (i === sortCol ? (dir > 0 ? " asc" : " desc") : ""));
+    page = Math.min(page, Math.max(0, Math.ceil(view.length / 50) - 1)); draw();
+  }
+  function draw(){
+    tbody.innerHTML = view.slice(page * 50, page * 50 + 50).map(r => "<tr>" + o.cols.map((c, i) => `<td class="${i === 0 ? "l " : ""}${c.color ? sgn(r[i]) : ""}">${c.f ? c.f(r[i], r) : (r[i] === null ? "-" : r[i])}</td>`).join("") + "</tr>").join("");
+    const pages = Math.max(1, Math.ceil(view.length / 50));
+    $(o.count).textContent = view.length.toLocaleString("en-IN") + " trade, net " + rs(sum(view.map(r => r[o.netcol])), true);
+    $(o.pager).innerHTML = `<button class="btn" ${page ? "" : "disabled"} data-d="-1">Pichhla</button> Page ${page + 1} / ${pages} <button class="btn" ${page < pages - 1 ? "" : "disabled"} data-d="1">Agla</button>`;
+  }
+  thead.onclick = e => { const th = e.target.closest("th"); if (!th || !rws.length) return; const i = +th.dataset.i; dir = i === sortCol ? -dir : (typeof rws[0][i] === "number" ? -1 : 1); sortCol = i; page = 0; apply(); };
+  $(o.pager).onclick = e => { const d = e.target.dataset.d; if (d) { page += +d; draw(); } };
+  o.filters.forEach(f => $(f.el).oninput = () => { page = 0; apply(); });
+  $(o.dl).onclick = () => { const esc = v => '"' + String(v === null ? "" : v).replace(/"/g, '""') + '"'; const csv = [o.cols.map(c => esc(c.h)).join(",")].concat(view.map(r => r.slice(0, o.cols.length).map(esc).join(","))).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = o.file; a.click(); };
+  apply();
+}
+const fill = (sel, first, vals) => { const cur = $(sel).value; $(sel).innerHTML = `<option value="">${first}</option>`; [...new Set(vals)].sort().forEach(v => { const op = document.createElement("option"); op.value = op.textContent = v; $(sel).appendChild(op); }); if ([...new Set(vals)].includes(cur)) $(sel).value = cur; };
+const chkHead = head(["Kya badla", "Trade", "Win %", "Return %", "CAGR", "Profit factor", "Expectancy (R)", "Max DD", "Sharpe", "IS trade", "IS return", "IS PF", "OOS trade", "OOS return", "OOS PF"]);
+const chkRow = (c, cls) => row([c[0], c[1], pct(c[2]), cp(c[3]), cp(c[4]), f2(c[5]), f2(c[6]), cp(c[7]), f2(c[8]), c[9], cp(c[10]), f2(c[11]), c[12], cp(c[13]), f2(c[14])], cls);
+
+function render(){
+  document.querySelectorAll("#seg_i button").forEach(b => b.classList.toggle("on", b.dataset.k === SYM));
+  document.querySelectorAll("#seg_v button").forEach(b => b.classList.toggle("on", b.dataset.k === VER));
+  X = V.trades.slice();
+  const S = V.stats.all, B = I.bh_stats.all;
+  $("#subtitle").textContent = `${V.label} | capital ${cap}, compounding ON (risk 1% abhi ki equity) | ${D.data_range[0]} se ${D.data_range[1]}, out-of-sample ${D.split} se | report bana: ${D.generated}`;
+  const chips = D.settings.concat(V.chips);
+  $("#settings").innerHTML = `<span class="st">Test ki settings</span>` + chips.map(c => `<span class="sc${c[2] ? " hl" : ""}">${c[0]}: <b>${c[1]}</b></span>`).join("");
+  $("#verdict").className = "verdict " + (S.ret_pct > B.ret_pct && S.ret_pct > 0 ? "good" : "bad");
+  $("#verdict").innerHTML = S.trades ? `"${V.label}": <b>${S.trades}</b> trade, <b>${pct(S.win_pct)}</b> jeete, net <b class="${sgn(S.net_eq)}">${rs(S.net_eq, true)}</b> (${cap} par ${pct(S.ret_pct)}, CAGR ${pct(S.cagr)}), profit factor <b>${f2(S.pf)}</b>, max drawdown <b>${pct(S.max_dd_pct)}</b>. Out-of-sample: <b class="${sgn(V.stats.oos.ret_pct)}">${pct(V.stats.oos.ret_pct)}</b> (${V.stats.oos.trades} trade). ${I.label} buy-and-hold isi period me <b>${pct(B.ret_pct)}</b> (CAGR ${pct(B.cagr)}).` : "Koi trade nahi.";
+  const cards = [["Net profit", rs(S.net_eq, true), sgn(S.net_eq), cap + " par " + pct(S.ret_pct)], ["CAGR", pct(S.cagr), sgn(S.cagr), "Buy-hold: " + pct(B.cagr)], ["Max drawdown", pct(S.max_dd_pct), "neg", "Buy-hold: " + pct(B.max_dd_pct)],
+    ["Win rate", pct(S.win_pct), "", S.trades + " trade"], ["Profit factor", f2(S.pf), (S.pf || 0) >= 1 ? "pos" : "neg", "1.00 se upar = profit"], ["Sharpe", f2(S.sharpe), sgn(S.sharpe), "Buy-hold: " + f2(B.sharpe)],
+    ["Expectancy", rs(S.exp_rs, true), sgn(S.exp_rs), f2(S.exp_r) + " R / trade"]];
+  $("#kpis").innerHTML = cards.map(c => `<div class="kpi"><div class="l">${c[0]}</div><div class="v ${c[2]}">${c[1]}</div><div class="n">${c[3]}</div></div>`).join("");
+  const P3 = [["In-sample: " + D.data_range[0] + " se " + D.split + " se pehle", V.stats.is, I.bh_stats.is], ["Out-of-sample: " + D.split + " se " + D.data_range[1], V.stats.oos, I.bh_stats.oos], ["Poora period", V.stats.all, I.bh_stats.all]];
+  $("#split").innerHTML = head(["Hissa", "Trade", "Win %", "Return %", "CAGR", "Profit factor", "Expectancy (R)", "Max DD", "Sharpe", "Buy-hold return", "Buy-hold CAGR", "Buy-hold max DD"]) + "<tbody>"
+    + P3.map(p => row([p[0], p[1].trades, pct(p[1].win_pct), cp(p[1].ret_pct), cp(p[1].cagr), f2(p[1].pf), f2(p[1].exp_r), cp(p[1].max_dd_pct), f2(p[1].sharpe), cp(p[2].ret_pct), cp(p[2].cagr), cp(p[2].max_dd_pct)])).join("") + "</tbody>";
+  $("#eqhint").textContent = `Har din ke aakhri candle ke close pe: ${cap} + band trades ka net + khule trade ka P&L. Dashed line: ${cap} ${I.label} me pehle din laga ke rakhte to${SYM === "RELIANCE" ? " (dividend cash me)" : " (price index, dividend nahi)"}. Out-of-sample ${D.split} se.`;
+  dds = ddOf(V.eq); ddb = ddOf(I.bh);
+  $("#kv").innerHTML = kv([["Total return", pct(S.ret_pct) + " (" + rs(S.net_eq, true) + ")"], ["CAGR", pct(S.cagr) + " (" + f2(S.years) + " saal)"], ["Max drawdown", pct(S.max_dd_pct) + " (" + rs(S.max_dd) + ")"],
+    ["Kul trade", S.trades], ["Win rate", pct(S.win_pct) + ` (${S.wins} jeet / ${S.losses} haar)`], ["Average jeet", `${rs(S.avg_win, true)} (${pct(S.avg_win_pct)} equity, ${f2(S.avg_win_r)} R)`],
+    ["Average haar", `${rs(S.avg_loss, true)} (${pct(S.avg_loss_pct)} equity, ${f2(S.avg_loss_r)} R)`], ["Profit factor", f2(S.pf)], ["Payoff (avg jeet / avg haar)", f2(S.payoff)],
+    ["Expectancy / trade", `${rs(S.exp_rs, true)} = ${f2(S.exp_r)} R = ${pct(S.exp_pct)} equity`], ["Sharpe (risk-free 0)", f2(S.sharpe)], ["Sharpe (risk-free 6.5%)", f2(S.sharpe_rf)],
+    ["Sortino", f2(S.sortino)], ["Volatility (saalana)", pct(S.vol_pct)], ["Average holding", `${f1(S.avg_days)} trading din (${f1(S.avg_bars)} candle = ~${f1(S.avg_bars * 2)} ghante market time)`],
+    ["Sabse lambi haar ki line", S.loss_streak + " trade lagatar"], ["Sabse lamba drawdown", S.uw_days + " trading din peak ke neeche"], ["Market me time", pct(S.exposure)],
+    ["Sabse accha / bura trade", rs(S.best, true) + " / " + rs(S.worst, true)], ["Bina kharcha + slippage ka P&L", rs(S.gross + S.slip, true)], ["Slippage", rs(-S.slip, true)],
+    ["Kharcha (brokerage, STT, ...)", rs(-S.costs, true)], ["Dividend mila", rs(S.div, true)]]);
+  const bt = V.boot, rd = V.rand, bl = k => bt[k].mean === null ? "n/a" : `${pct(bt[k].mean)} (95%: ${pct(bt[k].lo)} se ${pct(bt[k].hi)}), 0 se upar ${pct(bt[k].p_pos)} baar, t = ${f2(bt[k].t)}`;
+  $("#edge").innerHTML = kv([["Average trade, poora (% equity)", bl("all")], ["Average trade, in-sample", bl("is")], ["Average trade, out-of-sample", bl("oos")],
+    ["Random entry: median return", pct(rd.median) + ` (5%-95%: ${pct(rd.p5)} se ${pct(rd.p95)})`], ["Asli strategy return", pct(rd.actual)],
+    ["Asli strategy random se behtar", pct(rd.pct_rank) + ` run se (${rd.sims} run, ${rd.k} signal har run)`], ["Random run jo profit me", pct(rd.pos_share)]]);
+  const ex = group(X, t => t.reason);
+  $("#exits").innerHTML = head(["Exit", "Trade", "Win %", "Net", "Average R", "Average din"]) + "<tbody>" + Object.keys(ex).sort().map(k => { const s = tstats(ex[k]); return row([k, s.n, pct(s.win), cs(s.net), f2(s.avgR), f2(s.days)]); }).join("") + "</tbody>";
+  $("#skips").innerHTML = head(["Karan", "Signal"]) + "<tbody>" + row(["Kul buy signal (period me)", V.n_signals]) + row(["Trade bane", X.length]) + Object.keys(V.skipped).map(k => row([k, V.skipped[k]])).join("") + "</tbody>";
+  $("#inv").innerHTML = kv(V.inv);
+  const gr = [];
+  D.views.forEach(v => { const s = v.stats; gr.push(row([D.instr[v.sym].label + " " + v.ver, s.all.trades, pct(s.all.win_pct), cp(s.all.ret_pct), cp(s.all.cagr), f2(s.all.pf), f2(s.all.exp_r), cp(s.all.max_dd_pct), f2(s.all.sharpe), cp(s.is.ret_pct), cp(s.oos.ret_pct)], v.key === V.key ? "base" : "")); });
+  syms.forEach(s => { const b = D.instr[s].bh_stats; gr.push(row([D.instr[s].label + " buy-and-hold", "-", "-", cp(b.all.ret_pct), cp(b.all.cagr), "-", "-", cp(b.all.max_dd_pct), f2(b.all.sharpe), cp(b.is.ret_pct), cp(b.oos.ret_pct)])); });
+  $("#grid").innerHTML = head(["Kya", "Trade", "Win %", "Return %", "CAGR", "Profit factor", "Expectancy (R)", "Max DD", "Sharpe", "IS return", "OOS return"]) + "<tbody>" + gr.join("") + "</tbody>";
+  // years / months
+  $("#ytable").innerHTML = head(["Saal", "Return %", "P&L", "Saal shuru ki equity", "Trade", "Win %", "Profit factor", "Max DD", "Buy-hold return", "Buy-hold max DD"]) + "<tbody>"
+    + V.years.map(y => row([y[0], cp(y[1]), cs(y[2]), rs(y[3]), y[4], pct(y[5]), f2(y[6]), cp(y[7]), cp(y[8]), cp(y[9])])).join("") + "</tbody>";
+  $("#mtable").innerHTML = head(["Mahina", "Return %", "P&L", "Trade (entry)"]) + "<tbody>" + V.months.map(m => row([m[0], cp(m[1]), cs(m[2]), m[3]])).join("") + "</tbody>";
+  // extra checks
+  $("#chk").innerHTML = chkHead + "<tbody>" + V.checks.map((c, i) => chkRow(c, i === 0 ? "base" : "")).join("") + "</tbody>";
+  const N = V.nsum;
+  $("#nsum").innerHTML = kv([["In-sample me profit", `${N.is_pos} / ${N.n}`], ["Out-of-sample me profit", `${N.oos_pos} / ${N.n}`], ["Dono hisson me profit", `${N.both_pos} / ${N.n}`],
+    ["Poore period me profit", `${N.all_pos} / ${N.n} (median ${pct(N.median_all)}, best ${pct(N.best_all)}, worst ${pct(N.worst_all)})`],
+    ["In-sample rank vs out-of-sample rank (1 = same order)", f2(N.rank_corr)], ["Brief wali setting ka out-of-sample rank", `${N.base_oos_rank} / ${N.n}`],
+    ["In-sample me sabse acchi (sirf dekhne ke liye)", `buy ${N.best_is[0]} / sell ${N.best_is[1]} / stop ${N.best_is[2]} ATR: IS ${pct(N.best_is[4])}, OOS ${pct(N.best_is[7])}`]]);
+  $("#neigh").innerHTML = head(["Buy level", "Sell level", "Stop (ATR)", "IS trade", "IS return", "IS PF", "OOS trade", "OOS return", "OOS PF", "Poora return", "Poora max DD"]) + "<tbody>"
+    + V.neigh.map(n => row([n[0], n[1], n[2], n[3], cp(n[4]), f2(n[5]), n[6], cp(n[7]), f2(n[8]), cp(n[9]), cp(n[10])], n[0] === 30 && n[1] === 70 && n[2] === 2 ? "base" : "")).join("") + "</tbody>";
+  // trade log
+  const tr = X.map(t => [t.n, t.period, t.sig_t, f2(t.rsi_sig), t.entry_t, t.fill, t.stop, t.atr, t.qty, t.notional, t.risk_pct, t.capped ? "haan" : "nahi", t.exit_t, t.exit, t.reason, t.bars, t.days, t.gross, t.costs, t.div, t.net, t.R, t.ret_eq]);
+  const cols = [{h: "#"}, {h: "Hissa"}, {h: "Signal candle"}, {h: "RSI signal"}, {h: "Entry"}, {h: "Entry price", f: f2}, {h: "Stop", f: f2}, {h: "ATR", f: f2}, {h: SYM === "NIFTY50" ? "Qty (unit = index/100)" : "Qty"},
+    {h: "Position", f: rs}, {h: "Risk % equity", f: pct}, {h: "Cash limit lagi"}, {h: "Exit"}, {h: "Exit price", f: f2}, {h: "Exit kaise"}, {h: "Candle"}, {h: "Din"},
+    {h: "Gross", f: v => rs(v, true), color: 1}, {h: "Kharcha", f: rs}, {h: "Dividend", f: rs}, {h: "Net", color: 1, f: v => rs(v, true)}, {h: "R", color: 1, f: f2}, {h: "Return % equity", color: 1, f: pct}];
+  fill("#te", "Saare exit", tr.map(r => r[14]));
+  table({id: "#ttable", rows: tr, sort: [0, 1], filters: [{el: "#te", col: 14}, {el: "#tp", col: 1}], count: "#tcount", pager: "#tpager", dl: "#tdl", file: `trades_${V.key}.csv`, cols: cols, netcol: 20});
+  TV.setTrades(viewerTrades());
+  drawCharts();
+}
+function viewerTrades(){
+  const S = I.series, ser = S.t.map((t, k) => ({time: t, open: S.o[k], high: S.h[k], low: S.l[k], close: S.c[k]}));
+  return X.map(t => {
+    const a = Math.max(0, t.si - 80), b = Math.min(S.t.length - 1, t.xi + 30);
+    const fa = Math.max(0, t.si - 30), fb = Math.min(S.t.length - 1, t.xi + 10);
+    const sl = ser.slice(a, b + 1), focus = [S.t[fa], S.t[fb]];
+    const mk = [{time: S.t[t.si], position: "belowBar", shape: "circle", color: "--warn", text: "RSI > 30"},
+      {time: S.t[t.ei], position: "belowBar", shape: "arrowUp", color: "--accent", text: "Buy"},
+      {time: S.t[t.xi], position: "aboveBar", shape: "arrowDown", color: t.net > 0 ? "--pos" : "--neg", text: "Sell"}];
+    const seen = new Set(), markers = mk.filter(m => { const k = m.time + m.text; if (seen.has(k)) return false; seen.add(k); return true; });
+    const lines = [{price: t.fill, color: "--accent", style: 2, title: "Entry"}].concat(t.stop !== null ? [{price: t.stop, color: "--neg", style: 0, title: "SL"}] : []);
+    const ema = [];
+    for (let k = a; k <= b; k++) if (S.ema[k] !== null) ema.push({time: S.t[k], value: S.ema[k]});
+    const rsi = [];
+    for (let k = a; k <= b; k++) if (S.rsi[k] !== null) rsi.push({time: S.t[k], value: S.rsi[k]});
+    const charts = [{title: `${I.label} 2-hour candle (strategy isi pe)`, kind: "candle", intraday: true, focus: focus, data: sl, markers: markers, lines: lines,
+        overlays: VER === "B" ? [{data: ema, color: "--muted", title: "EMA200"}] : [],
+        legend: [["--warn", "Signal candle"], ["--accent", "Buy / entry"], ["--pos", "Profit exit"], ["--neg", "Loss exit / SL"]].concat(VER === "B" ? [["--muted", "EMA 200"]] : [])},
+      {title: "RSI (14, Wilder)", kind: "line", intraday: true, small: true, focus: focus, data: rsi, markers: markers.map(m => Object.assign({}, m, {position: m.position === "belowBar" ? "belowBar" : "aboveBar"})),
+        lines: [{price: 30, color: "--warn", style: 2, title: "30"}, {price: 70, color: "--warn", style: 2, title: "70"}], legend: []}];
+    const unit = SYM === "NIFTY50" ? " unit (index / 100)" : " share";
+    const meta = [["Trade", `${I.label} #${t.n} (${t.period === "IS" ? "in-sample" : "out-of-sample"})`], ["Signal candle", `${t.sig_t}, RSI ${f2(t.rsi_sig)}${VER === "B" ? `, EMA200 ${f2(t.ema_sig)}` : ""}`],
+      ["Entry", `${t.entry_t} @ ${f2(t.fill)} (open ${f2(t.raw)} + slippage)`], ["Stop / ATR", `${t.stop === null ? "-" : f2(t.stop)} / ATR ${f2(t.atr)}`],
+      ["Qty / position", `${t.qty.toLocaleString("en-IN")}${unit} / ${rs(t.notional)} (${f1(t.pos_pct)}% equity${t.capped ? ", cash ki limit lagi" : ""})`],
+      ["Risk", `${rs(t.risk_rs)} = ${f2(t.risk_pct)}% of ${rs(t.eq0)}`], ["Exit", `${t.exit_t} @ ${f2(t.exit)} (${t.reason})`],
+      ["Holding", `${t.days} trading din, ${t.bars} candle`], ["Net P&L", `${rs2(t.net)} (${f2(t.R)} R, ${f2(t.ret_eq)}% equity)`, sgn(t.net)]];
+    const cost = [["Gross P&L (slippage ke baad)", rs2(t.gross), sgn(t.gross)], ["Slippage (upar shamil)", rs2(-t.slip)], ["Brokerage", rs2(-t.c_brk)], ["STT", rs2(-t.c_stt)],
+      ["NSE + SEBI", rs2(-t.c_exch)], ["Stamp", rs2(-t.c_stamp)], ["GST", rs2(-t.c_gst)], ["DP charge", rs2(-t.c_dp)], ["Dividend", rs2(t.div)], ["Net P&L", rs2(t.net), sgn(t.net), true]];
+    return {id: t.id, date: t.entry_date, title: `${I.label} long #${t.n}`, sub: t.reason, pnl: t.net, tag: t.reason, meta: meta, charts: charts, cost: cost,
+      note: "2-hour candle 1-min data se bani (09:15 / 11:15 / 13:15-15:30). Time = candle shuru hone ka time (IST). Price split / bonus / demerger adjusted."};
+  }).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+}
+TradeViewer.stickyHeader(".top");
+const TV = TradeViewer(document.querySelector("#tv"), {labels: {stock: "Trade khojo", stockLabel: "Trade", exit: "Exit ka karan", trades: "Trade", outcome: "Nateeja"}});
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => { document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.p)); charts.forEach(c => c.resize()); if (b.dataset.p === "viewer") TV.show(); });
+render();
+</script>
+</body>
+</html>
