@@ -24,9 +24,9 @@ _c = _read_credentials()
 
 FS_STATIC_IP = _c.get("STATIC_IP")
 
-# Telegram alerts: TELEGRAM_BOT_TOKEN = ... and TELEGRAM_CHAT_IDS = id1,id2
+# Telegram alerts: TELEGRAM_BOT_TOKEN = ... and TELEGRAM_GROUP_CHAT_ID (or TELEGRAM_CHAT_IDS) = id1,id2
 FS_TELEGRAM_BOT_TOKEN = _c.get("TELEGRAM_BOT_TOKEN", "")
-FS_TELEGRAM_CHAT_IDS = [x.strip() for x in _c.get("TELEGRAM_CHAT_IDS", "").split(",") if x.strip()]
+FS_TELEGRAM_CHAT_IDS = [x.strip() for x in (_c.get("TELEGRAM_CHAT_IDS") or _c.get("TELEGRAM_GROUP_CHAT_ID", "")).split(",") if x.strip()]
 
 FS_CREDS = {
     "name":        _c["USERID"],

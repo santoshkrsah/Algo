@@ -690,7 +690,7 @@ def _check_static_ip(name):
         _log(f"[{name}] Static IP check skipped: {e}", fs_login_logger)
 
 
-def firstock_login(api: FirStockAPI, creds: dict, source_ip=None, force_fresh=False):
+def firstock_login(api: FirStockAPI, creds: dict, source_ip=None, force_fresh=False, max_attempts=20):
     """
     Login to Firstock, save jKey to token file, return api instance.
     Mirrors flatrade_login() in avinash_utils.py.
@@ -839,10 +839,10 @@ def firstock_login(api: FirStockAPI, creds: dict, source_ip=None, force_fresh=Fa
             except Exception as _re_err:
                 _log(f"[{name}] Re-check error: {_re_err} — proceeding with fresh login.", fs_login_logger)
 
-        for attempt in range(1, 21):  # 20 retries — same as FlatTrade
+        for attempt in range(1, max_attempts + 1):  # default 20 retries — same as FlatTrade
             try:
                 totp = _generate_totp(creds["totp_key"])
-                _log(f"[{name}] Attempt {attempt}/20 | TOTP generated.", fs_login_logger)
+                _log(f"[{name}] Attempt {attempt}/{max_attempts} | TOTP generated.", fs_login_logger)
 
                 payload = {
                     "userId":     creds["user_id"],
@@ -947,11 +947,11 @@ def firstock_login(api: FirStockAPI, creds: dict, source_ip=None, force_fresh=Fa
 
             time.sleep(5)
 
-        # ── All 20 retries exhausted ───────────────────────────────
+        # ── All retries exhausted ──────────────────────────────────
         sos = (f"🚨🚨 SOS — FIRSTOCK LOGIN FAILED 🚨🚨\n"
                f"Account   : {name}\n"
                f"Token file: {filename}\n"
-               f"All 20 retries exhausted.\n"
+               f"All {max_attempts} retries exhausted.\n"
                f"Restart manually!")
         _log(sos, fs_login_logger, telegram=True, client=name)
         raise RuntimeError(sos)
@@ -1833,3 +1833,141 @@ def get_positions(api: FirStockAPI):
     except Exception as e:
         _log(f"[get_positions] Error: {e}")
         return None
+
+
+# ════════════════════════════════════════════════════════════════
+#  SECTION 12 — STATUS CHECK  (python Firstock_Utils.py)
+#  Read-only: logs in, reads the account and reports on Telegram.
+#  Never places, modifies or cancels an order. Importing this
+#  module (what strategies do) does not run it.
+# ════════════════════════════════════════════════════════════════
+
+_STATUS_MAX_ROWS   = 15
+_STATUS_LOGIN_TRIES = 2     # a status check must not hammer the broker with 20 logins
+_STATUS_QTY_KEYS   = ("netQuantity", "netQty", "netqty", "quantity")
+_STATUS_HIDDEN     = ("token", "jkey", "userid", "actid", "request")
+
+
+def _status_first(row, keys):
+    for key in keys:
+        if row.get(key) not in (None, ""):
+            return row[key]
+    return "?"
+
+
+def _status_is_open(row):
+    try:
+        return float(_status_first(row, _STATUS_QTY_KEYS)) != 0
+    except (TypeError, ValueError):
+        return True     # quantity field not understood: never report it as closed
+
+
+def _status_cap(rows, render):
+    out = [render(r) for r in rows[:_STATUS_MAX_ROWS]]
+    if len(rows) > _STATUS_MAX_ROWS:
+        out.append(f"  ... and {len(rows) - _STATUS_MAX_ROWS} more")
+    return out
+
+
+def _status_limits(resp):
+    """Printable lines from a /limit response, or None if it was not a usable success."""
+    if not isinstance(resp, dict) or resp.get("status") != "success":
+        return None
+    data = resp.get("data")
+    if isinstance(data, list) and data:
+        data = data[0]
+    if not isinstance(data, dict):
+        return None
+    items = [(k, v) for k, v in data.items()
+             if v not in (None, "") and not any(h in str(k).lower() for h in _STATUS_HIDDEN)]
+    return _status_cap(items, lambda kv: f"  {kv[0]}: {kv[1]}")
+
+
+def run_status_check():
+    """Full account status on Telegram. Returns 0 if everything was fine, else 1."""
+    name = FS_CREDS.get("name", "?")
+    problems = []
+    lines = [f"📊 STATUS CHECK — {dt.now(_IST):%d-%b-%Y %H:%M:%S} IST",
+             f"Market: {'OPEN' if _market_hours_now() else 'CLOSED'}"]
+    _log("📊 Status check started (read-only, no orders).", telegram=True, client=name)
+
+    expected = globals().get("FS_STATIC_IP")
+    if not expected:
+        lines.append("Static IP: not configured")
+    else:
+        try:
+            match = requests.get("https://api.ipify.org", timeout=8).text.strip() == expected
+            lines.append(f"Static IP: {'match' if match else 'MISMATCH'}")
+            if not match:
+                problems.append("static IP mismatch")
+        except Exception:
+            lines.append("Static IP: could not check")
+
+    api = FirStockAPI(name=name)
+    try:
+        logged_in = firstock_login(api, FS_CREDS, max_attempts=_STATUS_LOGIN_TRIES)
+    except Exception as e:
+        _log(f"[status] Login error: {e}", fs_login_logger)
+        logged_in = None
+    if logged_in is None:
+        lines += ["Login: FAILED", "Overall: PROBLEM — login failed, account not checked"]
+        _log("\n".join(lines), telegram=True, client=name)
+        return 1
+    lines.append("Login: OK")
+
+    try:
+        ltp = api.ping()
+    except Exception:
+        ltp = None
+    lines.append(f"NIFTY LTP: {ltp}" if ltp else "NIFTY LTP: FAILED")
+    if not ltp:
+        problems.append("NIFTY LTP")
+
+    try:
+        funds = _status_limits(api.get_limits())
+    except Exception:
+        funds = None
+    if funds is None:
+        lines.append("Funds: FAILED")
+        problems.append("funds")
+    else:
+        lines += ["Funds:"] + funds
+
+    try:
+        positions = api.get_positions()
+    except Exception:
+        positions = None
+    if positions is None:
+        lines.append("Positions: FAILED (could not verify)")
+        problems.append("positions")
+    else:
+        open_pos = [p for p in positions if _status_is_open(p)]
+        lines.append(f"Open positions: {len(open_pos)}")
+        lines += _status_cap(open_pos, lambda p: f"  {p.get('tradingSymbol', '?')}: net qty {_status_first(p, _STATUS_QTY_KEYS)}")
+
+    try:
+        orders = api.get_order_book()
+    except Exception:
+        orders = None
+    if orders is None:
+        lines.append("Orders: FAILED")
+        problems.append("orders")
+    else:
+        counts = {}
+        for o in orders:
+            status = str(o.get("status", "?")).upper()
+            counts[status] = counts.get(status, 0) + 1
+        detail = ", ".join(f"{k} {v}" for k, v in sorted(counts.items()))
+        lines.append(f"Orders today: {len(orders)}" + (f" ({detail})" if detail else ""))
+
+    lines.append("Overall: ALL OK" if not problems else "Overall: PROBLEM — " + ", ".join(problems))
+    _log("\n".join(lines), telegram=True, client=name)
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(run_status_check())
+    except Exception as _status_err:
+        _log(f"🚨 STATUS CHECK CRASHED: {type(_status_err).__name__}: {_status_err}", telegram=True)
+        raise SystemExit(1)
