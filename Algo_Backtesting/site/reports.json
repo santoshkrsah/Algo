@@ -238,5 +238,15 @@
   "pf": 0.88,
   "trades": 106,
   "verdict": "loss"
+ },
+ "26_breadth_sector_lowvol_2021_2026": {
+  "name": "Breadth + Sector + Lowest-Volume candle (F&O, 5-min)",
+  "type": "Intraday",
+  "period": "Nov 2021 - Oct 2026",
+  "result": "A/D breadth (9:25) + best/worst sector + lowest-volume 5-min candle breakout, F&O stocks, half at 2R + EMA(10) trail, kharche + 0.05% slippage ke baad. Baseline: 1,558 trade, win 35%, -0.14R/trade, PF 0.81. 432 setting grid (sirf pehle 60% pe fit): IS me 49 profit me, OOS me ek bhi nahi. 60% win rate ka daava galat; kaam nahi karti",
+  "net": -1465122,
+  "pf": 0.81,
+  "trades": 1558,
+  "verdict": "loss"
  }
 }

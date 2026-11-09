@@ -86,7 +86,7 @@ def _read(out_dir: Path, name: str) -> pd.DataFrame:
     return pd.read_csv(p) if p.exists() else pd.DataFrame()
 
 
-def write_html(out_dir, data: dict) -> Path:
+def write_html(out_dir, data: dict, template: str = "rulebook_template.html") -> Path:
     out_dir = Path(out_dir)
     tr = _read(out_dir, "trades.csv")
     eq = _read(out_dir, "equity.csv")
@@ -106,7 +106,7 @@ def write_html(out_dir, data: dict) -> Path:
             "yearly": yr.astype(object).where(yr.notna(), None).values.tolist(), "yearly_cols": list(yr.columns),
             "breakdown": bd.astype(object).where(bd.notna(), None).values.tolist(), "breakdown_cols": list(bd.columns)}
     css = re.search(r"<style>.*?</style>", (ASSETS / "report_template.html").read_text(encoding="utf-8"), re.S).group(0)
-    tpl = viewer_assets.apply((ASSETS / "rulebook_template.html").read_text(encoding="utf-8")).replace("__CSS__", css)
+    tpl = viewer_assets.apply((ASSETS / template).read_text(encoding="utf-8")).replace("__CSS__", css)
     tpl = tpl.replace("__TITLE__", f"{data['strategy_name']} {data['mode']}")
     js = (ASSETS / "chart.umd.min.js").read_text(encoding="utf-8")
     text = json.dumps(_clean(blob), separators=(",", ":"), default=str).replace("</", "<\\/")

@@ -7,4 +7,5 @@ __pycache__/
 *.pyc
 *.egg-info/
 data/
+Algo_Live_Trading/Firstock_Credentials.txt
 
