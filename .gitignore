@@ -9,5 +9,5 @@ __pycache__/
 data/
 Algo_Live_Trading/Firstock_Credentials.txt
 Algo_Live_Trading/*_jkey.txt*
-Algo_Live_Trading/tokens_logs/
+tokens_logs/
 
