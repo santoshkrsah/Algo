@@ -1,0 +1,41 @@
+{
+ "gold": {
+  "title": "Extension: MCX GOLD futures, Module A long-only (same rules)",
+  "modelled": false,
+  "note": "Fyers MCX GOLD (1 kg) near + next futures 1-min Oct 2018 - Nov 2026, apni continuous series (49 roll), 09:00 se 1-ghanta candle. Slippage Rs 10 / 10g har fill, MCX charges + CTT 0.01%. 1 point = Rs 100 / lot. Fit < 2023-08-16 <= test.",
+  "kv": [
+   [
+    "NIFTY wali chuni setting (ATR 7 x 4, EMA 40)",
+    "294 trade, net 91,526 pts, PF 1.97"
+   ],
+   [
+    "Fit / test",
+    "15,721 pts (PF 1.41) / 75,805 pts (PF 2.36)"
+   ],
+   [
+    "Grid ke 54 settings",
+    "fit me 54 profit, test me 54 profit, net median 90,654 pts"
+   ],
+   [
+    "Buy-and-hold gold futures (rolls ke saath)",
+    "+87,948 pts (Rs 30,485 -> Rs 1,43,121 per 10 g)"
+   ],
+   [
+    "Matlab",
+    "Gold ki 2024-26 ki badi tezi pakdi; buy-and-hold ke barabar kamaya, usse behtar nahi"
+   ]
+  ]
+ },
+ "options": {
+  "title": "Module B (option cushion), C (stock put selling), D (Bank Nifty straddle) - NAHI chale",
+  "modelled": true,
+  "note": "Asli option data nahi mila, isliye skip kiye (model ke number pe bharosa nahi kiya ja sakta).",
+  "bullets": [
+   "Fyers expired option contracts ka data nahi deta; live contracts sirf listing se (Nov 2026 waale kuch hafte).",
+   "NSE bhavcopy (disk pe) me NIFTY / BANKNIFTY options sirf DAILY, Oct 2021 se, aur sirf 3 sabse paas ki expiry: 30-45 DTE monthly 15-delta strikes, intraday 20/30% leg stop, stock puts - inme se kuch bhi asli data se test nahi hota.",
+   "Bank Nifty weekly contracts: bhavcopy me Oct 2021 - Nov 2024 tak hain; 20 Nov 2024 se weekly band (SEBI), ab sirf monthly.",
+   "Model mode (Black-Scholes + India VIX) me 15-delta strike ka premium, skew aur intraday stop-loss bilkul alag aate hain - result 'MODELLED, low confidence' bhi kehne layak nahi, isliye nahi chalaya.",
+   "Chahiye: NIFTY / BANKNIFTY / stock options ka expired-contract 1-min (ya kam se kam daily) data 2018 se - koi data vendor (jaise TrueData / GDFL) se."
+  ]
+ }
+}

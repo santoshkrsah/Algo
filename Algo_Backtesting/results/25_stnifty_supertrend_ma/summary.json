@@ -1,0 +1,206 @@
+{
+ "P": {
+  "atr_n": 7,
+  "mult": 4.0,
+  "ma_type": "EMA",
+  "ma_len": 40
+ },
+ "split": "2023-05-10",
+ "metrics": {
+  "is": {
+   "trades": 111,
+   "trades_per_year": 21.072115384615387,
+   "net_pts": 4765.657574595988,
+   "pts_per_year": 904.7070837428196,
+   "gross_pts": 6517.250000000024,
+   "cost_pts": 1187.5924254040333,
+   "slip_pts": 564.0,
+   "cost_pts_per_year": 332.52033959398295,
+   "win_pct": 42.34234234234234,
+   "avg_win": 343.3787598017669,
+   "avg_loss": -177.70537712636025,
+   "pf": 1.4190272731596294,
+   "exp_pts": 42.93385202338728,
+   "best5_share": 122.29076803625235,
+   "best": 1375.4830158812001,
+   "worst": -579.7251636913334,
+   "avg_days": 9.332532532532532,
+   "long_n": 111,
+   "long_pts": 4765.657574595988,
+   "short_n": 0,
+   "short_pts": 0.0,
+   "rr": 1.9322924570684314
+  },
+  "oos": {
+   "trades": 73,
+   "trades_per_year": 20.84695074276779,
+   "net_pts": 1596.3792124834602,
+   "pts_per_year": 455.88546314275516,
+   "gross_pts": 3253.8499999999985,
+   "cost_pts": 1293.4707875165388,
+   "slip_pts": 364.0,
+   "cost_pts_per_year": 473.3316693826549,
+   "win_pct": 36.986301369863014,
+   "avg_win": 468.57387794413836,
+   "avg_loss": -240.3285976523539,
+   "pf": 1.1444018575506947,
+   "exp_pts": 21.868208390184385,
+   "best5_share": 348.9093247137878,
+   "best": 1979.753223635246,
+   "worst": -560.466437514,
+   "avg_days": 8.846594368340943,
+   "long_n": 73,
+   "long_pts": 1596.3792124834602,
+   "short_n": 0,
+   "short_pts": 0.0,
+   "rr": 1.9497216832345168
+  },
+  "full": {
+   "trades": 184,
+   "trades_per_year": 20.982204183577895,
+   "net_pts": 6362.036787079451,
+   "pts_per_year": 725.486711358342,
+   "gross_pts": 9771.100000000022,
+   "cost_pts": 2481.063212920572,
+   "slip_pts": 928.0,
+   "cost_pts_per_year": 388.74815439251915,
+   "win_pct": 40.21739130434783,
+   "avg_win": 389.0580596645241,
+   "avg_loss": -203.8932693463212,
+   "pf": 1.2836616345884404,
+   "exp_pts": 34.57628688630136,
+   "best5_share": 179.15449975464367,
+   "best": 1979.753223635246,
+   "worst": -579.7251636913334,
+   "avg_days": 9.139741847826087,
+   "long_n": 184,
+   "long_pts": 6362.036787079451,
+   "short_n": 0,
+   "short_pts": 0.0,
+   "rr": 1.9081456730368709
+  }
+ },
+ "curve": {
+  "full": {
+   "max_dd": 4014.033191269232,
+   "time_dd_days": 268,
+   "time_dd_months": 13.206307490144546,
+   "time_dd_from": "2019-06-03",
+   "time_dd_to": "2020-07-09"
+  },
+  "is": {
+   "max_dd": 1706.1691288922002,
+   "time_dd_days": 268,
+   "time_dd_months": 13.206307490144546,
+   "time_dd_from": "2019-06-03",
+   "time_dd_to": "2020-07-09"
+  },
+  "oos": {
+   "max_dd": 4014.033191269236,
+   "time_dd_days": 254,
+   "time_dd_months": 12.352168199737187,
+   "time_dd_from": "2025-10-29",
+   "time_dd_to": "2026-11-09"
+  }
+ },
+ "claims": [
+  [
+   "~30-35 trades a year",
+   "21.0 trades a year (range 18-22)",
+   false
+  ],
+  [
+   "Break-even ~370 points a year after futures costs",
+   "charges + slippage 389 points a year",
+   true
+  ],
+  [
+   "Best trades ~800 and ~1,400 points",
+   "best gross: 1,998, 1,654, 1,404",
+   true
+  ],
+  [
+   "Profitable every year",
+   "7 of 9 years in profit; worst 2026: -659 pts",
+   false
+  ]
+ ],
+ "random": {
+  "rule_mean": 34.57628688630136,
+  "rule_total": 6362.036787079451,
+  "n_rule": 184,
+  "any": {
+   "avg_trades": 184.0,
+   "p": 0.000999000999000999,
+   "mean": -1.005596220375154,
+   "p95": 18.912673805633897
+  },
+  "up": {
+   "avg_trades": 184.0,
+   "p": 0.004995004995004995,
+   "mean": 20.514832386588438,
+   "p95": 29.4636727932031
+  },
+  "p": 0.000999000999000999
+ },
+ "buy_hold": {
+  "net_pts": 3145.596311131664,
+  "pts_curve": {
+   "max_dd": 8149.1919163608945,
+   "time_dd_days": 521,
+   "time_dd_months": 25.394218134034166,
+   "time_dd_from": "2024-09-27",
+   "time_dd_to": "2026-11-09"
+  },
+  "rs_curve": {
+   "max_dd": 672321.9555955091,
+   "time_dd_days": 521,
+   "time_dd_months": 25.394218134034166,
+   "time_dd_from": "2024-09-27",
+   "time_dd_to": "2026-11-09",
+   "max_dd_pct": 51.08953128885281,
+   "end": 1052807.956656026,
+   "cagr_pct": 3.943129024199421,
+   "ruin_date": null
+  },
+  "net_rs": 302807.956656025
+ },
+ "cas_start": "2026-08-03 00:00:00",
+ "warnings": [
+  "Test period me sirf 73 trade (< 100): test ka nateeja kam bharosemand.",
+  "Sabse acche 5% trades = kul net points ka 179%: baaki trades milke loss me (trend following me aam, par dhyan do).",
+  "Chuni setting ka atr_n = 7 grid ke kinare pe hai (7 .. 14).",
+  "Chuni setting ka mult = 4 grid ke kinare pe hai (2 .. 4).",
+  "Chuni setting ka ma_len = 40 grid ke kinare pe hai (40 .. 60)."
+ ],
+ "verdict": {
+  "pass": true,
+  "text": "PASS: kharche, padosi settings, test period, random aur 5-pt slippage sab paar.",
+  "checks": [
+   [
+    "Kharche + slippage ke baad poore period me profit (points)",
+    true
+   ],
+   [
+    "Test period (aakhri 40%) me profit, PF > 1",
+    true
+   ],
+   [
+    "Chuni setting PLATEAU pe (aas-paas ki settings bhi profit)",
+    true
+   ],
+   [
+    "Random entry (kisi bhi candle pe, wahi Supertrend exit) se behtar (p < 0.05)",
+    true
+   ],
+   [
+    "Slippage 5 points pe bhi test period me profit",
+    true
+   ],
+   [
+    "Kam se kam 100 trade",
+    true
+   ]
+  ]
+ }
+}
