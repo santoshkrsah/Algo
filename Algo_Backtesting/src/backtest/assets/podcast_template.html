@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>try { const t = localStorage.getItem("bt_theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<title>__TITLE__</title>
+__CSS__
+<style>
+.chk td.l{white-space:normal;max-width:560px}
+.card.cp{position:relative}
+.card.cp h3{padding-right:120px}
+.copy{position:absolute;top:14px;right:14px}
+.ok{color:var(--pos);font-weight:650}.no{color:var(--neg);font-weight:650}
+.warnlist li{margin:4px 0}
+.heat{border-collapse:collapse;font-variant-numeric:tabular-nums}
+.heat th,.heat td{padding:6px 8px;text-align:center;border:1px solid var(--line);min-width:64px}
+.heat td.c{cursor:default}
+.heat td .st{display:block;font-size:10.5px;font-weight:650;letter-spacing:.03em;opacity:.85}
+.heat td.me{outline:3px solid var(--accent);outline-offset:-3px}
+.h-g2{background:rgba(15,157,104,.38)}.h-g1{background:rgba(15,157,104,.16)}.h-r1{background:rgba(217,58,76,.14)}.h-r2{background:rgba(217,58,76,.34)}.h-na{background:var(--soft);color:var(--muted)}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:10px 0}
+.ctrl label{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+.ctrl select{padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);max-width:100%}
+.mini{font-size:12.5px;color:var(--muted)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+.badge{display:inline-block;padding:1px 7px;border-radius:6px;font-size:12px;font-weight:650}
+.b-PLATEAU{background:var(--pos-soft);color:var(--pos)}.b-OVERFIT{background:rgba(201,138,18,.16);color:var(--warn)}.b-LOSS{background:var(--neg-soft);color:var(--neg)}.b-FEW{background:var(--soft);color:var(--muted)}
+td.num,th.num{text-align:right}
+</style>
+<style>__VIEWER_CSS__</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 17l5-6 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <div><h1 id="title"></h1><div class="sub">NIFTY / BANKNIFTY + 10 stocks &middot; podcast strategy framework &middot; backtest</div></div>
+  </div>
+  <div class="actions"><span class="chip" id="range"></span><button class="btn" id="theme">Dark / Light</button></div>
+</div>
+<div class="wrap">
+<div class="sub" id="subtitle" style="margin:14px 0 0"></div>
+<div class="verdict" id="verdict"></div>
+<div class="setrow" id="settings"></div>
+<div class="kpis" id="kpis"></div>
+<div class="tabs" id="tabs">
+  <button class="tab on" data-p="sum">Saransh</button>
+  <button class="tab" data-p="grid">Grid (plateau)</button>
+  <button class="tab" data-p="checks">Checks</button>
+  <button class="tab" data-p="months">Saal / Mahine</button>
+  <button class="tab" data-p="inst">Har instrument</button>
+  <button class="tab" data-p="viewer">Trade viewer</button>
+  <button class="tab" data-p="trades">Saare trades</button>
+  <button class="tab" data-p="data">Data</button>
+  <button class="tab" data-p="rules">Rules</button>
+</div>
+
+<section class="panel on" id="sum">
+  <div class="card"><h3>Saare numbers ek saath</h3><div class="hint" id="mthint"></div><div class="scroll" style="max-height:none"><table id="mt" class="chk"></table></div></div>
+  <div class="card"><h3>Dhyan do (warnings)</h3><ul class="warnlist" id="warn"></ul></div>
+  <div class="card"><h3>Pass / Fail</h3><div class="scroll" style="max-height:none"><table id="checks" class="chk"></table></div></div>
+  <div class="card"><h3>Equity curve (account value)</h3><div class="hint" id="eqhint"></div><div class="ch tall"><canvas id="c_eq"></canvas></div></div>
+  <div class="card"><h3>Drawdown (peak se kitna neeche, %)</h3><div class="ch"><canvas id="c_dd"></canvas></div></div>
+  <div class="two">
+    <div class="card"><h3>Har trade ka nateeja (R, kharche ke baad)</h3><div class="hint">1R = stop lagne pe jitna jaata (Rs 2,500). Daayein = profit.</div><div class="ch"><canvas id="c_hist"></canvas></div></div>
+    <div class="card"><h3>Paisa kaise lagaya (investment)</h3><div class="hint" id="invhint"></div><div class="kv" id="inv"></div></div>
+  </div>
+</section>
+
+<section class="panel" id="grid">
+  <div class="card"><h3>Parameter grid: plateau ya overfit?</h3>
+    <div class="hint">Har dabba = ek setting. PLATEAU = ye setting aur iske saare padosi (ek step upar / neeche) fit period me profit me (PF &gt; 1). OVERFIT = khud profit me par koi padosi loss me (sirf ek point pe kaam). LOSS = khud loss me. Neela border = chuni hui setting. Settings sirf fit period (pehle 60%) se chuni; test period ke number sirf dekhne ke liye.</div>
+    <div class="ctrl" id="gctrl"></div>
+    <div class="scroll" style="max-height:none"><table class="heat" id="heat"></table></div>
+    <div class="mini" id="gnote"></div>
+  </div>
+  <div class="card"><h3>Grid me kitne dabbe kis haal me</h3><div class="scroll" style="max-height:none"><table id="gstat"></table></div></div>
+  <div class="card"><h3>Podcast wali settings (jaise boli gayi)</h3><div class="hint">Podcast ke numbers bina badle: fit aur test dono period.</div><div class="scroll"><table id="pod"></table></div></div>
+</section>
+
+<section class="panel" id="checks">
+  <div class="card"><h3>Risk 0.25% vs 0.5%, kill switch ke saath / bina</h3><div class="hint">Kill switch: equity apni peak se 5% gire to 20 trading din nayi trade nahi, phir dobara shuru. Poora period.</div><div class="scroll" style="max-height:none"><table id="var"></table></div></div>
+  <div class="card"><h3>Random entry se muqabla (1,000 baar)</h3><div class="hint" id="rndhint"></div><div class="ch"><canvas id="c_rnd"></canvas></div><div class="mini" id="rndnote"></div></div>
+  <div class="card"><h3>Lambi history (index daily 2005 se)</h3><div id="long" class="mini"></div><div class="scroll" style="max-height:none"><table id="longy"></table></div></div>
+  <div class="card" id="ptsCard" style="display:none"><h3>Index points (option ki jagah futures pe)</h3><div class="hint">Har trade 1 unit: points = side x (exit - entry), slippage ke baad, charges se pehle. Option premium ka data nahi tha.</div><div class="scroll" style="max-height:none"><table id="pts"></table></div></div>
+  <div class="two">
+    <div class="card"><h3>Long vs short</h3><div class="scroll" style="max-height:none"><table id="ls"></table></div></div>
+    <div class="card"><h3>Kaun si trade chhodi gayi</h3><div class="scroll" style="max-height:none"><table id="skip"></table></div></div>
+  </div>
+</section>
+
+<section class="panel" id="months">
+  <div class="card"><h3>Saal ke hisaab se</h3><div class="hint">Return % = us saal ka net / shuruaati capital. BIG LOSS YEAR = loss jo aam saal (median) ke 2 guna se bada.</div><div class="scroll" style="max-height:none"><table id="ytable"></table></div></div>
+  <div class="card"><h3>Har mahine ka net profit</h3><div class="mini" id="worst"></div><div class="ch"><canvas id="c_m"></canvas></div></div>
+  <div class="card"><h3>Mahine ki table</h3><div class="scroll"><table id="mtable"></table></div></div>
+</section>
+
+<section class="panel" id="inst">
+  <div class="card"><h3>Har instrument</h3><div class="scroll" style="max-height:none"><table id="itable"></table></div></div>
+</section>
+
+<section class="panel" id="viewer"><div id="tv"></div></section>
+
+<section class="panel" id="trades">
+  <div class="card"><h3>Har ek trade (chuni hui setting, li gayi trades)</h3><div class="hint">Entry / exit asli price (slippage ke saath). P&amp;L me slippage aur charges kat chuke hain. Poori list (chhodi gayi trades bhi) trades.csv me.</div>
+    <div class="bar"><input id="tq" placeholder="Instrument khojo"><select id="te"><option value="">Saare exit</option></select>
+      <button class="btn" id="tdl">Download CSV</button><span class="note" id="tcount"></span></div>
+    <div class="scroll"><table id="ttable"><thead></thead><tbody></tbody></table></div><div class="pager" id="tpager"></div></div>
+</section>
+
+<section class="panel" id="data">
+  <div class="card"><h3>Data coverage (Fyers)</h3><div class="hint" id="covhint"></div><div class="scroll"><table id="cov"></table></div></div>
+  <div class="card"><h3>Data quality checks</h3><div class="scroll" style="max-height:none"><table id="qual" class="chk"></table></div></div>
+  <div class="card"><h3>Maanyatayen (assumptions)</h3><ul class="rules" id="assume"></ul></div>
+</section>
+
+<section class="panel" id="rules">
+  <div class="card cp"><button class="btn copy" data-copy="rules">Copy karo</button><h3>Rules</h3><ul class="rules" id="rulelist"></ul></div>
+  <div class="card cp"><button class="btn copy" data-copy="formulas">Copy karo</button><h3>Formulas</h3><div class="hint">Is backtest me har number in formulas se nikala gaya hai.</div>
+    <div class="scroll" style="max-height:none"><table id="fml" class="chk"></table></div></div>
+</section>
+<footer id="foot"></footer>
+</div>
+<script>__CHARTJS__</script>
+<script>__LWC__</script>
+<script>__VIEWER_JS__</script>
+<script>
+const D = __DATA__;
+const $ = s => document.querySelector(s);
+const ok = v => v !== null && v !== undefined && !(typeof v === "number" && isNaN(v));
+const sgn = v => !ok(v) ? "" : v > 0 ? "pos" : v < 0 ? "neg" : "";
+const rs = (v, plus) => !ok(v) ? "n/a" : (v < 0 ? "-" : plus && v > 0 ? "+" : "") + "Rs " + Math.round(Math.abs(v)).toLocaleString("en-IN");
+const rs2 = v => !ok(v) ? "n/a" : (v < 0 ? "-" : "") + "Rs " + Math.abs(v).toLocaleString("en-IN", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const f1 = v => !ok(v) ? "n/a" : Number(v).toFixed(1), f2 = v => !ok(v) ? "n/a" : Number(v).toFixed(2), f3 = v => !ok(v) ? "n/a" : Number(v).toFixed(3);
+const pct = v => !ok(v) ? "n/a" : f2(v) + "%";
+const int = v => !ok(v) ? "n/a" : Math.round(v).toLocaleString("en-IN");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const cap = D.capital, capS = "Rs " + cap.toLocaleString("en-IN");
+const M = D.metrics, IS = M.is || {}, OOS = M.oos || {}, FULL = M.full || {};
+
+$("#title").textContent = D.title;
+$("#range").innerHTML = `Data <b>${D.data_range[0]}</b> &rarr; <b>${D.data_range[1]}</b>`;
+$("#subtitle").textContent = `${D.label} | profit compound NAHI hota (risk hamesha ${capS} pe) | slippage + charges kat ke | fit < ${D.split} <= test | report bana: ${D.generated}`;
+$("#foot").textContent = "Purane result se aage ki guarantee nahi hoti. Stocks ki list aaj ke bade stocks hai (survivorship bias).";
+$("#settings").innerHTML = `<span class="st">Test ki settings</span>` + D.settings.map(c => `<span class="sc${c[2] ? " hl" : ""}">${esc(c[0])}: <b>${esc(c[1])}</b></span>`).join("");
+$("#verdict").className = "verdict " + (D.verdict.pass ? "good" : "bad");
+$("#verdict").innerHTML = `<b>${D.verdict.pass ? "PASS" : "FAIL"}</b> &middot; ${esc(D.label)}. Test period (${D.split} se): <b>${OOS.trades || 0}</b> trade, net <b class="${sgn(OOS.net)}">${rs(OOS.net, true)}</b>, PF <b>${f2(OOS.pf)}</b>, expectancy <b>${f3(OOS.exp_R)}R</b>. ${esc(D.verdict.text)}`;
+const R = D.random;
+const kp = [["Test net (OOS)", rs(OOS.net, true), sgn(OOS.net), `${OOS.trades || 0} trade, return ${pct(OOS.total_return_pct)}`],
+  ["Test profit factor", f2(OOS.pf), OOS.pf >= 1 ? "pos" : "neg", `fit period PF ${f2(IS.pf)}`],
+  ["Expectancy / trade", f3(OOS.exp_R) + "R", sgn(OOS.exp_R), `fit ${f3(IS.exp_R)}R, poora ${f3(FULL.exp_R)}R`],
+  ["Max drawdown", rs(FULL.max_dd_rs), "neg", `${pct(FULL.max_dd_cap_pct)} of capital; ${FULL.time_dd_days || 0} din (${f1(FULL.time_dd_months)} mahine) peak ke neeche${FULL.ruin_date ? "; account " + FULL.ruin_date + " ko khatam" : ""}`],
+  ["Random se behtar?", R.n ? (R.p < 0.05 ? "Haan" : "Nahi") : "n/a", R.n ? (R.p < 0.05 ? "pos" : "neg") : "", R.n ? `p = ${f3(R.p)} (${R.n} random run)` : ""],
+  ["Win rate", pct(FULL.win_pct), "", `${FULL.trades || 0} trade (poora period)`]];
+$("#kpis").innerHTML = kp.map(c => `<div class="kpi"><div class="l">${c[0]}</div><div class="v ${c[2]}">${c[1]}</div><div class="n">${c[3]}</div></div>`).join("");
+
+// ---------- all metrics together
+const MROWS = [["Trades", "trades", int], ["Net P&L", "net", v => rs(v, true), 1], ["Total return % (net / capital)", "total_return_pct", pct, 1], ["CAGR %", "cagr_pct", pct, 1],
+  ["Max drawdown % (peak equity se)", "max_dd_pct", pct], ["Max drawdown % (shuruaati capital ka)", "max_dd_cap_pct", pct], ["Max drawdown Rs", "max_dd_rs", rs],
+  ["Sabse kam equity", "min_equity", rs], ["Account Rs 0 se neeche (din)", "ruin_date", v => v || "nahi"], ["Time drawdown (trading din)", "time_dd_days", int], ["Time drawdown (mahine)", "time_dd_months", f1],
+  ["Win rate %", "win_pct", pct], ["Average win", "avg_win", rs], ["Average loss", "avg_loss", rs], ["Risk-reward (avg win / avg loss)", "rr", f2],
+  ["Expectancy / trade (Rs)", "exp_rs", v => rs(v, true), 1], ["Expectancy / trade (R)", "exp_R", f3, 1], ["Profit factor", "pf", f2], ["Best 5% trades ka share (kul profit ka)", "best5_share", pct],
+  ["Charges", "fees", rs], ["Slippage", "slippage", rs], ["Sharpe (daily)", "sharpe", f2], ["t-stat (R)", "t_stat", f2]];
+const MCOLS = [["Fit (pehle 60%)", IS], [`Test (${D.split} se)`, OOS], ["Poora period", FULL], ["Test, slippage 2x", (D.stress || {}).oos || {}]];
+$("#mthint").textContent = `Settings sirf fit period pe chuni. Test = jo period chunte waqt dekha hi nahi. Return % hamesha ${capS} pe (compounding nahi).`;
+$("#mt").innerHTML = "<thead><tr><th class='l'>Number</th>" + MCOLS.map(c => `<th class="num">${c[0]}</th>`).join("") + "</tr></thead><tbody>"
+  + MROWS.map(r => `<tr><td class="l">${r[0]}</td>` + MCOLS.map(c => `<td class="num ${r[3] ? sgn(c[1][r[1]]) : ""}">${r[2](c[1][r[1]])}</td>`).join("") + "</tr>").join("") + "</tbody>";
+$("#warn").innerHTML = (D.warnings.length ? D.warnings : ["Koi khaas warning nahi."]).map(w => `<li>${esc(w)}</li>`).join("");
+$("#checks").innerHTML = "<tbody>" + D.verdict.checks.map(c => `<tr><td class="l">${esc(c[0])}</td><td class="${c[1] ? "ok" : "no"}">${c[1] ? "PASS" : "FAIL"}</td></tr>`).join("") + "</tbody>";
+const iv = D.investment;
+$("#invhint").textContent = `Profit compound nahi hota: har trade ka risk ${capS} ka ${D.risk_pct}% hi rehta hai.`;
+$("#inv").innerHTML = [["Capital", capS + " (compounding nahi)"], ["Risk per trade", `${rs(iv.risk_rs)} (0.25%); doosra test ${rs(iv.risk_alt_rs)} (0.5%)`],
+  ["Qty rule", "risk / (entry - stop), units me (lot round nahi)"], ["Max ek position", "5x capital"], ["Ek saath max positions (hua)", int(iv.max_open)],
+  ["Average position", rs(iv.avg_position)], ["Sabse badi position", rs(iv.biggest_position)], ["Ek saath max paisa laga (peak)", rs(iv.peak_deployed)]]
+  .map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
+
+// ---------- charts
+let charts = [];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ax = (money) => ({x: {grid: {display: false}, ticks: {color: css("--muted"), maxTicksLimit: 7, maxRotation: 0}},
+  y: {grid: {color: css("--line")}, border: {display: false}, ticks: {color: css("--muted"), callback: v => money ? (Math.abs(v) >= 1e5 ? (v / 1e5).toFixed(1) + "L" : Math.round(v / 1000) + "k") : v}}});
+const tip = f => ({backgroundColor: css("--ink"), titleColor: css("--card"), bodyColor: css("--card"), padding: 10, displayColors: false, callbacks: {label: f}});
+function drawCharts(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const lab = D.equity.map(d => d[0]), si = lab.findIndex(d => d >= D.split);
+  $("#eqhint").textContent = `Neela = fit period, narangi = test period (${D.split} se). Shuru ${capS}.`;
+  charts.push(new Chart($("#c_eq"), {type: "line", data: {labels: lab, datasets: [{data: D.equity.map(d => d[1]), borderWidth: 2, pointRadius: 0,
+    segment: {borderColor: c => c.p1DataIndex >= si && si >= 0 ? css("--warn") : css("--accent")}, borderColor: css("--accent")}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false}, plugins: {legend: {display: false}, tooltip: tip(c => "Equity " + rs(c.parsed.y))}, scales: ax(true)}}));
+  charts.push(new Chart($("#c_dd"), {type: "line", data: {labels: lab, datasets: [{data: D.equity.map(d => -d[2]), borderColor: css("--neg"), backgroundColor: css("--neg-soft"), fill: true, borderWidth: 1.5, pointRadius: 0}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false}, plugins: {legend: {display: false}, tooltip: tip(c => "Drawdown " + f2(-c.parsed.y) + "%")}, scales: ax(false)}}));
+  const h = D.hist_R, hl = h.counts.map((_, i) => f2((h.edges[i] + h.edges[i + 1]) / 2));
+  charts.push(new Chart($("#c_hist"), {type: "bar", data: {labels: hl, datasets: [{data: h.counts, backgroundColor: h.counts.map((_, i) => (h.edges[i] + h.edges[i + 1]) / 2 >= 0 ? css("--pos") : css("--neg")), borderRadius: 2}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => c.parsed.y + " trade")}, scales: ax(false)}}));
+  const mv = D.monthly.map(m => m.net);
+  charts.push(new Chart($("#c_m"), {type: "bar", data: {labels: D.monthly.map(m => m.month), datasets: [{data: mv, backgroundColor: mv.map(x => x >= 0 ? css("--pos") : css("--neg")), borderRadius: 2, maxBarThickness: 30}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => rs(c.parsed.y, true))}, scales: ax(true)}}));
+  if (R.hist) {
+    const e = R.hist.edges, lbl = R.hist.counts.map((_, i) => f3((e[i] + e[i + 1]) / 2));
+    charts.push(new Chart($("#c_rnd"), {type: "bar", data: {labels: lbl, datasets: [{data: R.hist.counts, borderRadius: 2,
+      backgroundColor: R.hist.counts.map((_, i) => (R.rule_R >= e[i] && R.rule_R < e[i + 1]) ? css("--accent") : css("--muted"))}]},
+      options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => c.parsed.y + " random run")}, scales: ax(false)}}));
+  }
+}
+$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); const t = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("bt_theme", t); } catch (e) {} drawCharts(); TV.restyle(); };
+
+// ---------- grid heatmap
+const GC = {}; D.grid_cols.forEach((c, i) => GC[c] = i);
+const G = D.grid.map(r => { const o = {}; D.grid_cols.forEach((c, i) => o[c] = r[i]); return o; });
+const KEYS = D.grid_keys;
+const sliceKey = o => KEYS.map(k => o[k]).join(" | ");
+const slices = [...new Set(G.map(o => o.grid + " :: " + sliceKey(o)))];
+const METRICS = [["is_pf", "Fit PF"], ["oos_pf", "Test PF"], ["is_exp_R", "Fit expectancy R"], ["oos_exp_R", "Test expectancy R"], ["is_trades", "Fit trades"], ["oos_trades", "Test trades"], ["full_net", "Poora net Rs"]];
+const chosenKey = "1 :: " + sliceKey(D.chosen);
+function selHTML(id, label, opts, val){ return `<label>${label}<select id="${id}">${opts.map(o => `<option value="${esc(o[0])}"${String(o[0]) === String(val) ? " selected" : ""}>${esc(o[1])}</option>`).join("")}</select></label>`; }
+function gridCtrl(){
+  const cur = $("#gs") ? $("#gs").value : chosenKey;
+  const gnum = cur.split(" :: ")[0], dims = D.grid_dims[cur] || [];
+  let h = selHTML("gs", "Grid / setting", slices.map(s => [s, (s.startsWith("2") ? "Grid 2 (stop x target): " : "Grid 1: ") + s.split(" :: ")[1]]), cur)
+    + selHTML("gm", "Number", METRICS, $("#gm") ? $("#gm").value : "is_pf");
+  if (dims.length > 2) {
+    h += selHTML("gr", "Rows", dims.map(d => [d, d]), $("#gr") && dims.includes($("#gr").value) ? $("#gr").value : dims[0]);
+    h += selHTML("gk", "Columns", dims.map(d => [d, d]), $("#gk") && dims.includes($("#gk").value) ? $("#gk").value : dims[1]);
+  }
+  $("#gctrl").innerHTML = h;
+  const rows = G.filter(o => String(o.grid) + " :: " + sliceKey(o) === cur);
+  const rd = dims.length > 2 ? $("#gr").value : dims[0], cd = dims.length > 2 ? $("#gk").value : dims[1];
+  const others = dims.filter(d => d !== rd && d !== cd);
+  others.forEach(d => { const vals = [...new Set(rows.map(o => o[d]))].sort((a, b) => a - b); const ch = D.chosen[d] !== undefined && vals.includes(D.chosen[d]) ? D.chosen[d] : vals[0];
+    $("#gctrl").insertAdjacentHTML("beforeend", selHTML("gf_" + d, d + " (fixed)", vals.map(v => [v, v]), ch)); });
+  document.querySelectorAll("#gctrl select").forEach(s => s.onchange = () => { if (s.id === "gs") gridCtrl(); else drawHeat(); });
+  drawHeat();
+}
+function cls(metric, v){ if (!ok(v)) return "h-na"; if (metric.endsWith("_pf")) return v >= 1.2 ? "h-g2" : v > 1 ? "h-g1" : v >= 0.8 ? "h-r1" : "h-r2";
+  if (metric.endsWith("exp_R") || metric.endsWith("net")) return v > 0.05 * (metric.endsWith("net") ? 1e5 : 1) ? "h-g2" : v > 0 ? "h-g1" : v > -0.05 * (metric.endsWith("net") ? 1e5 : 1) ? "h-r1" : "h-r2"; return ""; }
+function drawHeat(){
+  const cur = $("#gs").value, gnum = cur.split(" :: ")[0], dims = D.grid_dims[cur] || [];
+  const rd = dims.length > 2 ? $("#gr").value : dims[0], cd = dims.length > 2 ? $("#gk").value : dims[1], metric = $("#gm").value;
+  let rows = G.filter(o => String(o.grid) + " :: " + sliceKey(o) === cur);
+  dims.filter(d => d !== rd && d !== cd).forEach(d => { const v = $("#gf_" + d).value; rows = rows.filter(o => String(o[d]) === v); });
+  const rv = [...new Set(rows.map(o => o[rd]))].sort((a, b) => a - b), cv = [...new Set(rows.map(o => o[cd]))].sort((a, b) => a - b);
+  const at = (a, b) => rows.find(o => o[rd] === a && o[cd] === b);
+  const isMe = o => o && cur.startsWith(gnum) && KEYS.every(k => String(o[k]) === String(D.chosen[k])) && dims.every(d => Number(o[d]) === Number(D.chosen[d]));
+  const fmt = v => metric.endsWith("trades") ? int(v) : metric.endsWith("net") ? rs(v, true) : metric.endsWith("pf") ? f2(v) : f3(v);
+  $("#heat").innerHTML = `<thead><tr><th>${esc(rd)} \\ ${esc(cd)}</th>${cv.map(v => `<th>${v}</th>`).join("")}</tr></thead><tbody>` + rv.map(a => `<tr><th>${a}</th>` + cv.map(b => { const o = at(a, b);
+    if (!o) return `<td class="h-na">-</td>`;
+    const st = o.status === "FEW TRADES" ? "FEW" : o.status;
+    return `<td class="c ${cls(metric, o[metric])}${isMe(o) ? " me" : ""}" title="fit PF ${f2(o.is_pf)} | test PF ${f2(o.oos_pf)} | fit ${int(o.is_trades)} / test ${int(o.oos_trades)} trade | plateau score ${f2(o.plateau_score)}">${fmt(o[metric])}<span class="st">${st}</span></td>`; }).join("") + "</tr>").join("") + "</tbody>";
+  const n = rows.length, cnt = s => rows.filter(o => o.status === s).length;
+  $("#gnote").textContent = `Is grid me ${n} setting: PLATEAU ${cnt("PLATEAU")}, OVERFIT ${cnt("OVERFIT")}, LOSS ${cnt("LOSS")}, kam trade ${cnt("FEW TRADES")}.`;
+}
+function gridStats(){
+  const by = {}; G.filter(o => o.grid === 1).forEach(o => { const k = sliceKey(o); by[k] = by[k] || {n: 0, PLATEAU: 0, OVERFIT: 0, LOSS: 0, "FEW TRADES": 0, best: -1, oos_pos: 0}; const b = by[k]; b.n++; b[o.status]++; b.best = Math.max(b.best, o.plateau_score || 0); if (o.oos_pf > 1) b.oos_pos++; });
+  $("#gstat").innerHTML = `<thead><tr><th class="l">Setting (grid 1)</th><th>Cells</th><th>PLATEAU</th><th>OVERFIT</th><th>LOSS</th><th>Kam trade</th><th>Test me PF&gt;1</th><th>Best plateau score</th></tr></thead><tbody>`
+    + Object.entries(by).map(([k, b]) => `<tr><td class="l">${esc(k)}${k === sliceKey(D.chosen) ? " <span class='badge b-PLATEAU'>chuni</span>" : ""}</td><td>${b.n}</td><td>${b.PLATEAU}</td><td>${b.OVERFIT}</td><td>${b.LOSS}</td><td>${b["FEW TRADES"]}</td><td>${b.oos_pos}</td><td>${f2(b.best)}</td></tr>`).join("") + "</tbody>";
+}
+function podTable(){
+  const P = D.podcast || [];
+  if (!P.length) { $("#pod").innerHTML = "<tbody><tr><td>-</td></tr></tbody>"; return; }
+  $("#pod").innerHTML = `<thead><tr><th class="l">Setting</th><th>Fit trades</th><th>Fit PF</th><th>Fit R</th><th>Test trades</th><th>Test PF</th><th>Test R</th><th>Test net</th><th>Status</th></tr></thead><tbody>`
+    + P.map(o => `<tr><td class="l">${esc(o.label)}</td><td>${int(o.is_trades)}</td><td class="${o.is_pf > 1 ? "pos" : "neg"}">${f2(o.is_pf)}</td><td class="${sgn(o.is_exp_R)}">${f3(o.is_exp_R)}</td><td>${int(o.oos_trades)}</td><td class="${o.oos_pf > 1 ? "pos" : "neg"}">${f2(o.oos_pf)}</td><td class="${sgn(o.oos_exp_R)}">${f3(o.oos_exp_R)}</td><td class="${sgn(o.oos_net)}">${rs(o.oos_net, true)}</td><td><span class="badge b-${o.status === "FEW TRADES" ? "FEW" : o.status}">${o.status}</span></td></tr>`).join("") + "</tbody>";
+}
+gridCtrl(); gridStats(); podTable();
+
+// ---------- checks
+$("#var").innerHTML = `<thead><tr><th class="l">Risk / trade</th><th class="l">Kill switch</th><th>Trades</th><th>Net</th><th>Return %</th><th>CAGR %</th><th>Max DD %</th><th>Max DD Rs</th><th>Time DD (din)</th><th>PF</th><th>Loss limit se chhodi</th><th>Kill se chhodi</th><th>Kill kitni baar</th></tr></thead><tbody>`
+  + D.variants.map(v => `<tr><td class="l">${v.risk_pct}%</td><td class="l">${v.kill ? "haan (5%)" : "nahi"}</td><td>${int(v.trades)}</td><td class="${sgn(v.net)}">${rs(v.net, true)}</td><td class="${sgn(v.total_return_pct)}">${pct(v.total_return_pct)}</td><td>${pct(v.cagr_pct)}</td><td>${pct(v.max_dd_pct)}</td><td>${rs(v.max_dd_rs)}</td><td>${int(v.time_dd_days)}</td><td>${f2(v.pf)}</td><td>${int(v.skipped_cap)}</td><td>${int(v.skipped_kill)}</td><td>${int(v.kill_events)}</td></tr>`).join("") + "</tbody>";
+$("#rndhint").textContent = R.n ? `Wahi instrument, wahi number of trades, wahi stop / target (ya wahi holding time), par entry ka din / candle aur side random. Grey = ${R.n} random run ki average R / trade; neela = rule (${f3(R.rule_R)}R).` : "Random test nahi chala.";
+$("#rndnote").innerHTML = R.n ? `Rule: <b>${f3(R.rule_R)}R</b> / trade (test period ${f3(R.rule_R_oos)}R). Random ka average ${f3(R.mean)}R, 95% random isse kam: ${f3(R.p95)}R. p-value <b>${f3(R.p)}</b> &rarr; ${R.p < 0.05 ? "<span class='pos'>rule random se behtar</span>" : "<span class='neg'>rule random se behtar NAHI (itna to kismat se bhi aa jata)</span>"}.` : "";
+if (D.long) {
+  const L = D.long.full;
+  $("#long").innerHTML = `Index (trade nahi ho sakta, sirf signal check; kharcha futures jaisa) ${esc(D.long.period)}: <b>${int(L.trades)}</b> trade, net <b class="${sgn(L.net)}">${rs(L.net, true)}</b>, PF <b>${f2(L.pf)}</b>, ${f3(L.exp_R)}R / trade, max DD ${pct(L.max_dd_pct)}. 2018 se pehle (jo data upar wale test me nahi tha): ${int(D.long.before_2018.trades)} trade, PF ${f2(D.long.before_2018.pf)}, net ${rs(D.long.before_2018.net, true)}.`;
+  $("#longy").innerHTML = `<thead><tr><th class="l">Saal</th><th>Net</th><th>Return %</th><th>Trades</th><th>PF</th></tr></thead><tbody>` + D.long.yearly.map(y => `<tr><td class="l">${y.year}</td><td class="${sgn(y.net)}">${rs(y.net, true)}</td><td class="${sgn(y.return_pct)}">${pct(y.return_pct)}</td><td>${int(y.trades)}</td><td>${f2(y.pf)}</td></tr>`).join("") + "</tbody>";
+} else { $("#long").textContent = "Is setting ke liye lambi history nahi (1-ghante / intraday data Dec 2017 se hi hai)."; }
+$("#ls").innerHTML = `<thead><tr><th class="l">Side</th><th>Trades</th><th>Net</th></tr></thead><tbody><tr><td class="l">Long</td><td>${int(FULL.long_n)}</td><td class="${sgn(FULL.long_net)}">${rs(FULL.long_net, true)}</td></tr><tr><td class="l">Short</td><td>${int(FULL.short_n)}</td><td class="${sgn(FULL.short_net)}">${rs(FULL.short_net, true)}</td></tr></tbody>`;
+$("#skip").innerHTML = `<thead><tr><th class="l">Karan</th><th>Trades</th></tr></thead><tbody>` + Object.entries(D.skipped).map(([k, v]) => `<tr><td class="l">${k ? esc(k) : "li gayi"}</td><td>${int(v)}</td></tr>`).join("") + "</tbody>";
+
+if (D.points) {
+  $("#ptsCard").style.display = "";
+  const yrs = [...new Set(Object.values(D.points).flatMap(v => Object.keys(v.per_year)))].sort();
+  $("#pts").innerHTML = `<thead><tr><th class="l">Instrument</th><th>Trades</th><th>Kul points</th><th>Avg points / trade</th><th>Win %</th>${yrs.map(y => `<th>${y}</th>`).join("")}</tr></thead><tbody>`
+    + Object.entries(D.points).map(([k, v]) => `<tr><td class="l">${k}</td><td>${int(v.trades)}</td><td class="${sgn(v.points)}">${f1(v.points)}</td><td class="${sgn(v.avg_points)}">${f2(v.avg_points)}</td><td>${pct(v.win_pct)}</td>${yrs.map(y => `<td class="${sgn(v.per_year[y])}">${f1(v.per_year[y])}</td>`).join("")}</tr>`).join("") + "</tbody>";
+}
+
+// ---------- years / months / instruments
+$("#ytable").innerHTML = `<thead><tr><th class="l">Saal</th><th>Net</th><th>Return %</th><th>Trades</th><th>Win %</th><th>PF</th><th>Max DD %</th><th class="l">Flag</th></tr></thead><tbody>`
+  + D.yearly.map(y => `<tr><td class="l">${y.year}${y.year >= +D.split.slice(0, 4) ? (y.year === +D.split.slice(0, 4) ? " (fit+test)" : " (test)") : ""}</td><td class="${sgn(y.net)}">${rs(y.net, true)}</td><td class="${sgn(y.return_pct)}">${pct(y.return_pct)}</td><td>${int(y.trades)}</td><td>${pct(y.win_pct)}</td><td>${f2(y.pf)}</td><td>${pct(y.max_dd_pct)}</td><td class="l neg">${esc(y.flag || "")}</td></tr>`).join("") + "</tbody>";
+const wm = D.monthly.reduce((a, b) => (b.net < a.net ? b : a), D.monthly[0] || {net: 0, month: "-"});
+$("#worst").innerHTML = `Sabse bura mahina: <b>${esc(wm.month)}</b> <span class="neg">${rs(wm.net, true)}</span> (${pct(wm.return_pct)}).`;
+$("#mtable").innerHTML = `<thead><tr><th class="l">Mahina</th><th>Net</th><th>Return %</th><th>Trades</th><th>Win %</th></tr></thead><tbody>`
+  + D.monthly.slice().reverse().map(m => `<tr><td class="l">${m.month}</td><td class="${sgn(m.net)}">${rs(m.net, true)}</td><td class="${sgn(m.return_pct)}">${pct(m.return_pct)}</td><td>${int(m.trades)}</td><td>${pct(m.win_pct)}</td></tr>`).join("") + "</tbody>";
+$("#itable").innerHTML = `<thead><tr><th class="l">Instrument</th><th class="l">Kya trade hua</th><th>Trades</th><th>Win %</th><th>Net</th><th>PF</th><th>Avg R</th><th>Long net</th><th>Short net</th></tr></thead><tbody>`
+  + D.instruments.sort((a, b) => b[4] - a[4]).map(r => `<tr><td class="l">${r[0]}</td><td class="l">${({fut: "index futures", sfut: "stock futures", cash: "stock cash (MIS)", index: "index"})[r[1]] || r[1]}</td><td>${int(r[2])}</td><td>${pct(r[3])}</td><td class="${sgn(r[4])}">${rs(r[4], true)}</td><td>${f2(r[5])}</td><td class="${sgn(r[6])}">${f3(r[6])}</td><td class="${sgn(r[7])}">${rs(r[7], true)}</td><td class="${sgn(r[8])}">${rs(r[8], true)}</td></tr>`).join("") + "</tbody>";
+
+// ---------- data + rules
+const DC = D.data_card || {};
+$("#covhint").textContent = DC.note || "";
+$("#cov").innerHTML = (DC.coverage || []).length ? `<thead><tr>${DC.coverage_cols.map((c, i) => `<th class="${i ? "" : "l"}">${esc(c)}</th>`).join("")}</tr></thead><tbody>` + DC.coverage.map(r => `<tr>${r.map((v, i) => `<td class="${i ? "" : "l"}">${esc(v)}</td>`).join("")}</tr>`).join("") + "</tbody>" : "";
+$("#qual").innerHTML = (DC.quality || []).length ? `<thead><tr><th class="l">Check</th><th>Datasets</th><th>Count</th><th class="l">Kya kiya</th></tr></thead><tbody>` + DC.quality.map(r => `<tr><td class="l">${esc(r[0])}</td><td>${r[1]}</td><td>${int(r[2])}</td><td class="l">${esc(r[3])}</td></tr>`).join("") + "</tbody>" : "";
+$("#assume").innerHTML = D.assumptions.map(a => `<li>${esc(a)}</li>`).join("");
+$("#rulelist").innerHTML = D.rules.map(r => `<li>${esc(r)}</li>`).join("");
+$("#fml").innerHTML = "<tbody>" + D.formulas.map(f => `<tr><td class="l"><b>${esc(f[0])}</b></td><td class="l"><code>${esc(f[1])}</code></td></tr>`).join("") + "</tbody>";
+const copyText = {rules: () => `Rules - ${D.title}\n` + D.rules.map((r, i) => (i + 1) + ". " + r).join("\n"), formulas: () => `Formulas - ${D.title}\n` + D.formulas.map(f => f[0] + ": " + f[1]).join("\n")};
+function copyOld(txt){ const ta = document.createElement("textarea"); ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); const k = document.execCommand("copy"); ta.remove(); return k; }
+document.querySelectorAll(".copy").forEach(b => b.onclick = async () => { const txt = copyText[b.dataset.copy](); let k = false;
+  try { await navigator.clipboard.writeText(txt); k = true; } catch (e) { k = copyOld(txt); } b.textContent = k ? "Copy ho gaya ✓" : "Copy nahi hua"; setTimeout(() => b.textContent = "Copy karo", 1500); });
+
+// ---------- trades table
+const TC = {}; D.trade_cols.forEach((c, i) => TC[c] = i);
+const T = D.trades;
+(function(){
+  const cols = [["entry_dt", "Entry"], ["inst", "Instrument"], ["side", "Side"], ["entry", "Entry px", f2], ["stop", "SL", f2], ["target", "Target", f2], ["exit_dt", "Exit"], ["exit", "Exit px", f2],
+    ["reason", "Exit ka karan"], ["units", "Qty", int], ["notional", "Position", rs], ["gross", "Gross", v => rs(v, true), 1], ["slippage", "Slippage", rs], ["fees", "Charges", rs], ["net", "Net", v => rs(v, true), 1], ["R", "R", f2, 1]];
+  [...new Set(T.map(r => r[TC.reason]))].sort().forEach(v => { const o = document.createElement("option"); o.value = o.textContent = v; $("#te").appendChild(o); });
+  let sortC = 0, dir = -1, page = 0, view = T;
+  const thead = $("#ttable thead"), tbody = $("#ttable tbody");
+  thead.innerHTML = "<tr>" + cols.map((c, i) => `<th class="s ${i < 3 ? "l" : ""}" data-i="${i}">${c[1]}</th>`).join("") + "</tr>";
+  function apply(){ const q = $("#tq").value.trim().toLowerCase(), e = $("#te").value; view = T.filter(r => (!q || r[TC.inst].toLowerCase().includes(q)) && (!e || r[TC.reason] === e));
+    const k = TC[cols[sortC][0]]; view.sort((a, b) => (a[k] < b[k] ? -1 : a[k] > b[k] ? 1 : 0) * dir); page = 0; draw(); }
+  function draw(){ tbody.innerHTML = view.slice(page * 50, page * 50 + 50).map(r => "<tr>" + cols.map((c, i) => `<td class="${i < 3 ? "l " : ""}${c[3] ? sgn(r[TC[c[0]]]) : ""}">${c[2] ? c[2](r[TC[c[0]]]) : esc(r[TC[c[0]]])}</td>`).join("") + "</tr>").join("");
+    const pages = Math.max(1, Math.ceil(view.length / 50)); $("#tcount").textContent = view.length.toLocaleString("en-IN") + " trade";
+    $("#tpager").innerHTML = `<button class="btn" ${page ? "" : "disabled"} data-d="-1">Pichhla</button> Page ${page + 1} / ${pages} <button class="btn" ${page < pages - 1 ? "" : "disabled"} data-d="1">Agla</button>`; }
+  thead.onclick = e => { const th = e.target.closest("th"); if (!th) return; const i = +th.dataset.i; dir = i === sortC ? -dir : 1; sortC = i; apply(); };
+  $("#tpager").onclick = e => { const d = e.target.dataset.d; if (d) { page += +d; draw(); } };
+  $("#tq").oninput = apply; $("#te").onchange = apply;
+  $("#tdl").onclick = () => { const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"'; const csv = [cols.map(c => q(c[1])).join(",")].concat(view.map(r => cols.map(c => q(r[TC[c[0]]])).join(","))).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = "trades.csv"; a.click(); };
+  apply();
+})();
+
+// ---------- trade viewer
+const decoded = {};
+function series(inst){
+  if (decoded[inst]) return decoded[inst];
+  const out = [];
+  ((D.candles[inst] || {}).segs || []).forEach(([a, enc]) => { const p = enc.split(",").map(Number); let t = 0, prev = 0;
+    for (let i = 0, k = 0; i + 4 < p.length; i += 5, k++) { t = k === 0 ? p[i] : t + p[i]; const o = prev + p[i + 1], h = o + p[i + 2], l = o + p[i + 3], c = o + p[i + 4]; prev = c;
+      out.push({i: a + k, time: t * 60, open: o / 100, high: h / 100, low: l / 100, close: c / 100}); } });
+  return (decoded[inst] = out);
+}
+const intraday = D.tf !== "1D";
+function viewerTrades(){
+  return T.map((r, n) => {
+    const g = k => r[TC[k]], long = g("side") === "LONG", s = series(g("inst"));
+    const lo = g("entry_i") - (intraday ? 40 : 30), hi = g("exit_i") + (intraday ? 15 : 10);
+    let data = s.filter(c => c.i >= lo && c.i <= hi).map(c => ({time: c.time, open: c.open, high: c.high, low: c.low, close: c.close}));
+    const tAt = i => { const c = s.find(x => x.i === i); return c ? c.time : null; };
+    const te = tAt(g("entry_i")), tx = tAt(g("exit_i"));
+    const mk = []; if (te !== null) mk.push({time: te, position: long ? "belowBar" : "aboveBar", shape: long ? "arrowUp" : "arrowDown", color: "--accent", text: g("side")});
+    if (tx !== null) mk.push({time: tx, position: long ? "aboveBar" : "belowBar", shape: long ? "arrowDown" : "arrowUp", color: g("net") >= 0 ? "--pos" : "--neg", text: "Exit"});
+    const lines = [{price: g("entry_adj"), color: "--accent", style: 3, title: "Entry"}, {price: g("exit_adj"), color: g("net") >= 0 ? "--pos" : "--neg", style: 3, title: "Exit"}];
+    if (ok(g("stop_adj"))) lines.push({price: g("stop_adj"), color: "--neg", title: "SL"}); if (ok(g("target_adj"))) lines.push({price: g("target_adj"), color: "--pos", title: "Target"});
+    const legs = (g("legs") || []).map(x => `${x[0].slice(5)} ${f2(x[1])} x${f2(x[2])} ${x[3]}`).join(" | ");
+    return {id: n + "|" + g("entry_dt") + "|" + g("inst"), date: g("entry_dt").slice(0, 10), title: `${g("inst")} ${g("side")}`, sub: `${g("entry_dt").slice(11)} ${f2(g("entry"))} → ${g("exit_dt").slice(5)} ${f2(g("exit"))} · ${g("reason")}`, pnl: g("net"), tag: g("reason"),
+      meta: [["Instrument / side", `${g("inst")} ${g("side")}`], ["Entry (asli price)", `${g("entry_dt")} @ ${f2(g("entry"))}`], ["Exit (asli price)", `${g("exit_dt")} @ ${f2(g("exit"))} · ${g("reason")}`],
+        ["Stop-loss", ok(g("stop")) ? f2(g("stop")) : "nahi (ulta cross)"], ["Target", ok(g("target")) ? f2(g("target")) : "nahi"], ["Exits", legs], ["Qty / position", `${int(g("units"))} / ${rs(g("notional"))}`],
+        ["Roll", g("rolls") ? g("rolls") + " baar" : "nahi"], ["R (kharche ke baad)", f2(g("R")), sgn(g("R"))], ["Net P&L", rs2(g("net")), sgn(g("net"))]],
+      charts: data.length ? [{title: intraday ? `Price (${D.tf} candle)` : "Price (daily candle)", kind: "candle", intraday: intraday, data: data, markers: mk, lines: lines,
+        legend: [["--accent", "Entry"], ["--pos", "Target / profit exit"], ["--neg", "SL / loss exit"]]}] : [],
+      note: (g("off") ? `Futures chart back-adjusted hai (roll gap hata ke): asli price = chart - ${f2(g("off"))}. ` : "") + (data.length ? "" : "Is trade ki candles report me nahi (size limit)."),
+      cost: [["Position value", rs2(g("notional"))], ["Gross P&L (slippage ke baad)", rs2(g("gross")), sgn(g("gross"))], ["Slippage (gross me shamil)", rs2(-g("slippage"))], ["Charges (brokerage, STT, NSE, SEBI, stamp, GST)", rs2(-g("fees"))], ["Net P&L", rs2(g("net")), sgn(g("net")), true]]};
+  }).sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+}
+TradeViewer.stickyHeader(".top");
+const TV = TradeViewer(document.querySelector("#tv"), {labels: {stock: "Instrument khojo", stockLabel: "Instrument"}});
+TV.setTrades(viewerTrades());
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => { document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.p)); charts.forEach(c => c.resize()); if (b.dataset.p === "viewer") TV.show(); });
+drawCharts();
+</script>
+</body>
+</html>

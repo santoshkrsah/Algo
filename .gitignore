@@ -11,3 +11,7 @@ Algo_Live_Trading/Firstock_Credentials.txt
 Algo_Live_Trading/*_jkey.txt*
 tokens_logs/
 
+
+# CSV files (results data is already inside each report.html); keep the rulebook run ledger
+*.csv
+!Algo_Backtesting/results/RULEBOOK_RUNS.csv

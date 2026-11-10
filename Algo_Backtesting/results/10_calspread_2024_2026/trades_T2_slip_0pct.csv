@@ -1,8 +1,0 @@
-symbol,side,entry_date,pair,lot,entry_gap,entry_gap_pct,normal_pct,entry_dist,lots,max_lots,exit1,exit_date,exit_gap,exit_reason,rolled,roll_date,max_adverse_dist,days,gross_pnl,costs,net_pnl,margin
-JUBLFOOD,Far BUY + Near SELL,2026-03-02,JUBLFOOD26MAR/26APR,1250,-8.15,-1.624,0.478,2.102,2,2,-,2026-03-18,-10.05,risk stop,nahi,-,2.586,11,-4750.0,731.87,-5481.87,34000.0
-PGEL,Far BUY + Near SELL,2026-04-06,PGEL26APR/26MAY,950,-8.85,-1.959,0.391,2.35,2,2,-,2026-04-16,-11.05,risk stop,nahi,-,2.593,7,-4180.0,593.58,-4773.58,34000.0
-JUBLFOOD,Far BUY + Near SELL,2026-03-20,JUBLFOOD26MAR/26APR,1250,-11.35,-2.505,-0.109,2.396,2,2,2026-03-27 (-4.45),2026-04-20,-13.25,risk stop,haan,2026-03-25,2.807,17,-2875.0,1420.81,-4295.81,34000.0
-PGEL,Far BUY + Near SELL,2026-04-20,PGEL26APR/26MAY,950,-10.65,-1.901,0.35,2.251,2,2,-,2026-04-24,-7.95,expiry aa gayi (roll nahi),nahi,-,2.251,4,5130.0,644.35,4485.65,34000.0
-LODHA,Far BUY + Near SELL,2026-08-11,LODHA26AUG/26SEP,625,-24.3,-2.014,0.535,2.55,2,2,-,2026-08-12,-28.7,risk stop,nahi,-,2.924,1,-5500.0,877.32,-6377.32,34000.0
-LODHA,Far BUY + Near SELL,2026-08-14,LODHA26AUG/26SEP,625,-28.0,-2.263,0.535,2.798,2,2,-,2026-08-19,-34.0,risk stop,nahi,-,3.344,3,-7500.0,888.88,-8388.88,34000.0
-LODHA,Far BUY + Near SELL,2026-08-26,LODHA26SEP/26OCT,625,-23.9,-1.977,0.489,2.466,2,2,-,2026-09-25,-12.3,expiry aa gayi (roll nahi),nahi,-,2.466,21,14500.0,872.54,13627.46,34000.0
