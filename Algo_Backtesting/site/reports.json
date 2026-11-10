@@ -228,5 +228,15 @@
   "pf": 2.24,
   "trades": 1232,
   "verdict": "profit"
+ },
+ "25_stnifty_supertrend_ma": {
+  "name": "NIFTY 1-ghanta Supertrend + 50 MA - This Profitable F&O Trader Takes Only 35 Trades a Year | Big Bull Series Ep 94",
+  "type": "Swing",
+  "period": "Feb 2018 - Nov 2026",
+  "result": "NIFTY futures long-only, ATR 7 x 4 + EMA 40 (54 setting grid ke saare fit + test me profit, fit se chuni). 184 trade (21/saal, daava 30-35), net 6,362 pts/unit, PF 1.28; test (2023-05-10 se) 1,596 pts, PF 1.14. Random se behtar (p 0.001). 2024 aur 2026 loss (har saal profit ka daava galat). Rs 7.5 lakh 2x: CAGR ~8.5%. Gold pe bhi chala. Option modules data na hone se nahi chale.",
+  "net": 6362,
+  "pf": 1.28,
+  "trades": 184,
+  "verdict": "profit"
  }
 }

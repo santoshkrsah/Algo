@@ -49,9 +49,11 @@ OUT = DATA / "bars"
 DAILY_START = date(2005, 1, 1)          # walk back to here (or to the first empty chunk = start of Fyers' history)
 INTRADAY_START = date(2017, 6, 1)
 STOCKS = ["RELIANCE", "HDFCBANK", "ICICIBANK", "INFY", "TCS", "SBIN", "ITC", "LT", "AXISBANK", "BHARTIARTL"]
-INDICES = {"NIFTY50": "NSE:NIFTY50-INDEX", "BANKNIFTY": "NSE:NIFTYBANK-INDEX"}
+INDICES = {"NIFTY50": "NSE:NIFTY50-INDEX", "BANKNIFTY": "NSE:NIFTYBANK-INDEX", "INDIAVIX": "NSE:INDIAVIX-INDEX"}
 FUT_ROOTS = ("NIFTY", "BANKNIFTY")      # -> NIFTY_F1 / NIFTY_F2 / BANKNIFTY_F1 / BANKNIFTY_F2
 FUT_STOCKS = tuple(STOCKS)              # stock futures (positional shorts need futures): RELIANCE_F1 / RELIANCE_F2 ...
+MCX_FUT = ("GOLD",)                     # MCX futures (GOLD = 1 kg contract, bi-monthly expiry): GOLD_F1 / GOLD_F2
+MCX_MASTER = "https://public.fyers.in/sym_details/MCX_COM.csv"
 RESAMPLE = {"3m": "3min", "5m": "5min", "60m": "60min"}
 CHUNK_DAYS = {"1": 99, "D": 365}        # Fyers: 100 days per 1m request, 366 per daily request
 OVERLAP_DAYS = 10                       # re-fetched days next to a seed, to prove both sources agree
@@ -212,7 +214,8 @@ def seeds(near_codes: dict) -> dict:
     """{(name, res): callable returning the seed frame or None}. Only files that already exist on disk."""
     s = {("NIFTY50", "1"): lambda: _read_csv(INDEX / "NIFTY50_FROM2020_1m.csv"),
          ("BANKNIFTY", "1"): lambda: _read_csv(INDEX / "BANKNIFTY_1m.csv"),
-         ("NIFTY50", "D"): lambda: _read_csv(DAILY / "index" / "NIFTY50.csv", "date")}
+         ("NIFTY50", "D"): lambda: _read_csv(DAILY / "index" / "NIFTY50.csv", "date"),
+         ("INDIAVIX", "1"): lambda: _read_csv(INDEX / "INDIAVIX_1m.csv")}
     for root, code in near_codes.items():
         s[(f"{root}_F1", "1")] = (lambda c=code: _read_csv(FNO / "1m" / "futures" / f"{c}.csv"))
     for sym in STOCKS:
@@ -240,6 +243,13 @@ def series_list() -> tuple[list, dict]:
     out += [x for r in FUT_ROOTS for x in fut[r]]
     out += [(s, f"NSE:{s}-EQ", "0", DAILY_START, INTRADAY_START) for s in STOCKS]
     out += [x for r in FUT_STOCKS for x in fut[r]]
+    mcx = pd.read_csv(MCX_MASTER, header=None, low_memory=False)
+    mcx["exp"] = pd.to_datetime(mcx[8], unit="s", utc=True).dt.tz_convert("Asia/Kolkata").dt.date
+    for root in MCX_FUT:
+        f = mcx[(mcx[13].astype(str) == root) & mcx[9].astype(str).str.endswith("FUT") & (mcx["exp"] >= today)].sort_values("exp")
+        if len(f) >= 2:
+            syms = f[9].tolist()
+            out += [(f"{root}_F1", syms[0], "1", DAILY_START, INTRADAY_START), (f"{root}_F2", syms[1], "1", DAILY_START, INTRADAY_START)]
     return out, near
 
 
@@ -296,14 +306,16 @@ def build(name: str, symbol: str, cont: str, res: str, start: date, end: date, s
     OUT.mkdir(parents=True, exist_ok=True)
     out.to_parquet(path, index=False)
     if res == "1":
+        anchor = "9h0min" if symbol.startswith("MCX:") else "9h15min"       # MCX session opens 09:00, NSE 09:15
         for tf2, rule in RESAMPLE.items():
-            resample(out, rule).to_parquet(OUT / f"{name}_{tf2}.parquet", index=False)
+            resample(out, rule, anchor).to_parquet(OUT / f"{name}_{tf2}.parquet", index=False)
     return out
 
 
-def resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
-    """1m -> N-minute candles anchored at 09:15 each day (09:15-09:17, 09:18-09:20 ... for 3m; 60m: 09:15-10:14 ... 15:15-15:29)."""
-    r = df.set_index("datetime").resample(rule, origin="start_day", offset="9h15min")
+def resample(df: pd.DataFrame, rule: str, anchor: str = "9h15min") -> pd.DataFrame:
+    """1m -> N-minute candles anchored at the session open each day (NSE 09:15: 09:15-09:17 ... for 3m; 60m: 09:15-10:14 ...
+    15:15-15:29; MCX 09:00)."""
+    r = df.set_index("datetime").resample(rule, origin="start_day", offset=anchor)
     out = r.agg({"open": "first", "high": "max", "low": "min", "close": "last", "volume": "sum"}).dropna(subset=["open"])
     return out.reset_index()[COLS]
 
