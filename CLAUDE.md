@@ -50,3 +50,5 @@
 - The Telegram finish message carries the HTML file, the website link and the direct report link <site url>#report-NN (NN = folder number).
 - Limits (free host): 10 MB per uploaded file (upload_site.py cuts bigger gzipped reports into parts), ~50,000 hits/day, 5 GB.
   The host shows a JavaScript cookie check first, so curl/scripts only see that page; check the site in a browser.
+- Blueprint (how the site works, server layout, traps, rebuild from zero if the site/account is deleted): Algo_Backtesting/site/BLUEPRINT.md.
+  Keep it up to date whenever the site, the template or the uploader changes.
