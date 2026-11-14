@@ -42,7 +42,7 @@
 
 ## Reports website (after every new report or rerun, without being asked)
 - One private Claude Artifact lists every report (search, type/result filter, sort; each opens in a new tab):
-  https://claude.ai/artifact/Qn4HCC5NT1iakRxbAfuYCa (also in Algo_Backtesting/site/site.json). Always update THIS url, never make a second site.
+  https://claude.ai/artifact/Vyz5an1TqzSvvdW5bd1rG5 (also in Algo_Backtesting/site/site.json). Always update THIS url, never make a second site.
 - Steps: add/update the report's entry in Algo_Backtesting/site/reports.json (name, type Intraday/Options/Calendar/Swing, period,
   one-line Hinglish result, net, pf, trades, verdict profit/loss/study) -> `python tools/build_site.py` -> Artifact publish with
   url from site.json, file_path site/index.html, files = only the new/changed report(s) from site/files.json (the others stay on the site).

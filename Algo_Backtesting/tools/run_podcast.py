@@ -24,7 +24,7 @@ from backtest.podcast import quality, report, runner  # noqa: E402
 from backtest.podcast.config import CONFIG, STOCKS  # noqa: E402
 
 MODULES = {"A": "backtest.podcast.module_a", "B": "backtest.podcast.module_b", "C": "backtest.podcast.module_c", "D": "backtest.podcast.module_d"}
-SITE_URL = "https://claude.ai/artifact/T1tmyG1FNSZLH7BXfC5nSM"
+SITE_URL = "https://claude.ai/artifact/Vyz5an1TqzSvvdW5bd1rG5"
 
 
 def send(text: str):
