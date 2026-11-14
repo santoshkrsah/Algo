@@ -189,6 +189,26 @@ render();
 const BY_HASH = Object.fromEntries(R.map(r => [r.hash, r]));
 const TITLE = document.title;
 let shown = null;
+// A report is one file (r.href) or several parts (r.parts, hosts with a per-file size limit), optionally gzip-compressed
+// (r.gz, first bytes 1f 8b): the parts are joined, unzipped in the browser and shown.
+async function loadReport(r) {
+  const bufs = await Promise.all((r.parts || [r.href]).map(async u => {
+    const res = await fetch(u, {cache: "no-cache"});
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.arrayBuffer();
+  }));
+  let blob = new Blob(bufs);
+  const head = new Uint8Array(await blob.slice(0, 2).arrayBuffer());
+  const zipped = head[0] === 0x1f && head[1] === 0x8b;
+  const ss = (f, ...a) => { try { return sessionStorage[f](...a) } catch (e) { return null } };
+  if (r.gz && !zipped) {            // the host answered with its bot-check page instead of the file: reload once
+    if (!ss("getItem", "site-reloaded")) { ss("setItem", "site-reloaded", "1"); location.reload(); }
+    throw new Error("server ne report ki jagah doosra page bheja");
+  }
+  ss("removeItem", "site-reloaded");
+  if (zipped) blob = await new Response(blob.stream().pipeThrough(new DecompressionStream("gzip"))).blob();
+  return blob.text();
+}
 async function route() {
   const r = BY_HASH[location.hash.slice(1)];
   $("viewer").hidden = !r;
@@ -205,9 +225,7 @@ async function route() {
   $("vtested").textContent = `Backtested ${day(r.tested)}`;
   $("vstate").textContent = `Report load ho rahi hai (${r.mb} MB)...`;
   try {
-    const res = await fetch(r.href);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
+    const html = await loadReport(r);
     if (shown !== r.hash) return;
     $("vframe").srcdoc = html;
     $("vstate").textContent = "";

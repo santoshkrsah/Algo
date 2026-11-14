@@ -1,4 +1,5 @@
 {
- "url": "https://claude.ai/artifact/3GDh5PHKSSvrJm72ni938J",
- "note": "Reports website (private Claude Artifact, account rockalmax16). Always republish to this url; never create a second one. (Changed 13 Nov 2026 by user instruction: old url T1tmyG1FNSZLH7BXfC5nSM showed 'page not found'; before that Qn4HCC5NT1iakRxbAfuYCa went dead on 4 Nov.)"
+ "url": "https://santoshkumar.infinityfree.io/",
+ "host": "InfinityFree web hosting, uploaded with tools/upload_site.py (FTP settings in Algo_Backtesting/.env)",
+ "note": "Reports website. Moved here on 14 Nov 2026 from Claude Artifacts (artifact links kept failing with 'Couldn't load this artifact': Qn4HCC5NT1iakRxbAfuYCa, T1tmyG1FNSZLH7BXfC5nSM, Vyz5an1TqzSvvdW5bd1rG5)."
 }

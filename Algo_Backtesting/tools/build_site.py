@@ -4,8 +4,8 @@ the site's own link + #report-NN, which shows that report full screen.
     python tools/build_site.py
 
 Reads site/reports.json (name, type, period, one-line result per report folder; add an entry for every new report),
-writes site/index.html and site/files.json (published path -> report file). Claude then publishes site/index.html as
-the Claude Artifact in site/site.json ("url") with those files, so the website link never changes.
+writes site/index.html and site/files.json (published path -> report file).
+The live site is on our own web hosting: tools/upload_site.py builds the same page and uploads it by FTP (see there).
 """
 import json
 import re
@@ -36,7 +36,29 @@ def backtested(report: Path) -> datetime:
     return datetime.fromtimestamp(max(out) if out else report.stat().st_mtime)
 
 
+def site_url() -> str:
+    site = SITE / "site.json"
+    return json.loads(site.read_text(encoding="utf-8"))["url"] if site.exists() else ""
+
+
+def render(data: dict) -> str:
+    """The site page (template + data). Same page for every host; hosts only change hrefs / parts in data."""
+    blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    return TEMPLATE.read_text(encoding="utf-8").replace("__DATA__", blob)
+
+
 def main() -> int:
+    data, files, missing = collect()
+    (SITE / "index.html").write_text(render(data), encoding="utf-8")
+    (SITE / "files.json").write_text(json.dumps(files, indent=1), encoding="utf-8")
+    print(f"site/index.html: {len(data['reports'])} reports, {sum(r['mb'] for r in data['reports']):.1f} MB")
+    if missing:
+        print("site/reports.json me entry nahi hai (naam/type/result khaali dikhega):", ", ".join(missing))
+    return 0
+
+
+def collect() -> tuple[dict, dict, list]:
+    """(page data, {published path: report file relative to ROOT}, folders missing in reports.json)."""
     meta = json.loads((SITE / "reports.json").read_text(encoding="utf-8"))
     rows, files, missing = [], {}, []
     for f in sorted(RESULTS.glob("[0-9]*_*/report.html")):
@@ -52,16 +74,8 @@ def main() -> int:
                      "updated": upd.strftime("%Y-%m-%d %H:%M"), "tested": backtested(f).strftime("%Y-%m-%d %H:%M"), "mb": round(f.stat().st_size / 1e6, 1),
                      "href": f"reports/{folder}.html", "hash": f"report-{int(folder.split('_', 1)[0])}"})
         files[f"reports/{folder}.html"] = str(f.relative_to(ROOT)).replace("\\", "/")
-    site = SITE / "site.json"
-    url = json.loads(site.read_text(encoding="utf-8"))["url"] if site.exists() else ""
-    data = {"reports": rows, "site": url, "generated": datetime.now().strftime("%d %b %Y %H:%M")}
-    blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-    (SITE / "index.html").write_text(TEMPLATE.read_text(encoding="utf-8").replace("__DATA__", blob), encoding="utf-8")
-    (SITE / "files.json").write_text(json.dumps(files, indent=1), encoding="utf-8")
-    print(f"site/index.html: {len(rows)} reports, {sum(r['mb'] for r in rows):.1f} MB")
-    if missing:
-        print("site/reports.json me entry nahi hai (naam/type/result khaali dikhega):", ", ".join(missing))
-    return 0
+    data = {"reports": rows, "site": site_url(), "generated": datetime.now().strftime("%d %b %Y %H:%M")}
+    return data, files, missing
 
 
 if __name__ == "__main__":

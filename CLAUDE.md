@@ -41,10 +41,12 @@
 - HTML report: src/backtest/rulebook_report.py `write_html(out_dir, data)` reads report_data.json (rules / formulas / settings already in Hinglish) and follows the report rules above; run_rulebook.py calls it automatically.
 
 ## Reports website (after every new report or rerun, without being asked)
-- One private Claude Artifact lists every report (search, type/result filter, sort; each opens in a new tab):
-  https://claude.ai/artifact/Vyz5an1TqzSvvdW5bd1rG5 (also in Algo_Backtesting/site/site.json). Always update THIS url, never make a second site.
+- One website lists every report (search, type/result filter, sort; each opens in a new tab), on our own InfinityFree hosting
+  (since 14 Nov 2026; Claude Artifacts kept failing with "Couldn't load this artifact" - do NOT publish reports as Artifacts any more):
+  https://santoshkumar.infinityfree.io/ (also in Algo_Backtesting/site/site.json; runners read the link from there).
 - Steps: add/update the report's entry in Algo_Backtesting/site/reports.json (name, type Intraday/Options/Calendar/Swing, period,
-  one-line Hinglish result, net, pf, trades, verdict profit/loss/study) -> `python tools/build_site.py` -> Artifact publish with
-  url from site.json, file_path site/index.html, files = only the new/changed report(s) from site/files.json (the others stay on the site).
+  one-line Hinglish result, net, pf, trades, verdict profit/loss/study) -> in Algo_Backtesting `python tools/upload_site.py`
+  (builds the page with build_site.py, gzips every report, uploads only changed files by FTP; FTP login is in Algo_Backtesting/.env, never print it).
 - The Telegram finish message carries the HTML file, the website link and the direct report link <site url>#report-NN (NN = folder number).
-- Limits: 16 MB per report file, 64 MB per publish, 256 MB / 511 files per site version.
+- Limits (free host): 10 MB per uploaded file (upload_site.py cuts bigger gzipped reports into parts), ~50,000 hits/day, 5 GB.
+  The host shows a JavaScript cookie check first, so curl/scripts only see that page; check the site in a browser.

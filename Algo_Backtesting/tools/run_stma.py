@@ -19,7 +19,7 @@ from backtest.stma import quality, report, run  # noqa: E402
 from backtest.stma.config import CONFIG, TITLE_SUFFIX  # noqa: E402
 
 NAME = "stnifty_supertrend_ma"
-SITE_URL = "https://claude.ai/artifact/Vyz5an1TqzSvvdW5bd1rG5"
+SITE_URL = json.loads((Path(__file__).resolve().parents[1] / "site" / "site.json").read_text(encoding="utf-8"))["url"]  # reports website
 
 
 def texts(res):

@@ -24,7 +24,7 @@ from backtest.podcast import quality, report, runner  # noqa: E402
 from backtest.podcast.config import CONFIG, STOCKS  # noqa: E402
 
 MODULES = {"A": "backtest.podcast.module_a", "B": "backtest.podcast.module_b", "C": "backtest.podcast.module_c", "D": "backtest.podcast.module_d"}
-SITE_URL = "https://claude.ai/artifact/Vyz5an1TqzSvvdW5bd1rG5"
+SITE_URL = json.loads((Path(__file__).resolve().parents[1] / "site" / "site.json").read_text(encoding="utf-8"))["url"]  # reports website
 
 
 def send(text: str):
