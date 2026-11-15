@@ -23,5 +23,6 @@
  "reports/23_gap_breakout_long.html": "results/23_gap_breakout_long/report.html",
  "reports/24_straddle_risk_2021_2026.html": "results/24_straddle_risk_2021_2026/report.html",
  "reports/25_stnifty_supertrend_ma.html": "results/25_stnifty_supertrend_ma/report.html",
- "reports/26_mtst_nifty_supertrend.html": "results/26_mtst_nifty_supertrend/report.html"
+ "reports/26_mtst_nifty_supertrend.html": "results/26_mtst_nifty_supertrend/report.html",
+ "reports/27_groww5_intraday.html": "results/27_groww5_intraday/report.html"
 }
