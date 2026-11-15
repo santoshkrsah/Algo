@@ -238,5 +238,28 @@
   "pf": 1.28,
   "trades": 184,
   "verdict": "profit"
+<<<<<<< Updated upstream
+=======
+ },
+ "26_mtst_nifty_supertrend": {
+  "name": "NIFTY multi-timeframe Supertrend (daily 7x3 + 1 ghanta 7x3) - This 1 Strategy Made Me Profitable",
+  "type": "Swing",
+  "period": "Feb 2018 - Nov 2026",
+  "result": "NIFTY futures long+short, daily Supertrend filter + 1h entry/exit, 1% risk Rs 25 lakh compounding. 293 trade (33/saal), net 3,969 pts/unit, PF 1.12, CAGR 5.2%, max DD 19%. Test (May 2023 se) -2,137 pts, PF 0.87; 2024-25 loss. Daily filter se nuksaan (bina filter 9,454 pts), random se behtar nahi (p 0.47). 2019-20 daava ~35%, asli ~11%. Video ka 2 Sep trade match (stop 80 pt farq).",
+  "net": 3969,
+  "pf": 1.12,
+  "trades": 293,
+  "verdict": "loss"
+ },
+ "27_groww5_intraday": {
+  "name": "5 Intraday Strategies (Scalping, Momentum, Breakout, Reversal, News) - Master These 5 Intraday Strategies Before Your Next Trade",
+  "type": "Intraday",
+  "period": "Oct 2021 - Nov 2026 (NIFTY Feb 2018 se)",
+  "result": "Groww video ki 5 strategy, 100 large cap + NIFTY fut, Rs 10 lakh har strategy, 1% risk, costs + slippage on. 5 me se 0 pass. Scalping 12,620 trade -Rs 74 L (PF 0.38), NIFTY momentum -Rs 75 L (PF 0.60), breakout -Rs 1.7 L (PF 0.91), reversal -Rs 29 L (PF 0.84): kharcha gross se zyada. News/gap +Rs 5.5 L (PF 1.16, 2x slippage pe bhi +2.4 L) par 2023 validation loss -> FAIL; profit gap-up short (video wala) se.",
+  "net": -17381757,
+  "pf": 0.68,
+  "trades": 25761,
+  "verdict": "loss"
+>>>>>>> Stashed changes
  }
 }
