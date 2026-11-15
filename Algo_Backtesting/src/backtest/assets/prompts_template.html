@@ -1,0 +1,258 @@
+<title>Algo Prompts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Prompts page: ready prompts for Claude. Fill the boxes, one click copies the finished prompt. Same tokens as site_template.html */
+:root {
+  --bg: #f3f5f9; --card: #ffffff; --ink: #0f1b33; --muted: #5a6680; --line: #dde3ee;
+  --navy: #1b3a6b; --accent: #2f6fd6; --accent-ink: #ffffff; --loss: #b3261e; --gain: #0f7a4a; --gain-bg: #e3f4ec;
+  --chip: #eaeef6; --code: #f6f8fc;
+  --f-display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1222; --card: #121b30; --ink: #e6ecf7; --muted: #94a1bb; --line: #24304a;
+  --navy: #9fbdf0; --accent: #5b93f0; --accent-ink: #0b1222; --loss: #f2827a; --gain: #4cc98d; --gain-bg: #10301f;
+  --chip: #1b2640; --code: #0e1628; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b1222; --card: #121b30; --ink: #e6ecf7; --muted: #94a1bb; --line: #24304a;
+  --navy: #9fbdf0; --accent: #5b93f0; --accent-ink: #0b1222; --loss: #f2827a; --gain: #4cc98d; --gain-bg: #10301f;
+  --chip: #1b2640; --code: #0e1628; color-scheme: dark }
+
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 20px 48px; display: grid; gap: 20px }
+.back { font: 600 14px var(--f-body); color: var(--accent); text-decoration: none; width: max-content }
+.back:hover { text-decoration: underline }
+h1 { font: 800 clamp(26px, 4vw, 36px)/1.1 var(--f-display); margin: 0; color: var(--navy); letter-spacing: -.01em; text-wrap: balance }
+.lede { margin: 6px 0 0; color: var(--muted); max-width: 70ch }
+h2 { font: 700 19px/1.25 var(--f-display); margin: 0 }
+.when { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; max-width: 75ch }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 14px; align-content: start; min-width: 0; scroll-margin-top: 16px }
+.card:target, .card.flash { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent) }
+.feat { border: 2px solid var(--accent); padding: 22px }
+.feat h2 { font-size: 23px; color: var(--navy) }
+.top { display: flex; justify-content: space-between; gap: 12px; align-items: start }
+.cat { font: 500 12px var(--f-body); padding: 2px 8px; border-radius: 5px; background: var(--chip); white-space: nowrap }
+
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px }
+.feat .fields { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+.fields .wide { grid-column: 1 / -1 }
+.fields label { display: grid; gap: 4px; font: 600 11px var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); min-width: 0 }
+.fields label b { color: var(--loss) }
+input, select, textarea { font: 15px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 9px 10px; width: 100%; min-width: 0; text-transform: none; letter-spacing: 0 }
+textarea { resize: vertical; min-height: 64px; font-family: var(--f-body) }
+.bad { border-color: var(--loss); box-shadow: 0 0 0 2px color-mix(in srgb, var(--loss) 25%, transparent) }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, .back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+.out { margin: 0; font: 13px/1.55 var(--f-mono); background: var(--code); border: 1px solid var(--line); border-radius: 8px; padding: 12px;
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto }
+.feat .out { max-height: 420px }
+.out mark { background: color-mix(in srgb, var(--loss) 18%, transparent); color: var(--loss); border-radius: 3px; padding: 0 2px }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.btn { font: 600 14px var(--f-body); border-radius: 8px; padding: 9px 16px; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--accent) }
+.btn:hover:not(:disabled) { border-color: var(--accent) }
+.btn.pri { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+.btn.pri:hover:not(:disabled) { filter: brightness(1.08) }
+.btn.ok { background: var(--gain-bg); color: var(--gain); border-color: var(--gain) }
+.btn:disabled { opacity: .5; cursor: default }
+.feat .btn { padding: 11px 22px; font-size: 15px }
+.sub { font-size: 12.5px; color: var(--muted) }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto }
+.tabs button { font: 600 13px var(--f-body); padding: 7px 12px; border-radius: 7px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer }
+.tabs button[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--card) }
+.tabs button span { font: 500 12px var(--f-mono); opacity: .7; margin-left: 4px }
+.controls input { flex: 0 1 260px; background: var(--card) }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start }
+.empty { padding: 28px 18px; color: var(--muted); text-align: center; grid-column: 1 / -1 }
+footer { font-size: 12.5px; color: var(--muted) }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); font: 600 14px var(--f-body);
+  padding: 10px 16px; border-radius: 8px; opacity: 0; pointer-events: none; max-width: calc(100vw - 32px) }
+.toast.on { opacity: 1 }
+@media (prefers-reduced-motion: no-preference) { .toast { transition: opacity .2s } .btn { transition: background .15s, filter .15s } }
+@media (max-width: 860px) {
+  .cards, .fields, .feat .fields { grid-template-columns: minmax(0, 1fr) }
+  .feat { padding: 16px }
+  .controls input { flex: 1 1 100% }
+  .feat .btn { flex: 1 1 auto }
+}
+</style>
+
+<div class="wrap">
+  <a class="back" href="./">&larr; Saari reports</a>
+  <header>
+    <h1>Prompts</h1>
+    <p class="lede">Claude ko dene wale ready prompts. Khaane bharo, <b>Copy karo</b> dabao, aur VS Code me Claude ko paste karo.
+      Lal <b style="color:var(--loss)">*</b> wale khaane zaroori hain. Jo bharoge wo isi browser me yaad rahega.</p>
+  </header>
+  <section class="card feat" id="feat"></section>
+  <div class="controls">
+    <div class="tabs" id="tabs" role="group" aria-label="Category"></div>
+    <input id="q" type="search" placeholder="Khojo: VM, data, rerun ..." autocomplete="off" aria-label="Prompt khojo">
+  </div>
+  <div class="cards" id="cards"></div>
+  <footer id="foot"></footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const D = __DATA__;
+const P = D.prompts;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const KEY = "algo-prompts";
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {} } catch (e) { saved = {} }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)) } catch (e) {} };
+const opts = f => (f.options || []).map(o => typeof o === "string" ? {label: o, value: o} : o);
+const catName = id => (P.cats.find(c => c.id === id) || {}).name || id;
+
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("on"), 2200);
+}
+
+function fieldHtml(p, f) {
+  const id = `f-${p.id}-${f.key}`, v = (saved[p.id] || {})[f.key];
+  const lab = `<span>${esc(f.label)}${f.need ? " <b>*</b>" : ""}</span>`;
+  let box;
+  if (f.kind === "select")
+    box = `<select id="${id}" data-k="${f.key}">${opts(f).map((o, i) => `<option value="${i}"${String(v) === String(i) ? " selected" : ""}>${esc(o.label)}</option>`).join("")}</select>`;
+  else if (f.kind === "area")
+    box = `<textarea id="${id}" data-k="${f.key}" rows="3" placeholder="${esc(f.ph)}">${esc(v)}</textarea>`;
+  else box = `<input id="${id}" data-k="${f.key}" type="text" placeholder="${esc(f.ph)}" value="${esc(v)}" autocomplete="off">`;
+  return `<label class="${f.kind === "area" ? "wide" : ""}">${lab}${box}</label>`;
+}
+
+function values(p, el) {
+  const out = {};
+  for (const f of p.fields) {
+    const box = el.querySelector(`[data-k="${f.key}"]`);
+    out[f.key] = f.kind === "select" ? box.value : box.value.trim();
+  }
+  return out;
+}
+
+// Finished prompt. mark=true -> HTML with empty required boxes highlighted (preview); false -> plain text (copy)
+function fill(p, vals, mark) {
+  const miss = [];
+  const val = f => {
+    let v = vals[f.key] ?? "";
+    if (f.kind === "select") v = (opts(f)[+v] || opts(f)[0] || {value: ""}).value;
+    if (f.key === "links" && v) v = v.split(/\s*\n\s*/).filter(Boolean).map(s => "- " + s).join("\n");
+    if (!v && f.need) { miss.push(f); return mark ? `\u0000${f.label}\u0001` : `[${f.label}]` }
+    if (!v) return f.default || "";
+    return f.wrap ? f.wrap.replace("{v}", v) : v;
+  };
+  const byKey = Object.fromEntries(p.fields.map(f => [f.key, f]));
+  const lines = [];
+  for (const ln of p.lines) {
+    const has = /\{\w+\}/.test(ln);
+    const s = ln.replace(/\{(\w+)\}/g, (m, k) => byKey[k] ? val(byKey[k]) : m);
+    if (has && !s.trim()) continue;          // a line that was only an empty optional box
+    lines.push(s);
+  }
+  let text = lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  if (mark) text = esc(text).replace(/\u0000(.*?)\u0001/g, (m, l) => `<mark>[${l}]</mark>`);
+  return {text, miss};
+}
+
+async function copyText(s) {
+  try { await navigator.clipboard.writeText(s); return true } catch (e) {
+    const t = document.createElement("textarea"); t.value = s; t.style.position = "fixed"; t.style.opacity = "0";
+    document.body.appendChild(t); t.select();
+    let ok = false; try { ok = document.execCommand("copy") } catch (e2) {}
+    t.remove(); return ok;
+  }
+}
+
+function flagMissing(el, p, miss) {
+  el.querySelectorAll(".bad").forEach(x => x.classList.remove("bad"));
+  for (const f of miss) el.querySelector(`[data-k="${f.key}"]`).classList.add("bad");
+  if (miss.length) { el.querySelector(`[data-k="${miss[0].key}"]`).focus(); toast("Pehle bharo: " + miss.map(f => f.label).join(", ")) }
+  return !miss.length;
+}
+
+async function doCopy(el, p, btn) {
+  const r = fill(p, values(p, el), false);
+  if (!flagMissing(el, p, r.miss)) return;
+  if (!(await copyText(r.text))) { toast("Copy nahi hua - text select karke Ctrl+C karo"); return }
+  const old = btn.textContent; btn.textContent = "Copy ho gaya ✓"; btn.classList.add("ok");
+  setTimeout(() => { btn.textContent = old; btn.classList.remove("ok") }, 1800);
+  toast("Copy ho gaya. Ab Claude me paste karo (Ctrl+V)");
+}
+
+function wire(el, p, feat) {
+  const out = el.querySelector(".out");
+  const show = () => { out.innerHTML = fill(p, values(p, el), true).text };
+  el.addEventListener("input", e => {
+    const k = e.target.dataset.k; if (!k) return;
+    e.target.classList.remove("bad");
+    (saved[p.id] ||= {})[k] = e.target.value; save();
+    if (!feat || !out.hidden) show();
+  });
+  el.querySelector(".copy").addEventListener("click", e => doCopy(el, p, e.currentTarget));
+  el.querySelector(".clear")?.addEventListener("click", () => {
+    delete saved[p.id]; save();
+    el.querySelectorAll("[data-k]").forEach(b => { b.value = b.tagName === "SELECT" ? "0" : ""; b.classList.remove("bad") });
+    if (feat) { out.hidden = true; el.querySelector(".copy").disabled = true } else show();
+  });
+  if (feat) el.querySelector(".gen").addEventListener("click", () => {
+    const r = fill(p, values(p, el), false);
+    if (!flagMissing(el, p, r.miss)) return;
+    show(); out.hidden = false; el.querySelector(".copy").disabled = false;
+    out.scrollIntoView({block: "nearest", behavior: "smooth"});
+  });
+  else show();
+}
+
+function card(p, feat) {
+  const body = `<div class="top"><div><h2>${esc(p.title)}</h2><p class="when">${esc(p.when)}</p></div>${feat ? "" : `<span class="cat">${esc(catName(p.cat))}</span>`}</div>
+    ${p.fields.length ? `<div class="fields">${p.fields.map(f => fieldHtml(p, f)).join("")}</div>` : ""}
+    ${feat ? `<div class="acts"><button type="button" class="btn pri gen">Generate</button><button type="button" class="btn pri copy" disabled>Copy karo</button><button type="button" class="btn clear">Khaali karo</button></div>
+      <pre class="out" hidden></pre><p class="sub">Generate ke baad prompt yahan dikhega; khaane badloge to prompt bhi badal jayega.</p>`
+    : `<pre class="out"></pre><div class="acts"><button type="button" class="btn pri copy">Copy karo</button>${p.fields.length ? `<button type="button" class="btn clear">Khaali karo</button>` : ""}</div>`}`;
+  return body;
+}
+
+// featured generator
+const fe = $("feat"); fe.id = "p-" + P.featured.id;
+fe.innerHTML = card(P.featured, true); wire(fe, P.featured, true);
+
+// all other prompts
+let cat = "";
+const cards = $("cards");
+cards.innerHTML = P.prompts.map(p => `<section class="card" id="p-${p.id}" data-cat="${p.cat}">${card(p, false)}</section>`).join("")
+  + `<p class="empty" id="none" hidden>Koi prompt nahi mila. Filter badlo.</p>`;
+for (const p of P.prompts) {
+  wire($("p-" + p.id), p, false);
+}
+function tabs() {
+  const n = c => P.prompts.filter(p => !c || p.cat === c).length;
+  $("tabs").innerHTML = [{id: "", name: "Sab"}, ...P.cats].map(c =>
+    `<button type="button" data-c="${c.id}" aria-pressed="${c.id === cat}">${esc(c.name)}<span>${n(c.id)}</span></button>`).join("");
+}
+function apply() {
+  const q = $("q").value.trim().toLowerCase();
+  let shown = 0;
+  for (const p of P.prompts) {
+    const hay = (p.title + " " + p.when + " " + p.lines.join(" ") + " " + catName(p.cat)).toLowerCase();
+    const ok = (!cat || p.cat === cat) && (!q || q.split(/\s+/).every(w => hay.includes(w)));
+    $("p-" + p.id).hidden = !ok; shown += ok;
+  }
+  $("none").hidden = shown > 0;
+}
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; cat = b.dataset.c; tabs(); apply() });
+$("q").addEventListener("input", apply);
+tabs(); apply();
+$("foot").textContent = `${P.prompts.length + 1} prompts · page bana ${D.generated} · naya prompt chahiye to "Is Prompts page me naya prompt jodo" wala prompt use karo.`;
+if (location.hash) { const t = document.querySelector(location.hash.replace(/[^#\w-]/g, "")); if (t) { t.classList.add("flash"); t.scrollIntoView() } }
+</script>

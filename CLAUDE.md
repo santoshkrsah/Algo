@@ -47,4 +47,14 @@
   one-line Hinglish result, net, pf, trades, verdict profit/loss/study) -> `python tools/build_site.py` -> Artifact publish with
   url from site.json, file_path site/index.html, files = only the new/changed report(s) from site/files.json (the others stay on the site).
 - The Telegram finish message carries the HTML file, the website link and the direct report link <site url>#report-NN (NN = folder number).
+<<<<<<< Updated upstream
 - Limits: 16 MB per report file, 64 MB per publish, 256 MB / 511 files per site version.
+=======
+- Limits (free host): 10 MB per uploaded file (upload_site.py cuts bigger gzipped reports into parts), ~50,000 hits/day, 5 GB.
+  The host shows a JavaScript cookie check first, so curl/scripts only see that page; check the site in a browser.
+- The site also has a Prompts page (<site url>prompts.html, opened only by its URL: no Prompts button on the home page): ready Hinglish prompts for Claude with one-click copy,
+  incl. the "Link se Rules + Backtest" generator. Prompts live in Algo_Backtesting/site/prompts.json (no secrets / IPs / handles: the site is public);
+  add new ones there and run upload_site.py.
+- Blueprint (how the site works, server layout, traps, rebuild from zero if the site/account is deleted): Algo_Backtesting/site/BLUEPRINT.md.
+  Keep it up to date whenever the site, the template or the uploader changes.
+>>>>>>> Stashed changes
