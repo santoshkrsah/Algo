@@ -15,3 +15,7 @@ Firstock_Credentials.txt
 # CSV files (results data is already inside each report.html); keep the rulebook run ledger
 *.csv
 !Algo_Backtesting/results/RULEBOOK_RUNS.csv
+
+# Firstock login details - never on GitHub
+Algo_Live_Trading/AWS_VM/Firstock_Credentials.txt
+**/Firstock_Credentials.txt
