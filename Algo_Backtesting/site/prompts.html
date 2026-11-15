@@ -1,0 +1,260 @@
+<title>Algo Prompts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Prompts page: ready prompts for Claude. Fill the boxes, one click copies the finished prompt. Same tokens as site_template.html */
+:root {
+  --bg: #f3f5f9; --card: #ffffff; --ink: #0f1b33; --muted: #5a6680; --line: #dde3ee;
+  --navy: #1b3a6b; --accent: #2f6fd6; --accent-ink: #ffffff; --loss: #b3261e; --gain: #0f7a4a; --gain-bg: #e3f4ec;
+  --chip: #eaeef6; --code: #f6f8fc;
+  --f-display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1222; --card: #121b30; --ink: #e6ecf7; --muted: #94a1bb; --line: #24304a;
+  --navy: #9fbdf0; --accent: #5b93f0; --accent-ink: #0b1222; --loss: #f2827a; --gain: #4cc98d; --gain-bg: #10301f;
+  --chip: #1b2640; --code: #0e1628; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b1222; --card: #121b30; --ink: #e6ecf7; --muted: #94a1bb; --line: #24304a;
+  --navy: #9fbdf0; --accent: #5b93f0; --accent-ink: #0b1222; --loss: #f2827a; --gain: #4cc98d; --gain-bg: #10301f;
+  --chip: #1b2640; --code: #0e1628; color-scheme: dark }
+
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 20px 48px; display: grid; gap: 20px }
+.nav { display: flex; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 4px; width: max-content }
+.nav a { font: 600 14px var(--f-body); color: var(--muted); text-decoration: none; padding: 6px 14px; border-radius: 7px }
+.nav a[aria-current="page"] { background: var(--accent); color: var(--accent-ink) }
+.nav a:not([aria-current]):hover { color: var(--ink) }
+h1 { font: 800 clamp(26px, 4vw, 36px)/1.1 var(--f-display); margin: 0; color: var(--navy); letter-spacing: -.01em; text-wrap: balance }
+.lede { margin: 6px 0 0; color: var(--muted); max-width: 70ch }
+h2 { font: 700 19px/1.25 var(--f-display); margin: 0 }
+.when { margin: 4px 0 0; color: var(--muted); font-size: 13.5px; max-width: 75ch }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: grid; gap: 14px; align-content: start; min-width: 0; scroll-margin-top: 16px }
+.card:target, .card.flash { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent) }
+.feat { border: 2px solid var(--accent); padding: 22px }
+.feat h2 { font-size: 23px; color: var(--navy) }
+.top { display: flex; justify-content: space-between; gap: 12px; align-items: start }
+.cat { font: 500 12px var(--f-body); padding: 2px 8px; border-radius: 5px; background: var(--chip); white-space: nowrap }
+
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px }
+.feat .fields { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+.fields .wide { grid-column: 1 / -1 }
+.fields label { display: grid; gap: 4px; font: 600 11px var(--f-body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); min-width: 0 }
+.fields label b { color: var(--loss) }
+input, select, textarea { font: 15px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 8px; padding: 9px 10px; width: 100%; min-width: 0; text-transform: none; letter-spacing: 0 }
+textarea { resize: vertical; min-height: 64px; font-family: var(--f-body) }
+.bad { border-color: var(--loss); box-shadow: 0 0 0 2px color-mix(in srgb, var(--loss) 25%, transparent) }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, .nav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+
+.out { margin: 0; font: 13px/1.55 var(--f-mono); background: var(--code); border: 1px solid var(--line); border-radius: 8px; padding: 12px;
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto }
+.feat .out { max-height: 420px }
+.out mark { background: color-mix(in srgb, var(--loss) 18%, transparent); color: var(--loss); border-radius: 3px; padding: 0 2px }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.btn { font: 600 14px var(--f-body); border-radius: 8px; padding: 9px 16px; cursor: pointer; border: 1px solid var(--line); background: var(--card); color: var(--accent) }
+.btn:hover:not(:disabled) { border-color: var(--accent) }
+.btn.pri { background: var(--accent); color: var(--accent-ink); border-color: var(--accent) }
+.btn.pri:hover:not(:disabled) { filter: brightness(1.08) }
+.btn.ok { background: var(--gain-bg); color: var(--gain); border-color: var(--gain) }
+.btn:disabled { opacity: .5; cursor: default }
+.feat .btn { padding: 11px 22px; font-size: 15px }
+.sub { font-size: 12.5px; color: var(--muted) }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto }
+.tabs button { font: 600 13px var(--f-body); padding: 7px 12px; border-radius: 7px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer }
+.tabs button[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: var(--card) }
+.tabs button span { font: 500 12px var(--f-mono); opacity: .7; margin-left: 4px }
+.controls input { flex: 0 1 260px; background: var(--card) }
+.cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start }
+.empty { padding: 28px 18px; color: var(--muted); text-align: center; grid-column: 1 / -1 }
+footer { font-size: 12.5px; color: var(--muted) }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg); font: 600 14px var(--f-body);
+  padding: 10px 16px; border-radius: 8px; opacity: 0; pointer-events: none; max-width: calc(100vw - 32px) }
+.toast.on { opacity: 1 }
+@media (prefers-reduced-motion: no-preference) { .toast { transition: opacity .2s } .btn { transition: background .15s, filter .15s } }
+@media (max-width: 860px) {
+  .cards, .fields, .feat .fields { grid-template-columns: minmax(0, 1fr) }
+  .feat { padding: 16px }
+  .controls input { flex: 1 1 100% }
+  .feat .btn { flex: 1 1 auto }
+}
+</style>
+
+<div class="wrap">
+  <nav class="nav" aria-label="Site"><a href="./">Reports</a><a href="prompts.html" aria-current="page">Prompts</a></nav>
+  <header>
+    <h1>Prompts</h1>
+    <p class="lede">Claude ko dene wale ready prompts. Khaane bharo, <b>Copy karo</b> dabao, aur VS Code me Claude ko paste karo.
+      Lal <b style="color:var(--loss)">*</b> wale khaane zaroori hain. Jo bharoge wo isi browser me yaad rahega.</p>
+  </header>
+  <section class="card feat" id="feat"></section>
+  <div class="controls">
+    <div class="tabs" id="tabs" role="group" aria-label="Category"></div>
+    <input id="q" type="search" placeholder="Khojo: VM, data, rerun ..." autocomplete="off" aria-label="Prompt khojo">
+  </div>
+  <div class="cards" id="cards"></div>
+  <footer id="foot"></footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const D = {"prompts":{"note":"Prompts page (prompts.html). Har prompt: id, cat, title, when, fields, lines. lines me {key} = us field ki value. Field: key, label, ph (placeholder), kind text/area/select, options, default (khaali ho to), wrap (sirf bhara ho tab: {v} = value), need (zaroori). Koi password / IP / token / Telegram handle yahan mat likho: site public hai.","cats":[{"id":"backtest","name":"Backtesting"},{"id":"live","name":"Live trading (AWS VM)"},{"id":"data","name":"Data"},{"id":"site","name":"Site + Telegram"}],"featured":{"id":"link-rules","title":"Link se Rules + Backtest","when":"YouTube / blog / PDF / tweet ka link daalo, Generate dabao. Prompt me rules nikaalna, PC me data check, data na ho to Fyers se download, aur backtest sab likha hoga.","fields":[{"key":"links","label":"Link (ek ya zyada, har line me ek)","kind":"area","need":true,"ph":"https://www.youtube.com/watch?v=..."},{"key":"mode","label":"Backtest kab chale","kind":"select","options":[{"label":"Rules dikhao, mere OK ke baad backtest","value":"Rules aur data check ka summary pehle mujhe yahan dikhao (aur Telegram pe bhejo). Mere OK ke baad hi backtest chalana."},{"label":"Sab ek saath: seedha backtest chala do","value":"Mujhse puchhe bina rules -> data -> backtest -> report -> website sab ek saath kar do. Jo baat saaf nahi hai uska assumption lo, report ke Rules tab me likho aur Telegram pe batao."}]},{"key":"kind","label":"Instrument (pata ho to)","kind":"select","options":[{"label":"Auto (video se samjho)","value":""},{"label":"Stocks intraday","value":"Ye stocks intraday strategy hai (cash / equity)."},{"label":"Index options (Nifty / BankNifty)","value":"Ye index options strategy hai (Nifty / BankNifty)."},{"label":"Stock F&O (futures / options)","value":"Ye stock futures / options strategy hai."},{"label":"Swing / positional","value":"Ye swing / positional strategy hai (kuch din se hafte tak hold)."}]},{"key":"period","label":"Period","ph":"jaise 2021-2026","default":"jitna data PC me hai (ya download ho sakta hai) poora; DEV / validation / latest saal alag dikhao"},{"key":"capital","label":"Capital / risk","ph":"jaise 10 L capital, 1% risk per trade","default":"video me jo bataya wo; na bataya ho to sensible default lo aur report me likho"},{"key":"extra","label":"Aur kuch (optional)","kind":"area","ph":"jaise sirf smallcap, 2x slippage bhi dekhna","wrap":"\nAur ye bhi dhyan rakho: {v}"}],"lines":["Bhai, is link me jo trading strategy batayi gayi hai uske SAARE rules nikaalo, hame iska backtest karna hai:","{links}","{kind}","","1) Rules nikaalo","- Link kholo. YouTube ho to transcript + description + pinned comment padho; blog / PDF / tweet ho to poora page. Link na khule ya transcript na mile to turant batao (Telegram pe bhi), andaaza mat lagao.","- Rules saaf points me likho: market / instrument, timeframe, universe (kaunse stocks / index), entry (exact condition + time), exit (target, stop loss, trailing, time exit), quantity / position size, ek din me max trade, kaunse din trade nahi karna, aur saare filter / indicator settings.","- Jo baat video me saaf nahi hai use \"Assumption\" likh ke alag dikhao; trading wale sawaal Ayush ko Telegram pe pucho.","- Rules ko Algo_Backtesting/strategies/<NAAM>_RULES.md me save karo (link + aaj ki date ke saath).","","2) Data check (mere PC me)","- Algo_Historical_Data/data me dekho is strategy ke liye data hai ya nahi: equity 1m (fast store: fast.panel / fast.read_day), index 1m (data/index), F&O futures / options (data/fno/<tf>/...), daily (data/daily). Har data kis date se kis date tak hai, ye batao.","- Jo data nahi hai ya kam hai, use Fyers API se download kar lo (Algo_Historical_Data me Fyers setup already hai): naye din = python -m fyers_data.update_equity, F&O = fyers_data.download_fno / download_calendar, daily = fyers_data.download_daily. Naye type ka data chahiye aur script nahi hai to src/fyers_data me nayi resumable script banao (same format). Do Fyers download ek saath mat chalao; baad me store verify --days 5 OK hona chahiye.","- Fyers ki history limit ki wajah se jo period nahi mil sakta, wo saaf batao.","","3) Backtest","- Period: {period}.","- Capital / risk: {capital}.","- Costs + slippage on. CLAUDE.md ke saare rules: Telegram start / progress / finish, naya look HTML report (Rules + Formulas Hinglish me, Test ki settings strip, Trade viewer), reports.json + website upload, finish pe report link.","- {mode}{extra}"]},"prompts":[{"id":"bt-new","cat":"backtest","title":"Naya backtest (apne rules se)","when":"Rules aapke paas hain (likh ke ya bol ke), seedha test karna hai.","fields":[{"key":"name","label":"Strategy ka naam","need":true,"ph":"jaise Gap up + VWAP pullback"},{"key":"rules","label":"Rules","kind":"area","need":true,"ph":"Entry: ...\nExit: ...\nSL: ...\nQty: ..."},{"key":"kind","label":"Type","kind":"select","options":["Intraday","Options","Swing","Calendar"]},{"key":"period","label":"Period","ph":"jaise 2021-2026","default":"jitna data hai poora"},{"key":"capital","label":"Capital / risk","ph":"jaise 10 L, 1% risk","default":"sensible default lo aur report me likho"}],"lines":["Bhai, \"{name}\" ka {kind} backtest karna hai. Rules ye hain:","{rules}","","- Period: {period}. Capital / risk: {capital}.","- Pehle check karo data PC me hai ya nahi; nahi hai to Fyers se download kar lo (update_equity / download_fno / download_daily).","- Jo rule adhoora hai uska assumption lo, report ke Rules tab me likho aur trading sawaal Ayush ko Telegram pe pucho.","- CLAUDE.md ke saare rules follow karo: Telegram updates, naya look HTML report, costs + slippage on, website upload aur finish pe link."]},{"id":"bt-rerun","cat":"backtest","title":"Purani report ko naye setting se dobara chalao","when":"Ek setting badal ke (SL, target, slippage, filter, period) same test phir se.","fields":[{"key":"num","label":"Report number","need":true,"ph":"jaise 24"},{"key":"change","label":"Kya badalna hai","kind":"area","need":true,"ph":"jaise SL 1% se 1.5%, slippage 0.1%"},{"key":"same","label":"Folder","kind":"select","options":[{"label":"Nayi report (naya number)","value":"Isko nayi report banao (naya folder number), purani report waisi hi rehne do."},{"label":"Purani report hi update karo","value":"Purani report hi update karo (same folder)."}]}],"lines":["Bhai, report #{num} wala backtest dobara chalao, sirf ye badal ke:","{change}","","- {same}","- Report me purane vs naye result ka chhota comparison bhi dikhao (net, PF, win rate, max drawdown) aur Test ki settings strip me nayi setting highlight karo.","- Telegram updates, reports.json + website upload, finish pe dono report ka link."]},{"id":"bt-rulebook","cat":"backtest","title":"Rulebook strategy: DEV pe naya variant","when":"orb / noise / vwap / fh / gapfade me koi idea ya filter try karna hai.","fields":[{"key":"strat","label":"Strategy","kind":"select","options":["orb","noise","vwap","fh","gapfade"]},{"key":"idea","label":"Idea / filter","kind":"area","need":true,"ph":"jaise sirf gap > 1% wale din"}],"lines":["Bhai, rulebook strategy {strat} pe ye variant DEV period (2021-10 -> 2023-12) pe test karo:","{idea}","","- Rule badalna ho to RULEBOOK.md aur rulebook.py dono saath badlo. FINAL (--final) mat chalana.","- RULEBOOK_RUNS.csv me row aayegi; batao ab tak kitne variant try ho chuke hain.","- Build vs validation vs stress (2x slippage), saal wise, long vs short, pass / fail dikhao. Website upload + Telegram finish."]},{"id":"bt-final","cat":"backtest","title":"Rulebook strategy: FINAL test (sirf ek baar)","when":"DEV pe setting freeze ho gayi, ab 2024 -> latest pe asli test.","fields":[{"key":"strat","label":"Strategy","kind":"select","options":["orb","noise","vwap","fh","gapfade"]},{"key":"setting","label":"Frozen setting","kind":"area","need":true,"ph":"jaise DEV run #7 wali setting"}],"lines":["Bhai, rulebook strategy {strat} ko is frozen setting pe --final chalao (2024 -> latest):","{setting}","","- Ye setting pe FINAL sirf ek baar chalta hai; agar pehle chal chuka hai to mat chalao, mujhe batao.","- Report me DEV vs FINAL vs stress, saal wise, pass / fail, aur kitne variant try hue the. Website upload + Telegram finish."]},{"id":"bt-report-ui","cat":"backtest","title":"Report me kuch badlo (tab / card / chart)","when":"Backtest dobara nahi chalana, sirf report ka look ya content.","fields":[{"key":"num","label":"Report number","need":true,"ph":"jaise 12"},{"key":"change","label":"Kya chahiye","kind":"area","need":true,"ph":"jaise month table me max drawdown column"}],"lines":["Bhai, report #{num} me ye badlav karo (backtest dobara mat chalao, sirf report):","{change}","","- Naya look ke rules wahi rahein (Hinglish, Rules + Formulas card, Copy karo button, mobile pe bina side scroll).","- Zaroorat ho to template (assets/) me bhi badlo taaki aage ki reports me bhi aaye. Phir website upload aur Telegram pe link."]},{"id":"bt-compare","cat":"backtest","title":"Do-teen reports ka comparison","when":"Kaunsi strategy behtar hai, ek nazar me.","fields":[{"key":"nums","label":"Report numbers","need":true,"ph":"jaise 17, 19, 24"}],"lines":["Bhai, reports {nums} ko compare karo: net, return %, PF, win rate, max drawdown, trade count, saal wise result, costs + slippage ka asar.","- Dhyan rakho har report ka capital / trade size alag ho sakta hai, isliye % aur PF pe compare karo.","- Simple Hinglish me batao kaunsi live ke liye best lagti hai aur kyun, aur kya risk hai. Summary Telegram pe bhi bhejo."]},{"id":"live-new","cat":"live","title":"Strategy ko live chalane ke liye VM ki nayi .py file","when":"Backtest pass ho gaya, ab AWS VM pe Firstock se live / paper trade.","fields":[{"key":"strat","label":"Strategy / report number","need":true,"ph":"jaise report #24 straddle risk"},{"key":"file","label":"File ka naam","ph":"jaise Live_Straddle.py","default":"Live_<STRATEGY>.py"},{"key":"qty","label":"Quantity / lots","ph":"jaise 1 lot","default":"1 lot / sabse chhota size"},{"key":"mode","label":"Mode","kind":"select","options":[{"label":"Paper (order nahi jayega)","value":"Pehle sirf PAPER mode: order Firstock pe nahi jayega, sirf log + Telegram pe batayega ki kya order hota."},{"label":"Live (asli order)","value":"LIVE mode: asli order Firstock pe jayega. Phir bhi --paper flag rakho aur pehli baar paper me hi test karwana."}]},{"key":"loss","label":"Max loss ek din","ph":"jaise Rs 5,000","default":"mujhse pucho"}],"lines":["Bhai, {strat} ko AWS VM pe live chalane ke liye nayi file Algo_Live_Trading/AWS_VM/{file} banao.","","- Rules bilkul backtest wale (report ka Rules tab + code se); jahan live me alag hona padega (data feed, fill, timing) wo mujhe pehle batao.","- Sirf Python standard library, ek hi file (VM pe editor nahi hai). Login / order Firstock API se; credentials Firstock_Credentials.txt se padho, code me kuch mat likho.","- Quantity: {qty}. Ek din me max loss: {loss}; uske baad naya order band + saari position square off.","- {mode}","- Market time check, square-off time, order reject / partial fill / internet tootne pe retry, har order ka log file, aur har entry / exit / error Telegram pe.","- SSL ke liye public root certificates file me hi daalo (VM ke Windows store me kuch roots nahi hain).","- VM_STEPS.txt me Hinglish me plain cmd commands: file kahan rakhni hai, kaise chalani hai, Task Scheduler se roz subah kaise start ho, kaise band karein.","- Pehle apne PC pe --paper se chala ke test karo, phir mujhe batao."]},{"id":"live-status","cat":"live","title":"VM ke liye check / helper script","when":"Funds, positions, order book dekhna ya sab square off ka button.","fields":[{"key":"need","label":"Kya chahiye","kind":"select","options":[{"label":"Status: funds + positions + orders","value":"ek read-only status script: login, funds / margin, open positions + MTM, aaj ki order book (khaali ho to NO_DATA ko error mat samjho)"},{"label":"Sab square off (emergency)","value":"ek emergency script: saare open order cancel + saari open position market se square off, pehle list dikha ke confirm maange (--yes se bina puchhe)"},{"label":"Test order (1 share, turant cancel)","value":"ek test script: 1 share ka limit order door ke price pe, phir turant cancel, aur dono ka status dikhao"}]},{"key":"extra","label":"Aur kuch (optional)","kind":"area","ph":"","wrap":"\n- Ye bhi: {v}"}],"lines":["Bhai, AWS VM ke liye Algo_Live_Trading/AWS_VM/ me {need}.","- Sirf Python standard library, ek file, credentials Firstock_Credentials.txt se. Result Telegram pe bhi bhejo.","- VM_STEPS.txt me chalane ki cmd command Hinglish me add karo.{extra}"]},{"id":"live-error","cat":"live","title":"VM pe error aaya","when":"Script VM pe fail hui, error copy karke yahan daalo.","fields":[{"key":"file","label":"Kaunsi file","ph":"jaise Live_Straddle.py"},{"key":"err","label":"Error / screen ka text","kind":"area","need":true,"ph":"Traceback (most recent call last): ..."}],"lines":["Bhai, AWS VM pe {file} chalate waqt ye error aaya:","{err}","","- Kya hua simple Hinglish me batao, fix karo, aur mujhe VM pe kya karna hai wo plain cmd commands me do.","- Agar koi order / position khuli reh gayi ho sakti hai to sabse pehle wo batao."]},{"id":"live-vm","cat":"live","title":"Nayi AWS VM setup (Mumbai)","when":"Live trading ke liye nayi VM; region aur IP sahi chahiye.","fields":[{"key":"os","label":"VM","kind":"select","options":["Windows Server","Ubuntu Linux"]}],"lines":["Bhai, live trading ke liye nayi AWS VM ({os}) setup karne ke steps Hinglish me do, ek-ek click:","- Region ap-south-1 (Mumbai), kyunki Firstock API wahin hai. Sasta par kaafi size batao.","- Elastic IP (static) lagao; nayi IP ko Firstock pe register karna aur scripts me STATIC_IP update (--setup) karna yaad dilao.","- Python install, AWS_VM folder copy, timezone IST, Task Scheduler / cron se roz start, aur VM ka kharcha kam rakhne ke tips.","- Security: RDP / SSH sirf meri IP se, password strong, credentials file sirf VM pe."]},{"id":"live-check","cat":"live","title":"Live / paper result vs backtest","when":"Kuch din live / paper chala, ab dekhna hai backtest jaisa hi chal raha hai ya nahi.","fields":[{"key":"file","label":"Log / trade file","ph":"jaise AWS_VM/logs/trades_nov.csv"},{"key":"num","label":"Backtest report number","ph":"jaise 24"}],"lines":["Bhai, live / paper trades ({file}) ko backtest report #{num} se same dino pe compare karo:","- Har trade: entry / exit time aur price, slippage asli me kitna laga, kaunse trade backtest me the par live me nahi (ya ulta), aur kyun.","- Result simple Hinglish me + Telegram pe. Agar backtest ki slippage / cost kam rakhi thi to batao."]},{"id":"data-update","cat":"data","title":"Naye din ka data update","when":"Roz / kuch din baad: equity data latest karna.","fields":[{"key":"nifty","label":"Nifty file bhi","kind":"select","options":[{"label":"Haan","value":" --nifty"},{"label":"Nahi","value":""}]}],"lines":["Bhai, Algo_Historical_Data me naye din ka data update karo: python -m fyers_data.update_equity{nifty} (sirf missing din).","- Phir store verify --days 5 (OK aana chahiye) aur store health; koi split / bad print mile to batao.","- Fyers login fail ho ya token expire ho to turant Telegram pe batao. Kitne din / stock aaye, wo finish pe Telegram pe."]},{"id":"data-check","cat":"data","title":"Ye data PC me hai? Nahi to download karo","when":"Kisi stock / index / option ka data chahiye, pata nahi hai ya nahi.","fields":[{"key":"what","label":"Kya chahiye","kind":"area","need":true,"ph":"jaise BANKNIFTY weekly options 1m, 2023-2026"},{"key":"tf","label":"Timeframe","ph":"jaise 1m","default":"1m (baaki 5m / 15m isi se bana lo)"}],"lines":["Bhai, mujhe ye data chahiye: {what}. Timeframe: {tf}.","- Pehle Algo_Historical_Data/data me dekho (store, data/index, data/fno, data/daily): hai to kis date se kis date tak, kitne symbol, koi gap.","- Jo nahi hai use Fyers API se download kar lo (setup already hai). Script hai to wahi (download_fno / download_calendar / download_daily / download_bars), nahi to src/fyers_data me nayi resumable script same format me. Do download ek saath nahi.","- Fyers ki history limit ki wajah se jo nahi mil sakta wo batao. Download start / progress / finish Telegram pe."]},{"id":"data-health","cat":"data","title":"Data ki sehat (health) check","when":"Backtest ka result ajeeb lage, ya mahine me ek baar.","fields":[],"lines":["Bhai, Algo_Historical_Data ka poora health check karo: store info, store verify --days 5, store health.","- Missing din, adhoore din (kam candle), bad prints, split / bonus jump (NSE corporate actions se milao) ki list do.","- Jo theek ho sakta hai (adjustments.csv, missing din dobara download) wo kar do, baaki mujhe batao. Summary Telegram pe."]},{"id":"site-add","cat":"site","title":"Report website pe daalo / update karo","when":"Report ban gayi par site pe nahi dikh rahi, ya naam / result line badalni hai.","fields":[{"key":"num","label":"Report number","need":true,"ph":"jaise 25"},{"key":"line","label":"Result line (optional)","ph":"jaise 1,200 trade, PF 1.3","wrap":"\n- Result line ye rakho: {v}"}],"lines":["Bhai, report #{num} ko website pe daalo / update karo: site/reports.json me entry (name, type, period, Hinglish result, net, pf, trades, verdict), phir Algo_Backtesting me python tools/upload_site.py.{line}","- Upload ke baad --dry-run se check karo (upload 1, remove 0). Telegram pe report HTML file + site link + #report-{num} link bhejo."]},{"id":"site-fix","cat":"site","title":"Website nahi khul rahi / report load nahi ho rahi","when":"Site ya koi report browser me nahi khul rahi.","fields":[{"key":"what","label":"Kya dikh raha hai","kind":"area","need":true,"ph":"jaise report #24 pe 'Loading...' ruka hai"}],"lines":["Bhai, website me problem hai: {what}","- site/BLUEPRINT.md padho (cookie check, DNS, 10 MB limit, gzip parts). upload_site.py --dry-run se dekho server pe kya hai.","- Wajah simple Hinglish me batao aur fix karo; FTP password kabhi print mat karna. Fix ke baad BLUEPRINT.md update karo agar kuch naya seekha."]},{"id":"site-rebuild","cat":"site","title":"Website zero se dobara banao","when":"Hosting account delete ho gaya ya naya host chahiye.","fields":[{"key":"url","label":"Naya site address (agar badla)","ph":"jaise https://naya.infinityfree.io","wrap":"\n- Naya address: {v} (site.json aur CLAUDE.md me bhi badlo)."}],"lines":["Bhai, reports website zero se dobara banani hai. site/BLUEPRINT.md ke section 5 ke steps follow karo.{url}","- Mujhe hosting panel me jo karna hai (account, FTP details, .env me kya bharna hai) wo step by step batao; password chat me mat mangwana, main khud .env me bharunga.","- Phir upload_site.py --force, aur section 8 wala check. Naya link Telegram pe."]},{"id":"site-prompt","cat":"site","title":"Is Prompts page me naya prompt jodo","when":"Koi kaam baar-baar karte ho to uska prompt yahan add karwa lo.","fields":[{"key":"idea","label":"Kaunsa kaam","kind":"area","need":true,"ph":"jaise har shaam Telegram pe aaj ka P&L"}],"lines":["Bhai, website ke Prompts page me naya prompt jodo is kaam ke liye: {idea}","- Algo_Backtesting/site/prompts.json me sahi category me Hinglish prompt (khaane jo mujhe bharne hon), koi password / IP / handle nahi.","- Phir python tools/upload_site.py aur Telegram pe Prompts page ka link."]},{"id":"tg-summary","cat":"site","title":"Team ko Telegram pe summary","when":"Aaj / is hafte kya hua, team ko ek message.","fields":[{"key":"span","label":"Kitne din ka","kind":"select","options":["aaj","is hafte","is mahine"]}],"lines":["Bhai, {span} ka kaam ka summary Telegram pe team ko bhejo (tools/send_telegram.py): kaunse backtest chale (number + ek line result + site link), kya live / VM pe badla, data kahan tak hai, aur kya pending hai.","- Trading wali baatein / sawaal Ayush ko tag karke, technical wali Almax ko. Simple Hinglish, chhota message."]}]},"site":"https://santoshkumar.infinityfree.io/","generated":"15 Nov 2026 06:15"};
+const P = D.prompts;
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const KEY = "algo-prompts";
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {} } catch (e) { saved = {} }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)) } catch (e) {} };
+const opts = f => (f.options || []).map(o => typeof o === "string" ? {label: o, value: o} : o);
+const catName = id => (P.cats.find(c => c.id === id) || {}).name || id;
+
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("on"), 2200);
+}
+
+function fieldHtml(p, f) {
+  const id = `f-${p.id}-${f.key}`, v = (saved[p.id] || {})[f.key];
+  const lab = `<span>${esc(f.label)}${f.need ? " <b>*</b>" : ""}</span>`;
+  let box;
+  if (f.kind === "select")
+    box = `<select id="${id}" data-k="${f.key}">${opts(f).map((o, i) => `<option value="${i}"${String(v) === String(i) ? " selected" : ""}>${esc(o.label)}</option>`).join("")}</select>`;
+  else if (f.kind === "area")
+    box = `<textarea id="${id}" data-k="${f.key}" rows="3" placeholder="${esc(f.ph)}">${esc(v)}</textarea>`;
+  else box = `<input id="${id}" data-k="${f.key}" type="text" placeholder="${esc(f.ph)}" value="${esc(v)}" autocomplete="off">`;
+  return `<label class="${f.kind === "area" ? "wide" : ""}">${lab}${box}</label>`;
+}
+
+function values(p, el) {
+  const out = {};
+  for (const f of p.fields) {
+    const box = el.querySelector(`[data-k="${f.key}"]`);
+    out[f.key] = f.kind === "select" ? box.value : box.value.trim();
+  }
+  return out;
+}
+
+// Finished prompt. mark=true -> HTML with empty required boxes highlighted (preview); false -> plain text (copy)
+function fill(p, vals, mark) {
+  const miss = [];
+  const val = f => {
+    let v = vals[f.key] ?? "";
+    if (f.kind === "select") v = (opts(f)[+v] || opts(f)[0] || {value: ""}).value;
+    if (f.key === "links" && v) v = v.split(/\s*\n\s*/).filter(Boolean).map(s => "- " + s).join("\n");
+    if (!v && f.need) { miss.push(f); return mark ? `\u0000${f.label}\u0001` : `[${f.label}]` }
+    if (!v) return f.default || "";
+    return f.wrap ? f.wrap.replace("{v}", v) : v;
+  };
+  const byKey = Object.fromEntries(p.fields.map(f => [f.key, f]));
+  const lines = [];
+  for (const ln of p.lines) {
+    const has = /\{\w+\}/.test(ln);
+    const s = ln.replace(/\{(\w+)\}/g, (m, k) => byKey[k] ? val(byKey[k]) : m);
+    if (has && !s.trim()) continue;          // a line that was only an empty optional box
+    lines.push(s);
+  }
+  let text = lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  if (mark) text = esc(text).replace(/\u0000(.*?)\u0001/g, (m, l) => `<mark>[${l}]</mark>`);
+  return {text, miss};
+}
+
+async function copyText(s) {
+  try { await navigator.clipboard.writeText(s); return true } catch (e) {
+    const t = document.createElement("textarea"); t.value = s; t.style.position = "fixed"; t.style.opacity = "0";
+    document.body.appendChild(t); t.select();
+    let ok = false; try { ok = document.execCommand("copy") } catch (e2) {}
+    t.remove(); return ok;
+  }
+}
+
+function flagMissing(el, p, miss) {
+  el.querySelectorAll(".bad").forEach(x => x.classList.remove("bad"));
+  for (const f of miss) el.querySelector(`[data-k="${f.key}"]`).classList.add("bad");
+  if (miss.length) { el.querySelector(`[data-k="${miss[0].key}"]`).focus(); toast("Pehle bharo: " + miss.map(f => f.label).join(", ")) }
+  return !miss.length;
+}
+
+async function doCopy(el, p, btn) {
+  const r = fill(p, values(p, el), false);
+  if (!flagMissing(el, p, r.miss)) return;
+  if (!(await copyText(r.text))) { toast("Copy nahi hua - text select karke Ctrl+C karo"); return }
+  const old = btn.textContent; btn.textContent = "Copy ho gaya ✓"; btn.classList.add("ok");
+  setTimeout(() => { btn.textContent = old; btn.classList.remove("ok") }, 1800);
+  toast("Copy ho gaya. Ab Claude me paste karo (Ctrl+V)");
+}
+
+function wire(el, p, feat) {
+  const out = el.querySelector(".out");
+  const show = () => { out.innerHTML = fill(p, values(p, el), true).text };
+  el.addEventListener("input", e => {
+    const k = e.target.dataset.k; if (!k) return;
+    e.target.classList.remove("bad");
+    (saved[p.id] ||= {})[k] = e.target.value; save();
+    if (!feat || !out.hidden) show();
+  });
+  el.querySelector(".copy").addEventListener("click", e => doCopy(el, p, e.currentTarget));
+  el.querySelector(".clear")?.addEventListener("click", () => {
+    delete saved[p.id]; save();
+    el.querySelectorAll("[data-k]").forEach(b => { b.value = b.tagName === "SELECT" ? "0" : ""; b.classList.remove("bad") });
+    if (feat) { out.hidden = true; el.querySelector(".copy").disabled = true } else show();
+  });
+  if (feat) el.querySelector(".gen").addEventListener("click", () => {
+    const r = fill(p, values(p, el), false);
+    if (!flagMissing(el, p, r.miss)) return;
+    show(); out.hidden = false; el.querySelector(".copy").disabled = false;
+    out.scrollIntoView({block: "nearest", behavior: "smooth"});
+  });
+  else show();
+}
+
+function card(p, feat) {
+  const body = `<div class="top"><div><h2>${esc(p.title)}</h2><p class="when">${esc(p.when)}</p></div>${feat ? "" : `<span class="cat">${esc(catName(p.cat))}</span>`}</div>
+    ${p.fields.length ? `<div class="fields">${p.fields.map(f => fieldHtml(p, f)).join("")}</div>` : ""}
+    ${feat ? `<div class="acts"><button type="button" class="btn pri gen">Generate</button><button type="button" class="btn pri copy" disabled>Copy karo</button><button type="button" class="btn clear">Khaali karo</button></div>
+      <pre class="out" hidden></pre><p class="sub">Generate ke baad prompt yahan dikhega; khaane badloge to prompt bhi badal jayega.</p>`
+    : `<pre class="out"></pre><div class="acts"><button type="button" class="btn pri copy">Copy karo</button>${p.fields.length ? `<button type="button" class="btn clear">Khaali karo</button>` : ""}</div>`}`;
+  return body;
+}
+
+// featured generator
+const fe = $("feat"); fe.id = "p-" + P.featured.id;
+fe.innerHTML = card(P.featured, true); wire(fe, P.featured, true);
+
+// all other prompts
+let cat = "";
+const cards = $("cards");
+cards.innerHTML = P.prompts.map(p => `<section class="card" id="p-${p.id}" data-cat="${p.cat}">${card(p, false)}</section>`).join("")
+  + `<p class="empty" id="none" hidden>Koi prompt nahi mila. Filter badlo.</p>`;
+for (const p of P.prompts) {
+  wire($("p-" + p.id), p, false);
+}
+function tabs() {
+  const n = c => P.prompts.filter(p => !c || p.cat === c).length;
+  $("tabs").innerHTML = [{id: "", name: "Sab"}, ...P.cats].map(c =>
+    `<button type="button" data-c="${c.id}" aria-pressed="${c.id === cat}">${esc(c.name)}<span>${n(c.id)}</span></button>`).join("");
+}
+function apply() {
+  const q = $("q").value.trim().toLowerCase();
+  let shown = 0;
+  for (const p of P.prompts) {
+    const hay = (p.title + " " + p.when + " " + p.lines.join(" ") + " " + catName(p.cat)).toLowerCase();
+    const ok = (!cat || p.cat === cat) && (!q || q.split(/\s+/).every(w => hay.includes(w)));
+    $("p-" + p.id).hidden = !ok; shown += ok;
+  }
+  $("none").hidden = shown > 0;
+}
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; cat = b.dataset.c; tabs(); apply() });
+$("q").addEventListener("input", apply);
+tabs(); apply();
+$("foot").textContent = `${P.prompts.length + 1} prompts · page bana ${D.generated} · naya prompt chahiye to "Is Prompts page me naya prompt jodo" wala prompt use karo.`;
+if (location.hash) { const t = document.querySelector(location.hash.replace(/[^#\w-]/g, "")); if (t) { t.classList.add("flash"); t.scrollIntoView() } }
+</script>
