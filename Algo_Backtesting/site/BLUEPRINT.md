@@ -27,7 +27,7 @@ screen kholta hai. Sab kuch is repo me hai; server pe sirf copy jaati hai. Websi
 
 ```
 /htdocs/index.html                       list + viewer page, "site" = SITE_URL
-/htdocs/prompts.html                     Prompts page (built from site/prompts.json; header link "Reports | Prompts")
+/htdocs/prompts.html                     Prompts page (built from site/prompts.json; NOT linked from index.html, open it by its URL)
 /htdocs/reports/<NN_name>.html.gz        each report, gzip -9 (85 MB of reports -> 27 MB)
 /htdocs/reports/<NN_name>.html.gz.p1..   only when a gzipped report is still > 9.5 MB (host refuses files > 10 MB)
 /htdocs/_manifest.json                   sha256 per uploaded file -> next run uploads only what changed,
@@ -61,6 +61,8 @@ first, the size is checked, then renamed, so visitors never get a half-written f
 - Page: generator card on top (Generate -> prompt -> Copy karo), category buttons + search, one card per prompt with
   a live preview (empty required boxes in red) and "Copy karo" (navigator.clipboard, execCommand fallback).
   Typed values stay in the browser (localStorage `algo-prompts`). Direct link to one prompt: `prompts.html#p-<id>`.
+- No Prompts button on the home page (user asked 15 Nov 2026): the page opens only by its URL; it has a
+  small "Saari reports" back link.
 - New prompt: add it to `prompts.json`, then `tools/upload_site.py`. The site is public: no password, IP, token or
   Telegram handle in prompts.
 
