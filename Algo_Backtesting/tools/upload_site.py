@@ -9,6 +9,7 @@ SITE_FTP_USER, SITE_FTP_PASS, SITE_FTP_DIR (folder the website serves, e.g. /htd
 
 What goes up (SITE_FTP_DIR/...):
     index.html                       the same page as tools/build_site.py (list + full-screen viewer), "site" = SITE_URL
+    prompts.html                     Prompts page (site/prompts.json: ready Claude prompts, one click copy)
     reports/<NN_name>.html.gz        every results/NN_*/report.html, gzip-compressed (the page unzips it in the browser)
     reports/<NN_name>.html.gz.pN     only if the compressed report is still over PART bytes: the host refuses files
                                      over 10 MB, so it is cut into parts that the page joins again
@@ -67,6 +68,7 @@ def build(site_url: str) -> dict[str, bytes]:
                 out[p] = z[i * PART:(i + 1) * PART]
             r["href"] = r["parts"][0]
     out["index.html"] = (HEAD + build_site.render(data) + "\n</html>\n").encode("utf-8")
+    out["prompts.html"] = (HEAD + build_site.render_prompts(data["site"]) + "\n</html>\n").encode("utf-8")
     if missing:
         print("site/reports.json me entry nahi hai (naam/type/result khaali dikhega):", ", ".join(missing))
     return out
@@ -154,7 +156,7 @@ def main() -> int:
     raw = rem.read(MANIFEST)
     old = json.loads(raw) if raw else {}
     todo = [p for p in site if a.force or old.get(p) != new[p]]
-    todo.sort(key=lambda p: p == "index.html")          # reports first, the page that links them last
+    todo.sort(key=lambda p: p in ("index.html", "prompts.html"))          # reports first, the page that links them last
     gone = [p for p in old if p not in new]
     size = sum(len(site[p]) for p in todo)
     print(f"{len(site)} files ({sum(map(len, site.values())) / 1e6:.1f} MB on the server); upload {len(todo)} "

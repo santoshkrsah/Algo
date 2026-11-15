@@ -5,6 +5,7 @@ the site's own link + #report-NN, which shows that report full screen.
 
 Reads site/reports.json (name, type, period, one-line result per report folder; add an entry for every new report),
 writes site/index.html and site/files.json (published path -> report file).
+Also writes site/prompts.html: the Prompts page (ready Claude prompts from site/prompts.json, one click copy).
 The live site is on our own web hosting: tools/upload_site.py builds the same page and uploads it by FTP (see there).
 """
 import json
@@ -20,6 +21,7 @@ from backtest.config import RESULTS, ROOT  # noqa: E402
 
 SITE = ROOT / "site"
 TEMPLATE = ROOT / "src" / "backtest" / "assets" / "site_template.html"
+PROMPTS_TEMPLATE = ROOT / "src" / "backtest" / "assets" / "prompts_template.html"
 
 
 def first_added(report: Path) -> date:
@@ -41,16 +43,24 @@ def site_url() -> str:
     return json.loads(site.read_text(encoding="utf-8"))["url"] if site.exists() else ""
 
 
-def render(data: dict) -> str:
+def render(data: dict, template: Path = TEMPLATE) -> str:
     """The site page (template + data). Same page for every host; hosts only change hrefs / parts in data."""
     blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-    return TEMPLATE.read_text(encoding="utf-8").replace("__DATA__", blob)
+    return template.read_text(encoding="utf-8").replace("__DATA__", blob)
+
+
+def render_prompts(url: str) -> str:
+    """prompts.html: ready Claude prompts from site/prompts.json (fill the boxes, one click copies)."""
+    data = {"prompts": json.loads((SITE / "prompts.json").read_text(encoding="utf-8")), "site": url,
+            "generated": datetime.now().strftime("%d %b %Y %H:%M")}
+    return render(data, PROMPTS_TEMPLATE)
 
 
 def main() -> int:
     data, files, missing = collect()
     (SITE / "index.html").write_text(render(data), encoding="utf-8")
     (SITE / "files.json").write_text(json.dumps(files, indent=1), encoding="utf-8")
+    (SITE / "prompts.html").write_text(render_prompts(data["site"]), encoding="utf-8")
     print(f"site/index.html: {len(data['reports'])} reports, {sum(r['mb'] for r in data['reports']):.1f} MB")
     if missing:
         print("site/reports.json me entry nahi hai (naam/type/result khaali dikhega):", ", ".join(missing))

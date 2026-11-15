@@ -16,6 +16,7 @@ screen kholta hai. Sab kuch is repo me hai; server pe sirf copy jaati hai. Websi
 | Reports | `results/NN_<name>/report.html` | One self-contained HTML dashboard per backtest (the source of truth) |
 | Report list info | `site/reports.json` | Per folder: name, type, period, one-line Hinglish result, net, pf, trades, verdict |
 | Page template | `src/backtest/assets/site_template.html` | The list + viewer page; `__DATA__` is replaced with the report data |
+| Prompts page | `site/prompts.json` + `src/backtest/assets/prompts_template.html` | `prompts.html`: ready Claude prompts (Hinglish), boxes to fill, one-click "Copy karo"; top card "Link se Rules + Backtest" generator |
 | Builder | `tools/build_site.py` | `collect()` reads results + reports.json, `render(data)` fills the template |
 | Uploader | `tools/upload_site.py` | Builds, gzips every report, uploads only changed files by FTP |
 | Site link | `site/site.json` | `url` = the public address (used in the page and in Telegram messages) |
@@ -26,6 +27,7 @@ screen kholta hai. Sab kuch is repo me hai; server pe sirf copy jaati hai. Websi
 
 ```
 /htdocs/index.html                       list + viewer page, "site" = SITE_URL
+/htdocs/prompts.html                     Prompts page (built from site/prompts.json; NOT linked from index.html, open it by its URL)
 /htdocs/reports/<NN_name>.html.gz        each report, gzip -9 (85 MB of reports -> 27 MB)
 /htdocs/reports/<NN_name>.html.gz.p1..   only when a gzipped report is still > 9.5 MB (host refuses files > 10 MB)
 /htdocs/_manifest.json                   sha256 per uploaded file -> next run uploads only what changed,
@@ -51,12 +53,25 @@ first, the size is checked, then renamed, so visitors never get a half-written f
 - The server page gets a small head added by upload_site.py (`<!doctype html>`, charset, viewport, `body{margin:0}`),
   because the template itself starts at `<title>`.
 
+## 3b. Prompts page (`prompts.html`)
+
+- Data: `site/prompts.json` -> `{cats, featured, prompts}`. Each prompt: `id, cat, title, when, fields, lines`;
+  `{key}` in `lines` = that field's value. Field: `key, label, ph, kind (text/area/select), options, default
+  (used when empty), wrap (used only when filled, {v} = value), need (required)`.
+- Page: generator card on top (Generate -> prompt -> Copy karo), category buttons + search, one card per prompt with
+  a live preview (empty required boxes in red) and "Copy karo" (navigator.clipboard, execCommand fallback).
+  Typed values stay in the browser (localStorage `algo-prompts`). Direct link to one prompt: `prompts.html#p-<id>`.
+- No Prompts button on the home page (user asked 15 Nov 2026): the page opens only by its URL; it has a
+  small "Saari reports" back link.
+- New prompt: add it to `prompts.json`, then `tools/upload_site.py`. The site is public: no password, IP, token or
+  Telegram handle in prompts.
+
 ## 4. Every new report (normal use)
 
 1. Runner writes `results/NN_<name>/report.html` (folder number from `backtest.config.result_dir`).
 2. Add / update its entry in `site/reports.json`.
 3. In `Algo_Backtesting`: `.venv/Scripts/python.exe tools/upload_site.py` (`--dry-run` shows the plan first).
-   It always re-uploads `index.html` (30 KB, its "generated" time changes) plus the new / changed report.
+   It always re-uploads `index.html` and `prompts.html` (their "generated" time changes) plus the new / changed report.
 4. Telegram finish message: report HTML file + site link + `<site url>#report-NN`.
 
 ## 5. Rebuild from zero (website / account deleted)
@@ -107,7 +122,7 @@ static files over HTTPS, `.gz` served as plain bytes (no `Content-Encoding` head
 
 ## 8. Check after every rebuild
 
-- `tools/upload_site.py --dry-run` right after an upload says `upload 1` (only index.html) and `remove 0`.
+- `tools/upload_site.py --dry-run` right after an upload says `upload 2` (only index.html + prompts.html) and `remove 0`.
 - Browser: the list shows every report; the newest is on top; filters work.
 - Open the biggest report (today 24, 4.5 MB gzipped) and one small one with "Get Report": both show their tabs and charts.
 - Phone: list readable, no sideways scroll, report opens.
