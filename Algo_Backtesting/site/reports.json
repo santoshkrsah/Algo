@@ -238,5 +238,15 @@
   "pf": 1.28,
   "trades": 184,
   "verdict": "profit"
+ },
+ "26_mtst_nifty_supertrend": {
+  "name": "NIFTY multi-timeframe Supertrend (daily 7x3 + 1 ghanta 7x3) - This 1 Strategy Made Me Profitable",
+  "type": "Swing",
+  "period": "Feb 2018 - Nov 2026",
+  "result": "NIFTY futures long+short, daily Supertrend filter + 1h entry/exit, 1% risk Rs 25 lakh compounding. 293 trade (33/saal), net 3,969 pts/unit, PF 1.12, CAGR 5.2%, max DD 19%. Test (May 2023 se) -2,137 pts, PF 0.87; 2024-25 loss. Daily filter se nuksaan (bina filter 9,454 pts), random se behtar nahi (p 0.47). 2019-20 daava ~35%, asli ~11%. Video ka 2 Sep trade match (stop 80 pt farq).",
+  "net": 3969,
+  "pf": 1.12,
+  "trades": 293,
+  "verdict": "loss"
  }
 }
