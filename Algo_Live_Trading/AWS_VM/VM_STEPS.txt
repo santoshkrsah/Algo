@@ -1,0 +1,59 @@
+AWS VM pe Firstock status check - steps
+=======================================
+
+Is folder me 4 files hain:
+  Firstock_Status_AWS.py     status check (sirf padhti hai, koi order nahi dalti)
+  Firstock_Test_Order.py     EK test order lagati hai aur turant cancel karti hai (step 4)
+  Firstock_Credentials.txt   login details (password / keys / IP) - kisi ko mat bhejna
+  VM_STEPS.txt               ye file
+
+Python 3.8 ya naya chahiye (VM pe 3.14.10 hai - theek). pip install kuch nahi karna.
+
+
+1. Pura AWS_VM folder VM pe copy karo
+   Windows VM : RDP window me folder copy-paste kar do (jaise C:\Firstock)
+   Linux VM   : PC ke PowerShell se
+                scp -i <key.pem> -r C:\Algo\Algo_Live_Trading\AWS_VM ubuntu@<VM-IP>:~/
+                (Amazon Linux ho to "ubuntu" ki jagah "ec2-user")
+
+2. Pehle test, bina Telegram ke
+   Windows : cd C:\Firstock         phir   py Firstock_Status_AWS.py --no-telegram
+   Linux   : cd ~/AWS_VM            phir   python3 Firstock_Status_AWS.py --no-telegram
+   Sabse last line "Overall: ALL OK" aani chahiye.
+
+3. Asli run (report Telegram group me jayegi)
+   Windows : py Firstock_Status_AWS.py
+   Linux   : python3 Firstock_Status_AWS.py
+
+4. Test order (order VM se Firstock tak pahunchta hai ya nahi) - sirf haath se chalao
+   Windows : py Firstock_Test_Order.py
+   Linux   : python3 Firstock_Test_Order.py
+   - BUY 1 share IDEA-EQ (NSE), LIMIT price last price se 5% neeche (bharega nahi), CNC.
+   - Pehle order dikhati hai; YES (bade akshar) type karne pe hi bhejti hai, aur lagte hi cancel karti hai.
+   - Doosra share chahiye to: py Firstock_Test_Order.py --symbol YESBANK-EQ
+   - Market band ho (shaam / Sat-Sun) to Firstock shayad mana karega - test ke liye theek hai.
+     Pura test market time me (Mon-Fri 9:15 - 3:30 IST): order OPEN dikhega, phir CANCELLED.
+   - Report Telegram pe bhi jati hai. "IP problem" aaye to VM ka IP Firstock me register karo.
+   - Kabhi "may still be OPEN" aaye to Firstock app me wo order turant cancel karo.
+
+
+Report me kya dekhna hai
+  Static IP: match           -> theek
+  Static IP: MISMATCH ...    -> VM ka public IP Firstock me register wale IP se alag hai.
+                                Firstock me VM ka IP register karo (ya --setup se sahi IP daalo).
+  Login: FAILED (...)        -> bracket me Firstock ka reason hai (password / TOTP / IP)
+  Overall: ALL OK            -> sab theek
+
+
+Kuch badalna ho (password, IP, Telegram ...)
+  python3 Firstock_Status_AWS.py --setup        (Windows: py Firstock_Status_AWS.py --setup)
+  Har sawaal pe sirf Enter = purani value hi rahegi. Editor ki zarurat nahi.
+
+
+Dhyan rakho
+  - Jab tak session key chal rahi hai, Firstock nayi login pe bhi wahi key deta hai (14 Nov 2026 ko check kiya),
+    isliye VM aur PC ek-doosre ka session band nahi karte.
+  - Ye file khud banati hai: <USERID>_jkey.txt (session key, agli baar dobara kaam aati hai) aur
+    tokens_logs\ (roz ki log file). Inhe delete mat karo.
+  - Nayi version aaye to sirf Firstock_Status_AWS.py replace karo; pura folder delete karke dobara copy mat karo.
+  - Linux pe credentials file sirf tumhara user padh sakta hai (setup khud permission set karta hai).
