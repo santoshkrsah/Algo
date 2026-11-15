@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<script>try { const t = localStorage.getItem("bt_theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<title>__TITLE__</title>
+__CSS__
+<style>
+.chk td.l{white-space:normal;max-width:560px}
+.card.cp{position:relative}.card.cp h3{padding-right:120px}.copy{position:absolute;top:14px;right:14px}
+.ok{color:var(--pos);font-weight:650}.no{color:var(--neg);font-weight:650}
+.heat{border-collapse:collapse;font-variant-numeric:tabular-nums}
+.heat th,.heat td{padding:6px 8px;text-align:center;border:1px solid var(--line);min-width:70px}
+.heat td .st{display:block;font-size:10.5px;font-weight:650;opacity:.85}
+.heat td.me{outline:3px solid var(--accent);outline-offset:-3px}
+.heat td.pk{outline:3px dashed var(--warn);outline-offset:-3px}
+.h-g2{background:rgba(15,157,104,.38)}.h-g1{background:rgba(15,157,104,.16)}.h-r1{background:rgba(217,58,76,.14)}.h-r2{background:rgba(217,58,76,.34)}.h-na{background:var(--soft);color:var(--muted)}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:10px 0}
+.ctrl label{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+.ctrl select{padding:7px 8px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);max-width:100%}
+.mini{font-size:12.5px;color:var(--muted)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px}
+td.num,th.num{text-align:right}
+tr.hl td{font-weight:650}
+</style>
+<style>__VIEWER_CSS__</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 17l5-6 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <div><h1 id="title"></h1><div class="sub">NIFTY futures &middot; daily Supertrend filter + 1-ghanta Supertrend entry/exit &middot; backtest</div></div>
+  </div>
+  <div class="actions"><span class="chip" id="range"></span><button class="btn" id="theme">Dark / Light</button></div>
+</div>
+<div class="wrap">
+<div class="sub" id="subtitle" style="margin:14px 0 0"></div>
+<div class="verdict" id="verdict"></div>
+<div class="setrow" id="settings"></div>
+<div class="kpis" id="kpis"></div>
+<div class="tabs" id="tabs">
+  <button class="tab on" data-p="sum">Saransh</button>
+  <button class="tab" data-p="video">Video check</button>
+  <button class="tab" data-p="var">Variants</button>
+  <button class="tab" data-p="grid">Grid (plateau)</button>
+  <button class="tab" data-p="checks">Controls</button>
+  <button class="tab" data-p="years">Saal / Mahine</button>
+  <button class="tab" data-p="viewer">Trade viewer</button>
+  <button class="tab" data-p="trades">Saare trades</button>
+  <button class="tab" data-p="data">Data</button>
+  <button class="tab" data-p="rules">Rules</button>
+</div>
+
+<section class="panel on" id="sum">
+  <div class="card"><h3>Saare numbers ek saath (kharche + slippage ke baad)</h3><div class="hint" id="mthint"></div><div class="scroll" style="max-height:none"><table id="mt" class="chk"></table></div></div>
+  <div class="two">
+    <div class="card"><h3>Pass / Fail</h3><div class="scroll" style="max-height:none"><table id="checks" class="chk"></table></div></div>
+    <div class="card"><h3>Dhyan do (warnings)</h3><ul class="rules" id="warn"></ul></div>
+  </div>
+  <div class="card"><h3>Account Rs me (1% risk, compounding) vs buy-and-hold futures (1x)</h3><div class="hint" id="rshint"></div><div class="ch tall"><canvas id="c_rs"></canvas></div></div>
+  <div class="card"><h3>Net points (1 unit) vs buy-and-hold futures</h3><div class="hint" id="eqhint"></div><div class="ch"><canvas id="c_eq"></canvas></div></div>
+  <div class="card"><h3>Drawdown (Rs account, peak se % neeche)</h3><div class="ch"><canvas id="c_dd"></canvas></div></div>
+  <div class="two">
+    <div class="card"><h3>Har trade ke net points</h3><div class="ch"><canvas id="c_hist"></canvas></div></div>
+    <div class="card"><h3>Paisa kaise lagaya (investment)</h3><div class="hint">Profit COMPOUND hota hai: har entry pe risk = 1% x us waqt ki equity.</div><div class="kv" id="inv"></div></div>
+  </div>
+</section>
+
+<section class="panel" id="video">
+  <div class="card"><h3>Video ka trade (2 Sep 2026 short) vs hamara backtest</h3><div class="hint" id="vhint"></div><div class="scroll" style="max-height:none"><table id="vmain" class="chk"></table></div></div>
+  <div class="card"><h3>Kaun sa combination video ke sabse kareeb? (7 x 3, sab combinations)</h3><div class="hint">Miss = |entry farq| + |stop farq| + |exit farq| points; galat candle pe +300. Futures chart ke price asli (back-adjust hata ke).</div><div class="scroll"><table id="vcombo"></table></div></div>
+  <div class="two">
+    <div class="card"><h3>Supertrend values (spot, RMA 7 x 3) zaroori candles pe</h3><div class="scroll"><table id="vvals"></table></div></div>
+    <div class="card"><h3>Charges: hamara model vs video (per lot, Rs 15 lakh)</h3><div class="kv" id="vcost"></div></div>
+  </div>
+  <div class="card"><h3>July 2026: daily buy mode, 1-ghanta buy signals</h3><div class="hint" id="julhint"></div><div class="scroll" style="max-height:none"><table id="jul"></table></div></div>
+</section>
+
+<section class="panel" id="var">
+  <div class="card"><h3>Variants (ek cheez badli, baaki video setup jaisa: 7x3 / 7x3)</h3><div class="hint">Points = 1 unit futures, kharche ke baad. Rs = 1% risk account. Bold = main.</div><div class="scroll"><table id="vt"></table></div></div>
+  <div class="card"><h3>Position sizing (main trades, Rs 25 lakh se, compounding)</h3><div class="hint">round = lots round karo, kam se kam 1 (video jaisa). floor = neeche round, 0 lot = trade chhoota. DD-aware = sizing capital = equity x 90%; drawdown 10% se zyada ho to aadha size jab tak naya high na bane.</div><div class="scroll" style="max-height:none"><table id="szt"></table></div></div>
+</section>
+
+<section class="panel" id="grid">
+  <div class="card"><h3>Parameter grid: plateau ya overfit? (1h ATR x mult x daily ATR x mult = 256)</h3>
+    <div class="hint">PLATEAU = setting + uske saare padosi (kisi bhi ek parameter ka ek step) fit period me PF &gt; 1. OVERFIT = khud profit par koi padosi loss me. Neela border = video setup (7x3 / 7x3), narangi dashed = fit period se chuni.</div>
+    <div class="ctrl" id="gctrl"></div><div class="scroll" style="max-height:none"><table class="heat" id="heat"></table></div><div class="mini" id="gnote"></div></div>
+  <div class="card"><h3>Fit period se chuni setting (test period dekhe bina)</h3><div class="kv" id="pick"></div></div>
+</section>
+
+<section class="panel" id="checks">
+  <div class="card"><h3>Controls: long+short vs long vs short vs bina daily filter vs buy-and-hold</h3><div class="scroll" style="max-height:none"><table id="ctl"></table></div></div>
+  <div class="card"><h3>Random entry se muqabla (1,000 baar, wahi Supertrend exit, wahi trade count)</h3><div class="hint" id="rndhint"></div><div class="ch"><canvas id="c_rnd"></canvas></div><div class="mini" id="rndnote"></div></div>
+  <div class="two">
+    <div class="card"><h3>Trending vs choppy (daily flips) aur VIX</h3><div class="hint" id="reghint"></div><div class="scroll" style="max-height:none"><table id="reg"></table></div></div>
+    <div class="card"><h3>Khaas periods (COVID, sell-offs, July 2026)</h3><div class="hint">Main = 25 lakh account me us period ka return. Fresh = us period ki shuruaat me naya Rs 25 lakh account.</div><div class="scroll" style="max-height:none"><table id="per"></table></div></div>
+  </div>
+</section>
+
+<section class="panel" id="years">
+  <div class="card"><h3>Saal ke hisaab se</h3><div class="hint">Return % = us saal ka Rs net / saal ki shuruaat ki equity (compounding). Sabse bura saal laal.</div><div class="scroll" style="max-height:none"><table id="yt"></table></div></div>
+  <div class="card"><h3>Har mahine ka Rs net</h3><div class="ch"><canvas id="c_m"></canvas></div></div>
+  <div class="card"><h3>Mahine ki table</h3><div class="scroll"><table id="mtab"></table></div></div>
+</section>
+
+<section class="panel" id="viewer"><div id="tv"></div></section>
+
+<section class="panel" id="trades">
+  <div class="card"><h3>Har trade (video setup)</h3><div class="hint">Entry / exit = futures ka asli price. Points per unit; Rs = 1% risk account.</div>
+    <div class="bar"><select id="te"><option value="">Saare exit</option></select><select id="ts"><option value="">Long + short</option><option>LONG</option><option>SHORT</option></select><button class="btn" id="tdl">Download CSV</button><span class="note" id="tcount"></span></div>
+    <div class="scroll"><table id="ttable"><thead></thead><tbody></tbody></table></div><div class="pager" id="tpager"></div></div>
+</section>
+
+<section class="panel" id="data">
+  <div class="card"><h3>Data coverage (Fyers)</h3><div class="hint" id="covhint"></div><div class="scroll"><table id="cov"></table></div></div>
+  <div class="card"><h3>Data quality checks</h3><div class="scroll" style="max-height:none"><table id="qual" class="chk"></table></div></div>
+  <div class="two">
+    <div class="card"><h3>Futures roll (aakhri 40)</h3><div class="hint">Roll = expiry se 3 trading din pehle agla contract. Gap back-adjust se hataya: kabhi P&amp;L nahi.</div><div class="scroll"><table id="rolls"></table></div></div>
+    <div class="card"><h3>NIFTY lot size (date se)</h3><div class="scroll" style="max-height:none"><table id="lots"></table></div></div>
+  </div>
+  <div class="card"><h3>Maanyatayen (assumptions)</h3><ul class="rules" id="assume"></ul></div>
+</section>
+
+<section class="panel" id="rules">
+  <div class="card cp"><button class="btn copy" data-copy="rules">Copy karo</button><h3>Rules</h3><ul class="rules" id="rulelist"></ul></div>
+  <div class="card cp"><button class="btn copy" data-copy="formulas">Copy karo</button><h3>Formulas</h3><div class="hint">Is backtest me har number in formulas se nikala gaya hai.</div><div class="scroll" style="max-height:none"><table id="fml" class="chk"></table></div></div>
+</section>
+<footer id="foot"></footer>
+</div>
+<script>__CHARTJS__</script>
+<script>__LWC__</script>
+<script>__VIEWER_JS__</script>
+<script>
+const D = __DATA__;
+const $ = s => document.querySelector(s);
+const ok = v => v !== null && v !== undefined && !(typeof v === "number" && isNaN(v));
+const sgn = v => !ok(v) ? "" : v > 0 ? "pos" : v < 0 ? "neg" : "";
+const rs = (v, plus) => !ok(v) ? "n/a" : (v < 0 ? "-" : plus && v > 0 ? "+" : "") + "Rs " + Math.round(Math.abs(v)).toLocaleString("en-IN");
+const f0 = v => !ok(v) ? "n/a" : Math.round(v).toLocaleString("en-IN"), f1 = v => !ok(v) ? "n/a" : Number(v).toFixed(1), f2 = v => !ok(v) ? "n/a" : Number(v).toFixed(2), f3 = v => !ok(v) ? "n/a" : Number(v).toFixed(3);
+const pts = (v, plus) => !ok(v) ? "n/a" : (plus && v > 0 ? "+" : "") + f0(v) + " pts";
+const pct = v => !ok(v) ? "n/a" : f1(v) + "%";
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const kv = (el, rows) => { $(el).innerHTML = rows.map(r => `<div><span>${r[0]}</span><span><b class="${r[2] || ""}">${r[1]}</b></span></div>`).join(""); };
+const tbl = (el, head, body) => { $(el).innerHTML = "<thead><tr>" + head.map((h, i) => `<th class="${i ? "" : "l"}">${h}</th>`).join("") + "</tr></thead><tbody>" + body.join("") + "</tbody>"; };
+const M = D.metrics, IS = M.is, OOS = M.oos, FULL = M.full, CV = D.curve, RS = D.rs, B = D.base;
+const PL = `1h ${B.h_n}x${B.h_mult} + daily ${B.d_n}x${B.d_mult}, spot chart, Wilder ATR, E1`;
+$("#title").textContent = D.title;
+$("#range").innerHTML = `Data <b>${D.data_range[0]}</b> &rarr; <b>${D.data_range[1]}</b>`;
+$("#subtitle").textContent = `Video setup (pehle se tay, optimise NAHI kiya): ${PL} | long + short | NIFTY futures pe order (agla 1-min open) | Rs 25 lakh, 1% risk, profit COMPOUND hota hai | slippage 2 pt + aaj ke charges | fit < ${D.split} <= test | report: ${D.generated}`;
+$("#foot").textContent = "Purane result se aage ki guarantee nahi. Futures carry (basis) bhi P&L me shamil hai. Lot size aur margin date ke hisaab se badalte hain.";
+$("#settings").innerHTML = `<span class="st">Test ki settings</span>` + D.settings.map(c => `<span class="sc${c[2] ? " hl" : ""}">${esc(c[0])}: <b>${esc(c[1])}</b></span>`).join("");
+$("#verdict").className = "verdict " + (D.verdict.pass ? "good" : "bad");
+$("#verdict").innerHTML = `<b>${D.verdict.pass ? "PASS" : "FAIL"}</b> &middot; ${esc(PL)}. Poora period: <b>${FULL.trades}</b> trade, net <b class="${sgn(FULL.net_pts)}">${pts(FULL.net_pts, true)}</b>, PF <b>${f2(FULL.pf)}</b>. Test period (${D.split} se): net <b class="${sgn(OOS.net_pts)}">${pts(OOS.net_pts, true)}</b>, PF <b>${f2(OOS.pf)}</b>. ${esc(D.verdict.text)}`;
+const R = D.random;
+const kp = [["Rs account (1% risk)", rs(RS.end), sgn(RS.end - D.capital), `net ${rs(RS.net_rs, true)}, CAGR ${pct(RS.cagr_pct)}`], ["Max drawdown (Rs)", pct(RS.max_dd_pct), "neg", `${RS.time_dd_days} din high ke neeche`],
+  ["Poora net (per unit)", pts(FULL.net_pts, true), sgn(FULL.net_pts), `${f1(FULL.trades_per_year)} trade / saal, win ${pct(FULL.win_pct)}, PF ${f2(FULL.pf)}`],
+  ["Test net (per unit)", pts(OOS.net_pts, true), sgn(OOS.net_pts), `${OOS.trades} trade, PF ${f2(OOS.pf)}`],
+  ["Random se behtar?", R.trend.p < 0.05 ? "Haan" : "Nahi", R.trend.p < 0.05 ? "pos" : "neg", `p ${f3(R.trend.p)} (1h direction), ${f3(R.coin.p)} (sikka)`],
+  ["Buy-and-hold (1x)", rs(D.buy_hold.rs_curve.end), sgn(D.buy_hold.net_rs), `CAGR ${pct(D.buy_hold.rs_curve.cagr_pct)}, max DD ${pct(D.buy_hold.rs_curve.max_dd_pct)}`]];
+$("#kpis").innerHTML = kp.map(c => `<div class="kpi"><div class="l">${c[0]}</div><div class="v ${c[2]}">${c[1]}</div><div class="n">${c[3]}</div></div>`).join("");
+const MR = [["Trades", s => f0(s.trades)], ["Trades / saal", s => f1(s.trades_per_year)], ["Net points (per unit)", s => pts(s.net_pts, true), s => sgn(s.net_pts)], ["Net points / saal", s => pts(s.pts_per_year, true), s => sgn(s.pts_per_year)],
+  ["Gross points (kharche se pehle)", s => pts(s.gross_pts, true)], ["Charges (points)", s => pts(s.cost_pts)], ["Slippage (points)", s => pts(s.slip_pts)],
+  ["Win rate", s => pct(s.win_pct)], ["Average win", s => pts(s.avg_win)], ["Average loss", s => pts(s.avg_loss)], ["Avg win / avg loss", s => f2(s.rr)], ["Profit factor", s => f2(s.pf)], ["Expectancy / trade", s => pts(s.exp_pts, true), s => sgn(s.exp_pts)],
+  ["Long: trades / net pts", s => `${s.long_n} / ${f0(s.long_pts)}`], ["Short: trades / net pts", s => `${s.short_n} / ${f0(s.short_pts)}`],
+  ["Sabse accha / bura trade", s => `${f0(s.best)} / ${f0(s.worst)}`], ["Top 5% trades ka share", s => pct(s.best5_share)], ["Average holding (din)", s => f1(s.avg_days)]];
+const MC = [["Fit (pehle 60%)", IS, CV.is], [`Test (${D.split} se)`, OOS, CV.oos], ["Poora period", FULL, CV.full]];
+$("#mthint").textContent = "Points = NIFTY futures ke 1 unit pe. Video setup pehle se tay tha; test period ka number kisi chunav me use nahi hua. Rs ki lines sirf poore period ki (1% risk account).";
+$("#mt").innerHTML = "<thead><tr><th class='l'>Number</th>" + MC.map(c => `<th class="num">${c[0]}</th>`).join("") + "</tr></thead><tbody>"
+  + MR.map(r => `<tr><td class="l">${r[0]}</td>` + MC.map(c => `<td class="num ${r[2] ? r[2](c[1]) : ""}">${c[1].trades ? r[1](c[1]) : "-"}</td>`).join("") + "</tr>").join("")
+  + `<tr><td class="l">Max drawdown (points)</td>${MC.map(c => `<td class="num">${pts(c[2].max_dd)}</td>`).join("")}</tr><tr><td class="l">Time drawdown: sabse lamba flat/loss samay (trading din / mahine)</td>${MC.map(c => `<td class="num">${c[2].time_dd_days} / ${f1(c[2].time_dd_months)}</td>`).join("")}</tr>`
+  + `<tr><td class="l">Rs: net / CAGR / max DD</td><td class="num">-</td><td class="num">-</td><td class="num ${sgn(RS.net_rs)}">${rs(RS.net_rs, true)} / ${pct(RS.cagr_pct)} / ${pct(RS.max_dd_pct)}</td></tr>`
+  + `<tr><td class="l">Rs: win rate / avg win / avg loss / PF / expectancy</td><td class="num">-</td><td class="num">-</td><td class="num">${pct(RS.win_pct_rs)} / ${rs(RS.avg_win_rs)} / ${rs(RS.avg_loss_rs)} / ${f2(RS.pf_rs)} / ${rs(RS.exp_rs, true)}</td></tr>`
+  + `<tr><td class="l">Rs: time drawdown</td><td class="num">-</td><td class="num">-</td><td class="num">${RS.time_dd_days} din (${RS.time_dd_from} &rarr; ${RS.time_dd_to})</td></tr></tbody>`;
+$("#checks").innerHTML = "<tbody>" + D.verdict.checks.map(c => `<tr><td class="l">${esc(c[0])}</td><td class="${c[1] ? "ok" : "no"}">${c[1] ? "PASS" : "FAIL"}</td></tr>`).join("") + "</tbody>";
+$("#warn").innerHTML = (D.warnings.length ? D.warnings : ["Koi khaas warning nahi."]).map(w => `<li>${esc(w)}</li>`).join("");
+const iv = D.investment;
+kv("#inv", [["Shuruaati capital", rs(iv.capital) + " (compounding)"], ["Risk per trade", iv.risk_pct + "% of equity (0.5% / 2% Variants tab me)"], ["Lots rule", "round(risk Rs / (stop points x lot size)), kam se kam 1"],
+  ["Average stop distance", f0(iv.avg_stop) + " points"], ["Asli risk / trade (average / max)", `${pct(iv.avg_risk_pct)} / ${pct(iv.max_risk_pct)} of equity`], ["Margin per lot (maana)", rs(iv.margin) + "; lots <= equity / margin"],
+  ["Average lots / sabse zyada", `${f1(iv.avg_lots)} / ${iv.max_lots}`], ["Margin ki wajah se kam kiye lots", iv.capped + " trade"], ["Chhoote trades (margin)", iv.skipped],
+  ["Average position value", rs(iv.avg_notional)], ["Sabse badi position value", rs(iv.peak_notional)], ["Sabse zyada margin laga (peak money)", rs(iv.peak_margin)], ["Ek saath max positions", "1 (long aur short kabhi saath nahi)"]]);
+
+// ---------- charts
+let charts = [];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ax = (money) => ({x: {grid: {display: false}, ticks: {color: css("--muted"), maxTicksLimit: 7, maxRotation: 0}}, y: {grid: {color: css("--line")}, border: {display: false}, ticks: {color: css("--muted"), callback: v => money ? (Math.abs(v) >= 1e5 ? (v / 1e5).toFixed(1) + "L" : Math.round(v / 1000) + "k") : v}}});
+const tip = f => ({backgroundColor: css("--ink"), titleColor: css("--card"), bodyColor: css("--card"), padding: 10, displayColors: true, callbacks: {label: f}});
+const lineOpts = (money, f, legend) => ({responsive: true, maintainAspectRatio: false, animation: false, interaction: {mode: "index", intersect: false}, plugins: {legend: legend ? {labels: {color: css("--muted")}} : {display: false}, tooltip: tip(f)}, scales: ax(money)});
+function drawCharts(){
+  charts.forEach(c => c.destroy()); charts = [];
+  const E = D.equity, lab = E.map(r => r[0]), si = lab.findIndex(d => d >= D.split);
+  $("#rshint").textContent = `Rs ${f0(D.capital)} se. Strategy: CAGR ${pct(RS.cagr_pct)}, max DD ${pct(RS.max_dd_pct)}. Buy-and-hold futures 1x: CAGR ${pct(D.buy_hold.rs_curve.cagr_pct)}, max DD ${pct(D.buy_hold.rs_curve.max_dd_pct)}. Narangi = test period.`;
+  charts.push(new Chart($("#c_rs"), {type: "line", data: {labels: lab, datasets: [{label: "Strategy (1% risk)", data: E.map(r => r[3]), borderWidth: 2, pointRadius: 0, segment: {borderColor: c => c.p1DataIndex >= si ? css("--warn") : css("--accent")}, borderColor: css("--accent")},
+    {label: "Buy-and-hold futures 1x", data: E.map(r => r[5]), borderColor: css("--muted"), borderWidth: 1.5, pointRadius: 0}]}, options: lineOpts(true, c => c.dataset.label + " " + rs(c.parsed.y), true)}));
+  $("#eqhint").textContent = `1 unit NIFTY futures. Strategy (neela) vs buy-and-hold (grey, rolls ke saath).`;
+  charts.push(new Chart($("#c_eq"), {type: "line", data: {labels: lab, datasets: [{label: "Strategy", data: E.map(r => r[1]), borderWidth: 2, pointRadius: 0, borderColor: css("--accent")},
+    {label: "Buy-and-hold", data: E.map(r => r[4]), borderWidth: 1.5, pointRadius: 0, borderColor: css("--muted")}]}, options: lineOpts(false, c => c.dataset.label + " " + pts(c.parsed.y, true), true)}));
+  let pk = -1e18; const ddp = E.map(r => { pk = Math.max(pk, r[3]); return -(pk - r[3]) / pk * 100; });
+  charts.push(new Chart($("#c_dd"), {type: "line", data: {labels: lab, datasets: [{data: ddp, borderColor: css("--neg"), backgroundColor: css("--neg-soft"), fill: true, borderWidth: 1.5, pointRadius: 0}]}, options: lineOpts(false, c => "Drawdown " + f1(-c.parsed.y) + "%")}));
+  const h = D.hist, hl = h.counts.map((_, i) => f0((h.edges[i] + h.edges[i + 1]) / 2));
+  charts.push(new Chart($("#c_hist"), {type: "bar", data: {labels: hl, datasets: [{data: h.counts, backgroundColor: h.counts.map((_, i) => (h.edges[i] + h.edges[i + 1]) / 2 >= 0 ? css("--pos") : css("--neg")), borderRadius: 2}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => c.parsed.y + " trade")}, scales: ax(false)}}));
+  const mv = D.monthly.map(m => m[2]);
+  charts.push(new Chart($("#c_m"), {type: "bar", data: {labels: D.monthly.map(m => m[0]), datasets: [{data: mv, backgroundColor: mv.map(x => x >= 0 ? css("--pos") : css("--neg")), borderRadius: 2, maxBarThickness: 26}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {display: false}, tooltip: tip(c => rs(c.parsed.y, true))}, scales: ax(true)}}));
+  const A = R.trend.hist, U = R.coin.hist, e = A.edges, lbl = A.counts.map((_, i) => f1((e[i] + e[i + 1]) / 2));
+  charts.push(new Chart($("#c_rnd"), {type: "bar", data: {labels: lbl, datasets: [{label: "Random time, 1h Supertrend direction", data: A.counts, backgroundColor: css("--muted"), borderRadius: 2},
+    {label: "Random time, sikka (random direction)", data: U.counts, backgroundColor: css("--accent-soft"), borderColor: css("--accent"), borderWidth: 1, borderRadius: 2}]},
+    options: {responsive: true, maintainAspectRatio: false, animation: false, plugins: {legend: {labels: {color: css("--muted")}}, tooltip: tip(c => c.parsed.y + " run")}, scales: ax(false)}}));
+}
+$("#theme").onclick = () => { const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme:dark)").matches ? "dark" : "light"); const t = cur === "dark" ? "light" : "dark"; document.documentElement.setAttribute("data-theme", t); try { localStorage.setItem("bt_theme", t); } catch (e) {} drawCharts(); TV.restyle(); };
+
+// ---------- video check
+const VT = D.video, V0 = D.validation.find(v => v.chart === "spot" && v.atr === "rma" && v.entry === "E1" && v.last === "include" && v.fill === "next") || {};
+const VB = D.validation[0];
+$("#vhint").innerHTML = `Video setup (spot, Wilder ATR, E1, 15:15 candle shamil). Sabse kareeb combination: <b>${esc(VB.chart)} / ${esc(VB.atr)} / ${esc(VB.entry)} / ${esc(VB.last)} / fill ${esc(VB.fill)}</b> (miss ${f0(VB.miss_score)} pts).`;
+const vr = [["Daily Supertrend sell mode me", VT.daily_flip, V0.daily_flip], ["Entry candle", VT.entry_time, V0.signal_candle], ["Entry (candle close)", f1(VT.entry), f1(V0.entry_close)], ["Initial stop (1h upper band)", f1(VT.stop), f1(V0.stop)],
+  ["Risk (points)", f0(VT.entry - VT.stop < 0 ? VT.stop - VT.entry : VT.entry - VT.stop), f0(V0.stop_dist)], ["Risk per lot (65)", rs(VT.risk_rs), rs(V0.stop_dist * 65)], ["Exit candle", VT.exit_time, V0.exit_candle], ["Exit (candle close)", f1(VT.exit), f1(V0.exit_close)],
+  ["Profit (chart points)", f0(VT.points), f0(V0.chart_points)], ["Futures fills (agla 1-min open)", "-", `${f1(V0.fill_in)} &rarr; ${f1(V0.fill_out)} = ${f0(V0.fut_points)} pts; net ${f0(V0.net_pts)}`]];
+$("#vmain").innerHTML = "<thead><tr><th class='l'>Cheez</th><th class='l'>Video</th><th class='l'>Hamara backtest</th></tr></thead><tbody>" + vr.map(r => `<tr><td class="l">${r[0]}</td><td class="l">${esc(r[1])}</td><td class="l">${r[2] ?? "-"}</td></tr>`).join("") + "</tbody>";
+tbl("#vcombo", ["Chart", "ATR", "Entry", "15:15", "Fill", "Daily flip", "Entry candle", "Entry", "Stop", "Risk", "Exit candle", "Exit", "Chart pts", "Miss"],
+  D.validation.map((v, i) => `<tr${i === 0 ? ' class="hl"' : ""}><td class="l">${v.chart}</td><td>${v.atr}</td><td>${v.entry}</td><td>${v.last}</td><td>${v.fill}</td><td>${v.daily_flip || "-"}</td><td>${v.signal_candle || "-"}</td><td>${f1(v.entry_close)}</td><td>${f1(v.stop)}</td><td>${f0(v.stop_dist)}</td><td>${v.exit_candle || "-"}</td><td>${f1(v.exit_close)}</td><td>${f0(v.chart_points)}</td><td>${f0(v.miss_score)}</td></tr>`));
+tbl("#vvals", D.video_values.cols, D.video_values.rows.map(r => `<tr>${r.map((x, i) => `<td class="${i ? "" : "l"}">${typeof x === "number" ? (Math.abs(x) < 5 ? x : f1(x)) : esc(x)}</td>`).join("")}</tr>`));
+const CC = D.cost_check;
+kv("#vcost", [["Notional", rs(CC.notional)], ["Buy side: video / hamara", `${rs(CC.video_buy)} / ${rs(CC.buy)}`], ["Sell side: video / hamara", `${rs(CC.video_sell)} / ${rs(CC.sell)}`],
+  ["Hamara buy: brokerage + NSE + SEBI + stamp + GST", `${f1(CC.buy_parts.brokerage)} + ${f1(CC.buy_parts.exchange)} + ${f1(CC.buy_parts.sebi)} + ${f1(CC.buy_parts.stamp)} + ${f1(CC.buy_parts.gst)}`],
+  ["Hamara sell: STT 0.05% + baaki", `${f1(CC.sell_parts.stt)} + ${f1(CC.sell - CC.sell_parts.stt)}`]]);
+const julP = D.periods.find(p => p.period.startsWith("July 2026")) || {};
+$("#julhint").textContent = `July 2026: ${julP.trades} trade shuru hue, ${julP.wins} jeete; net ${f0(julP.net_pts)} pts / unit, us mahine ka sabse bada drawdown ${f0(julP.max_dd_pts)} pts (${pct(julP.max_dd_pct_main)} account). Neeche 25 Jun - 5 Aug ke trades.`;
+tbl("#jul", ["Signal", "Side", "Entry", "Exit signal", "Exit", "Net pts", "Lots", "Rs"], D.july.map(r => `<tr><td class="l">${r[0]}</td><td>${r[1]}</td><td>${f1(r[2])}</td><td>${r[3]}</td><td>${f1(r[4])}</td><td class="${sgn(r[5])}">${f1(r[5])}</td><td>${r[6]}</td><td class="${sgn(r[7])}">${rs(r[7], true)}</td></tr>`));
+
+// ---------- variants + sizing
+tbl("#vt", ["Variant", "Trades", "/saal", "Net pts", "PF", "Win %", "Exp / trade", "Fit pts", "Test pts", "Test PF", "Max DD pts", "Long pts", "Short pts", "Rs net", "CAGR", "Max DD %"],
+  D.variants.map((v, i) => `<tr${i === 0 ? ' class="hl"' : ""}><td class="l">${esc(v.variant)}</td><td>${v.full_trades}</td><td>${f1(v.trades_per_year)}</td><td class="${sgn(v.full_net_pts)}">${f0(v.full_net_pts)}</td><td>${f2(v.full_pf)}</td><td>${pct(v.full_win)}</td><td class="${sgn(v.full_exp)}">${f1(v.full_exp)}</td><td class="${sgn(v.is_net_pts)}">${f0(v.is_net_pts)}</td><td class="${sgn(v.oos_net_pts)}">${f0(v.oos_net_pts)}</td><td>${f2(v.oos_pf)}</td><td>${f0(v.max_dd_pts)}</td><td class="${sgn(v.long_pts)}">${f0(v.long_pts)}</td><td class="${sgn(v.short_pts)}">${f0(v.short_pts)}</td><td class="${sgn(v.net_rs)}">${rs(v.net_rs, true)}</td><td class="${sgn(v.cagr_pct)}">${pct(v.cagr_pct)}</td><td>${pct(v.max_dd_pct)}</td></tr>`));
+tbl("#szt", ["Risk %", "Lots", "DD-aware", "Net Rs", "Aakhri equity", "CAGR", "Max DD %", "Time DD (din)", "Trades", "Chhoote", "Margin cap", "Aadha size", "Avg / max lots", "Asli risk avg / max"],
+  D.sizing.map(s => `<tr${s.risk_pct === 1 && s.rounding === "round" && !s.dd_aware ? ' class="hl"' : ""}><td class="l">${s.risk_pct}%</td><td>${s.rounding}</td><td>${s.dd_aware ? "on" : "off"}</td><td class="${sgn(s.net_rs)}">${rs(s.net_rs, true)}</td><td>${rs(s.end)}</td><td class="${sgn(s.cagr_pct)}">${pct(s.cagr_pct)}</td><td>${pct(s.max_dd_pct)}</td><td>${s.time_dd_days}</td><td>${s.trades_taken}</td><td>${s.skipped}</td><td>${s.capped}</td><td>${s.dd_half}</td><td>${f1(s.avg_lots)} / ${s.max_lots}</td><td>${pct(s.avg_risk_pct)} / ${pct(s.max_risk_pct)}</td></tr>`));
+
+// ---------- grid
+const G = D.grid;
+const METRICS = [["is_pf", "Fit PF"], ["oos_pf", "Test PF"], ["full_pf", "Poora PF"], ["is_pts_year", "Fit pts / saal"], ["oos_pts_year", "Test pts / saal"], ["full_net_pts", "Poora net pts"], ["full_trades", "Trades"]];
+function sel(id, label, opts, val){ return `<label>${label}<select id="${id}">${opts.map(o => `<option value="${esc(o[0])}"${String(o[0]) === String(val) ? " selected" : ""}>${esc(o[1])}</option>`).join("")}</select></label>`; }
+const NS = [...new Set(G.map(o => o.h_n))].sort((a, b) => a - b), MS = [...new Set(G.map(o => o.h_mult))].sort((a, b) => a - b);
+const combos = []; NS.forEach(n => MS.forEach(m => combos.push([n + "|" + m, `${n} x ${m}`])));
+$("#gctrl").innerHTML = sel("gw", "Heatmap me", [["h", "1-ghanta line (daily fixed)"], ["d", "Daily line (1h fixed)"]], "h") + sel("gf", "Fixed line ki setting", combos, `${B.d_n}|${B.d_mult}`) + sel("gm", "Number", METRICS, "is_pf");
+function hcls(m, v){ if (!ok(v)) return "h-na"; if (m.endsWith("pf")) return v >= 1.2 ? "h-g2" : v > 1 ? "h-g1" : v >= 0.9 ? "h-r1" : "h-r2"; if (m.includes("pts")) return v > 500 ? "h-g2" : v > 0 ? "h-g1" : v > -500 ? "h-r1" : "h-r2"; return ""; }
+const PK = D.is_pick;
+function drawHeat(){
+  const w = $("#gw").value, [fn, fm] = $("#gf").value.split("|").map(Number), m = $("#gm").value;
+  const fmt = x => m.endsWith("pf") ? f2(x) : f0(x);
+  const find = (a, u) => G.find(o => w === "h" ? (o.h_n === a && o.h_mult === u && o.d_n === fn && o.d_mult === fm) : (o.d_n === a && o.d_mult === u && o.h_n === fn && o.h_mult === fm));
+  $("#heat").innerHTML = `<thead><tr><th>${w === "h" ? "1h" : "Daily"} ATR \\ mult</th>${MS.map(x => `<th>${x}</th>`).join("")}</tr></thead><tbody>` + NS.map(a => `<tr><th>${a}</th>` + MS.map(u => { const o = find(a, u);
+    if (!o) return `<td class="h-na">-</td>`; const me = o.h_n === B.h_n && o.h_mult === B.h_mult && o.d_n === B.d_n && o.d_mult === B.d_mult; const pk = o.h_n === PK.h_n && o.h_mult === PK.h_mult && o.d_n === PK.d_n && o.d_mult === PK.d_mult;
+    return `<td class="${hcls(m, o[m])}${me ? " me" : ""}${pk ? " pk" : ""}" title="fit PF ${f2(o.is_pf)} | test PF ${f2(o.oos_pf)} | ${o.is_trades} / ${o.oos_trades} trade | padosi ok ${o.neighbours_ok}">${fmt(o[m])}<span class="st">${o.status}</span></td>`; }).join("") + "</tr>").join("") + "</tbody>";
+  const c = s => G.filter(o => o.status === s).length;
+  $("#gnote").textContent = `256 settings: PLATEAU ${c("PLATEAU")}, OVERFIT ${c("OVERFIT")}, LOSS ${c("LOSS")}, kam trade ${c("FEW TRADES")}. Poore period me profit: ${G.filter(o => o.full_net_pts > 0).length}; test period me PF > 1: ${G.filter(o => o.oos_pf > 1).length}. Video setup: ${D.base_cell.status} (padosi ok ${D.base_cell.neighbours_ok}).`;
+}
+document.querySelectorAll("#gctrl select").forEach(s => s.onchange = drawHeat); drawHeat();
+const IM = D.is_metrics;
+kv("#pick", [["Chuni setting", `1h ${PK.h_n} x ${PK.h_mult}, daily ${PK.d_n} x ${PK.d_mult}`], ["Kaise chuni", "sirf fit period: PLATEAU cells me sabse uncha 'plateau score' (khud + padosiyon ka sabse kam PF)"],
+  ["Status / plateau score", `${PK.status} / ${f2(PK.plateau_score)}`], ["Fit: trades / net pts / PF", `${IM.is.trades} / ${f0(IM.is.net_pts)} / ${f2(IM.is.pf)}`],
+  ["TEST: trades / net pts / PF", `${IM.oos.trades} / ${f0(IM.oos.net_pts)} / ${f2(IM.oos.pf)}`, sgn(IM.oos.net_pts)], ["Video setup ka test (tulna)", `${OOS.trades} / ${f0(OOS.net_pts)} / ${f2(OOS.pf)}`, sgn(OOS.net_pts)]]);
+
+// ---------- controls
+const VV = n => D.variants.find(v => v.variant === n) || {};
+const ctlRows = [["Long + short (main)", VV("Main (video setup)")], ["Sirf long", VV("Long only")], ["Sirf short", VV("Short only")], ["Bina daily filter (sirf 1h Supertrend, dono side)", VV("No daily filter (1h alone)")], ["Bina daily filter, sirf long", VV("Long only, no daily filter")]];
+$("#ctl").innerHTML = "<thead><tr><th class='l'>Kya</th><th>Trades</th><th>Net pts</th><th>PF</th><th>Win %</th><th>Exp / trade</th><th>Test pts</th><th>Test PF</th><th>Max DD pts</th><th>Rs net (1% risk)</th><th>CAGR</th><th>Max DD %</th></tr></thead><tbody>"
+  + ctlRows.map((r, i) => { const v = r[1]; return `<tr${i === 0 ? ' class="hl"' : ""}><td class="l">${r[0]}</td><td>${v.full_trades}</td><td class="${sgn(v.full_net_pts)}">${f0(v.full_net_pts)}</td><td>${f2(v.full_pf)}</td><td>${pct(v.full_win)}</td><td class="${sgn(v.full_exp)}">${f1(v.full_exp)}</td><td class="${sgn(v.oos_net_pts)}">${f0(v.oos_net_pts)}</td><td>${f2(v.oos_pf)}</td><td>${f0(v.max_dd_pts)}</td><td class="${sgn(v.net_rs)}">${rs(v.net_rs, true)}</td><td>${pct(v.cagr_pct)}</td><td>${pct(v.max_dd_pct)}</td></tr>`; }).join("")
+  + `<tr><td class="l">Buy-and-hold NIFTY futures (1x, rolls ke saath)</td><td>-</td><td class="${sgn(D.buy_hold.net_pts)}">${f0(D.buy_hold.net_pts)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>${f0(D.buy_hold.pts_curve.max_dd)}</td><td class="${sgn(D.buy_hold.net_rs)}">${rs(D.buy_hold.net_rs, true)}</td><td>${pct(D.buy_hold.rs_curve.cagr_pct)}</td><td>${pct(D.buy_hold.rs_curve.max_dd_pct)}</td></tr></tbody>`;
+$("#rndhint").textContent = `Rule: ${f1(D.rule_mean)} net pts / trade (${D.n_rule} trade). Grey: random 1-ghanta candle pe entry, direction = us waqt ka 1h Supertrend. Neela: random direction. Exit wahi Supertrend wala, trade count wahi.`;
+$("#rndnote").innerHTML = `1h direction: random average ${f1(R.trend.mean)} pts, 95% isse kam ${f1(R.trend.p95)}; p = <b>${f3(R.trend.p)}</b>. Sikka: average ${f1(R.coin.mean)}, 95% ${f1(R.coin.p95)}; p = <b>${f3(R.coin.p)}</b>. `
+  + (R.trend.p < 0.05 ? "<span class='pos'>Rule ki entry timing random se behtar.</span>" : "<span class='neg'>Rule ki entry timing random (1h direction) se behtar saabit nahi: fayda Supertrend exit (trend pakadna) se hai, daily filter / alignment timing se nahi.</span>");
+$("#reghint").textContent = "Daily flips = entry se pehle ke 60 daily candles me daily Supertrend kitni baar palta (0-1 trending, 4+ choppy). VIX = pichhle din ka close.";
+tbl("#reg", ["Kis hisaab se", "Regime", "Trades", "Net pts", "PF", "Win %", "Exp / trade", "Rs net"], D.regimes.map(r => `<tr><td class="l">${esc(r.by)}</td><td>${esc(r.regime)}</td><td>${r.trades}</td><td class="${sgn(r.net_pts)}">${f0(r.net_pts)}</td><td>${f2(r.pf)}</td><td>${pct(r.win_pct)}</td><td class="${sgn(r.exp_pts)}">${f1(r.exp_pts)}</td><td class="${sgn(r.net_rs)}">${rs(r.net_rs, true)}</td></tr>`));
+tbl("#per", ["Period", "Trades", "Net pts", "Max DD pts", "Return (main)", "Return (fresh 25L)", "Buy-and-hold"], D.periods.map(p => `<tr><td class="l">${esc(p.period)}<div class="mini">${p.from} - ${p.to}</div></td><td>${p.trades}</td><td class="${sgn(p.net_pts)}">${f0(p.net_pts)}</td><td>${f0(p.max_dd_pts)}</td><td class="${sgn(p.return_pct_main)}">${pct(p.return_pct_main)}</td><td class="${sgn(p.fresh_return_pct)}">${pct(p.fresh_return_pct)}</td><td class="${sgn(p.buy_hold_pct)}">${pct(p.buy_hold_pct)}</td></tr>`));
+
+// ---------- years / months
+const worst = D.yearly.reduce((a, b) => (b.net_rs < a.net_rs ? b : a), D.yearly[0]);
+tbl("#yt", ["Saal", "Net pts", "Trades", "Win %", "PF", "Sabse accha trade", "Kharcha (pts)", "Rs net", "Return %"], D.yearly.map(y => `<tr${y.year === worst.year ? ' style="background:var(--neg-soft)"' : ""}><td class="l">${y.year}${y.year > +D.split.slice(0, 4) ? " (test)" : y.year === +D.split.slice(0, 4) ? " (fit+test)" : ""}</td><td class="${sgn(y.net_pts)}">${f0(y.net_pts)}</td><td>${y.trades}</td><td>${pct(y.win_pct)}</td><td>${f2(y.pf)}</td><td>${f0(y.best)}</td><td>${f0(y.cost_pts)}</td><td class="${sgn(y.net_rs)}">${rs(y.net_rs, true)}</td><td class="${sgn(y.return_pct)}">${pct(y.return_pct)}</td></tr>`));
+tbl("#mtab", ["Mahina", "Net pts", "Rs net", "Return %", "Trades band"], D.monthly.slice().reverse().map(m => `<tr><td class="l">${m[0]}</td><td class="${sgn(m[1])}">${f0(m[1])}</td><td class="${sgn(m[2])}">${rs(m[2], true)}</td><td class="${sgn(m[3])}">${pct(m[3])}</td><td>${m[4]}</td></tr>`));
+
+// ---------- data, rules
+const DC = D.data_card;
+$("#covhint").textContent = DC.note || "";
+tbl("#cov", DC.coverage_cols, DC.coverage.map(r => `<tr>${r.map((v, i) => `<td class="${i ? "" : "l"}">${esc(v)}</td>`).join("")}</tr>`));
+tbl("#qual", ["Check", "Count", "Examples", "Kya kiya"], DC.quality.map(r => `<tr><td class="l">${esc(r[0])}</td><td>${f0(r[1])}</td><td class="l">${esc(r[2])}</td><td class="l">${esc(r[3])}</td></tr>`));
+tbl("#rolls", ["Roll din", "Purana expiry", "Naya expiry", "Gap (pts)"], D.rolls.map(r => `<tr><td class="l">${String(r.roll_day).slice(0, 10)}</td><td>${String(r.old_expiry || "").slice(0, 10)}</td><td>${String(r.new_expiry || "").slice(0, 10)}</td><td>${f1(r.roll_gap_pts)}</td></tr>`));
+tbl("#lots", ["Is din se", "Lot size"], D.lot_sizes.map(l => `<tr><td class="l">${l[0]}</td><td>${l[1]}</td></tr>`));
+$("#assume").innerHTML = D.assumptions.map(a => `<li>${esc(a)}</li>`).join("");
+$("#rulelist").innerHTML = D.rules.map(r => `<li>${esc(r)}</li>`).join("");
+$("#fml").innerHTML = "<tbody>" + D.formulas.map(f => `<tr><td class="l"><b>${esc(f[0])}</b></td><td class="l"><code>${esc(f[1])}</code></td></tr>`).join("") + "</tbody>";
+const copyText = {rules: () => `Rules - ${D.title}\n` + D.rules.map((r, i) => (i + 1) + ". " + r).join("\n"), formulas: () => `Formulas - ${D.title}\n` + D.formulas.map(f => f[0] + ": " + f[1]).join("\n")};
+function copyOld(t){ const a = document.createElement("textarea"); a.value = t; a.style.position = "fixed"; a.style.opacity = "0"; document.body.appendChild(a); a.select(); const k = document.execCommand("copy"); a.remove(); return k; }
+document.querySelectorAll(".copy").forEach(b => b.onclick = async () => { const t = copyText[b.dataset.copy](); let k = false; try { await navigator.clipboard.writeText(t); k = true; } catch (e) { k = copyOld(t); } b.textContent = k ? "Copy ho gaya ✓" : "Copy nahi hua"; setTimeout(() => b.textContent = "Copy karo", 1500); });
+
+// ---------- trades table
+const TC = {}; D.trade_cols.forEach((c, i) => TC[c] = i);
+const T = D.trades;
+(function(){
+  const cols = [["entry_dt", "Entry"], ["side", "Side"], ["entry", "Entry px", f1], ["stop_dist", "Stop dist", f0], ["lots", "Lots"], ["exit_dt", "Exit"], ["exit", "Exit px", f1], ["reason", "Exit ka karan"], ["points", "Points", f1, 1], ["slip", "Slippage", f1], ["charges", "Charges", f1], ["net", "Net pts", f1, 1], ["rolls", "Rolls"], ["days", "Din", f1], ["pnl_rs", "Rs", v => rs(v, true), 1], ["trend", "Regime"]];
+  [...new Set(T.map(r => r[TC.reason]))].sort().forEach(v => { const o = document.createElement("option"); o.value = o.textContent = v; $("#te").appendChild(o); });
+  let sortC = 0, dir = -1, page = 0, view = T;
+  const th = $("#ttable thead"), tb = $("#ttable tbody");
+  th.innerHTML = "<tr>" + cols.map((c, i) => `<th class="s ${i < 2 ? "l" : ""}" data-i="${i}">${c[1]}</th>`).join("") + "</tr>";
+  function apply(){ const e = $("#te").value, s = $("#ts").value; view = T.filter(r => (!e || r[TC.reason] === e) && (!s || r[TC.side] === s)); const k = TC[cols[sortC][0]]; view.sort((a, b) => (a[k] < b[k] ? -1 : a[k] > b[k] ? 1 : 0) * dir); page = 0; draw(); }
+  function draw(){ tb.innerHTML = view.slice(page * 50, page * 50 + 50).map(r => "<tr>" + cols.map((c, i) => `<td class="${i < 2 ? "l " : ""}${c[3] ? sgn(r[TC[c[0]]]) : ""}">${c[2] ? c[2](r[TC[c[0]]]) : esc(r[TC[c[0]]])}</td>`).join("") + "</tr>").join("");
+    const pages = Math.max(1, Math.ceil(view.length / 50)); $("#tcount").textContent = view.length + " trade";
+    $("#tpager").innerHTML = `<button class="btn" ${page ? "" : "disabled"} data-d="-1">Pichhla</button> Page ${page + 1} / ${pages} <button class="btn" ${page < pages - 1 ? "" : "disabled"} data-d="1">Agla</button>`; }
+  th.onclick = e => { const h = e.target.closest("th"); if (!h) return; const i = +h.dataset.i; dir = i === sortC ? -dir : 1; sortC = i; apply(); };
+  $("#tpager").onclick = e => { const d = e.target.dataset.d; if (d) { page += +d; draw(); } };
+  $("#te").onchange = apply; $("#ts").onchange = apply;
+  $("#tdl").onclick = () => { const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"'; const csv = [cols.map(c => q(c[1])).join(",")].concat(view.map(r => cols.map(c => q(r[TC[c[0]]])).join(","))).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"})); a.download = "trades.csv"; a.click(); };
+  apply();
+})();
+
+// ---------- trade viewer: 1-hour spot candles + 1h Supertrend + daily Supertrend (last completed day)
+const C = D.chart;
+function viewerTrades(){
+  return T.map((r, n) => {
+    const g = k => r[TC[k]], long = g("side") === "LONG";
+    const a = Math.max(0, g("k_in") - 40), z = Math.min(C.t.length - 1, g("k_out") + 15);
+    const data = [], st = [], dst = [];
+    for (let i = a; i <= z; i++) { const t = C.t[i] * 60; data.push({time: t, open: C.o[i], high: C.h[i], low: C.l[i], close: C.c[i]}); if (C.st[i] !== null) st.push({time: t, value: C.st[i]}); if (C.dst[i] !== null) dst.push({time: t, value: C.dst[i]}); }
+    const mk = [{time: C.t[g("k_in")] * 60, position: long ? "belowBar" : "aboveBar", shape: long ? "arrowUp" : "arrowDown", color: "--accent", text: g("side")},
+      {time: C.t[g("k_out")] * 60, position: long ? "aboveBar" : "belowBar", shape: long ? "arrowDown" : "arrowUp", color: g("net") >= 0 ? "--pos" : "--neg", text: "Exit"}];
+    return {id: n + "|" + g("entry_dt"), date: g("entry_dt").slice(0, 10), title: `NIFTY ${g("side")}`, sub: `${g("entry_dt").slice(5)} ${f1(g("entry"))} → ${g("exit_dt").slice(5)} ${f1(g("exit"))} · ${g("reason")}`, pnl: g("pnl_rs"), tag: g("reason"),
+      meta: [["Signal candle close (spot)", `${g("sig_in")} @ ${f1(g("sig_close"))}`], ["Initial stop (1h band) / doori", `${f1(g("stop"))} / ${f0(g("stop_dist"))} pts`], ["Entry (futures, agla 1-min open)", `${g("entry_dt")} @ ${f1(g("entry"))}`],
+        ["Exit signal / exit (futures)", `${g("sig_out")} / ${g("exit_dt")} @ ${f1(g("exit"))}`], ["Lots x lot size / risk", `${g("lots")} x ${g("lot")} / ${rs(g("risk_rs"))} (equity ${rs(g("equity_in"))})${g("capped") ? " - margin cap" : ""}`],
+        ["Net points (per unit)", pts(g("net"), true), sgn(g("net"))], ["Holding", f1(g("days")) + " din, " + g("rolls") + " roll"], ["Regime", `${g("trend")}, ${g("vix")}`], ["Rs", rs(g("pnl_rs"), true), sgn(g("pnl_rs"))]],
+      charts: [{title: "NIFTY spot 1-ghanta candle (signal chart)", kind: "candle", intraday: true, data: data, markers: mk, lines: [{price: g("stop"), color: "--warn", title: "initial stop"}],
+        overlays: [{data: st, color: "--neg", title: "1h Supertrend"}, {data: dst, color: "--accent", title: "Daily Supertrend"}],
+        legend: [["--neg", "1h Supertrend 7x3"], ["--accent", "Daily Supertrend 7x3 (pichhla poora din)"], ["--warn", "initial stop"]]}],
+      note: "Chart spot ka hai (signals isi pe); order futures pe - entry / exit price futures ke hain (basis ka farq).",
+      cost: [["Points (gross, per unit)", f1(g("points")), sgn(g("points"))], ["Slippage (points)", "-" + f1(g("slip"))], ["Charges (points)", "-" + f1(g("charges"))], ["Net points", f1(g("net")), sgn(g("net")), true], ["Rs (lots x lot size x net pts)", rs(g("pnl_rs"), true), sgn(g("pnl_rs")), true]]};
+  }).sort((x, y) => (x.date < y.date ? 1 : x.date > y.date ? -1 : 0));
+}
+TradeViewer.stickyHeader(".top");
+const TV = TradeViewer(document.querySelector("#tv"), {labels: {stock: "Khojo", stockLabel: "Trade"}});
+TV.setTrades(viewerTrades());
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => { document.querySelectorAll(".tab").forEach(x => x.classList.toggle("on", x === b)); document.querySelectorAll(".panel").forEach(p => p.classList.toggle("on", p.id === b.dataset.p)); charts.forEach(c => c.resize()); if (b.dataset.p === "viewer") TV.show(); });
+drawCharts();
+</script>
+</body>
+</html>
