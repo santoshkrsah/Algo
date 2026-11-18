@@ -119,6 +119,8 @@ static files over HTTPS, `.gz` served as plain bytes (no `Content-Encoding` head
   deleted — open the site now and then.
 - **Plain FTP:** the password travels unencrypted; use a password that is used nowhere else and change it if it was
   ever pasted somewhere (it was pasted in a Claude chat on 14 Nov 2026 -> change it in the panel, then in `.env`).
+- **PASV answered with 229 (18 Nov 2026):** the server started replying "229 Extended Passive Mode" to PASV, so plain
+  ftplib failed every transfer with `error_reply 229`. upload_site.py `_makepasv` now accepts both 227 and 229 replies.
 
 ## 8. Check after every rebuild
 
