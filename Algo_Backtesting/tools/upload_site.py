@@ -74,6 +74,17 @@ def build(site_url: str) -> dict[str, bytes]:
     return out
 
 
+def _makepasv(f: ftplib.FTP):
+    """PASV that also accepts a '229 Extended Passive Mode' answer: since Nov 2026 the InfinityFree
+    server replies 229 to PASV, which plain ftplib rejects (error_reply 229 on every transfer)."""
+    resp = f.sendcmd("PASV")
+    peer = f.sock.getpeername()
+    if resp.startswith("229"):
+        return peer[0], ftplib.parse229(resp, peer)[1]
+    host, port = ftplib.parse227(resp)
+    return (peer[0] if not f.trust_server_pasv_ipv4_address else host), port
+
+
 class Remote:
     """FTP session that reconnects and retries (the free host drops connections now and then)."""
 
@@ -89,6 +100,7 @@ class Remote:
         if tls:
             f.prot_p()
         f.set_pasv(True)
+        f.makepasv = lambda: _makepasv(f)
         f.cwd(e["SITE_FTP_DIR"])
         self.ftp = f
 

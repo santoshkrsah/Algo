@@ -38,6 +38,13 @@ def nifty():
 
 
 def index_1m(symbol: str, name: str, start: date = START):
+    """index/<name>_1m.csv. If the file exists only the days after its last candle are downloaded (from 3 days before,
+    so a half-saved last day is replaced) and merged in; older rows are kept, even ones from before START
+    (e.g. NIFTY500_1m starts in 2020). Index prices are never re-adjusted, so no adjustment check is needed."""
+    path = INDEX / f"{name}_1m.csv"
+    old = pd.read_csv(path, parse_dates=["datetime"]) if path.exists() else None
+    if old is not None and len(old):
+        start = max(start, old.datetime.max().date() - timedelta(days=3))
     rows, end = [], date.today()
     while end >= start:
         begin = max(start, end - timedelta(days=CHUNK_DAYS - 1))
@@ -45,10 +52,17 @@ def index_1m(symbol: str, name: str, start: date = START):
         end = begin - timedelta(days=1)
     df = pd.DataFrame(rows, columns=["ts", "open", "high", "low", "close", "volume"])
     df["datetime"] = pd.to_datetime(df["ts"], unit="s", utc=True).dt.tz_convert("Asia/Kolkata").dt.tz_localize(None)
-    df = df.drop(columns="ts").drop_duplicates("datetime").sort_values("datetime")
+    df = df.drop(columns="ts")
+    n_old = 0
+    if old is not None and len(old):
+        n_old = len(old)
+        df = pd.concat([old, df], ignore_index=True)
+    df = df.drop_duplicates("datetime", keep="last").sort_values("datetime")
     INDEX.mkdir(parents=True, exist_ok=True)
-    df[["datetime", "open", "high", "low", "close", "volume"]].to_csv(INDEX / f"{name}_1m.csv", index=False)
-    print(f"{name}: {len(df)} candles, {df.datetime.min()} -> {df.datetime.max()}")
+    tmp = path.with_suffix(".tmp")
+    df[["datetime", "open", "high", "low", "close", "volume"]].to_csv(tmp, index=False)
+    tmp.replace(path)                       # a half-written file never looks finished
+    print(f"{name}: {len(df)} candles (+{len(df) - n_old}), {df.datetime.min()} -> {df.datetime.max()}")
 
 
 def bands(start: str = ""):
