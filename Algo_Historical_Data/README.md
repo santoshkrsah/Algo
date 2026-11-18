@@ -64,6 +64,8 @@ The equity downloader saves progress after every batch of 25 stocks. If it stops
 | Task | Command |
 |---|---|
 | Add the missing days only (one request per stock, ~10 min; then builds the store) | `python -m fyers_data.update_equity` (`--dry-run` shows the plan, `--nifty` also refreshes the Nifty file) |
+| Daily candles: add the missing days only (one request per stock, ~25 min; a stock Fyers re-adjusted for a split / bonus gets its full history again), then the parquet | `python -m fyers_data.download_daily --update` |
+| Other index 1m files: add the new days (older rows kept) | `python -m fyers_data.download_reference index NSE:NIFTYBANK-INDEX BANKNIFTY` (also `NSE:INDIAVIX-INDEX INDIAVIX`, `NSE:NIFTY500-INDEX NIFTY500`) |
 | Build / refresh the Parquet store (first time ~10-20 min, then only new days) | `python -m fyers_data.store build` |
 | Prove the store returns the same candles as the CSVs | `python -m fyers_data.store verify --days 5` |
 | Days, stocks, size on disk | `python -m fyers_data.store info` |
