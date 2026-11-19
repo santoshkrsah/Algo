@@ -258,5 +258,15 @@
   "pf": 0.68,
   "trades": 25761,
   "verdict": "loss"
+ },
+ "28_rsi15_swing_nifty50": {
+  "name": "RSI 30/70 Swing (15-min) - NIFTY 50 stocks",
+  "type": "Swing",
+  "period": "Jun 2023 - Jun 2026",
+  "result": "NIFTY 50 ke 50 stocks, RSI(14) 15-min: 30 ke upar cross pe buy, 70 ke neeche cross pe sell, SL nahi, Rs 10 L (Rs 1 L/trade, max 10), Angel One charges + 0.05% slippage. 1369 trade, 57% jeete, net -Rs 3.09 L (-31%), PF 0.80, max DD -38%. Kharche se pehle +2.18 L par charges 3.92 L + slippage 1.35 L. 2023 profit, 2024-26 loss; NIFTY 50 buy-hold +28%.",
+  "net": -309328,
+  "pf": 0.8,
+  "trades": 1369,
+  "verdict": "loss"
  }
 }

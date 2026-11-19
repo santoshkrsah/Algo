@@ -1,7 +1,4 @@
 {
- "reports/01_oct_2026.html": "results/01_oct_2026/report.html",
- "reports/02_jan_oct_2026.html": "results/02_jan_oct_2026/report.html",
- "reports/03_full_2021_2026.html": "results/03_full_2021_2026/report.html",
  "reports/05_vmu_v3.html": "results/05_vmu_v3/report.html",
  "reports/06_vmu_v2.html": "results/06_vmu_v2/report.html",
  "reports/07_vol5l_2021_2026.html": "results/07_vol5l_2021_2026/report.html",
@@ -24,5 +21,6 @@
  "reports/24_straddle_risk_2021_2026.html": "results/24_straddle_risk_2021_2026/report.html",
  "reports/25_stnifty_supertrend_ma.html": "results/25_stnifty_supertrend_ma/report.html",
  "reports/26_mtst_nifty_supertrend.html": "results/26_mtst_nifty_supertrend/report.html",
- "reports/27_groww5_intraday.html": "results/27_groww5_intraday/report.html"
+ "reports/27_groww5_intraday.html": "results/27_groww5_intraday/report.html",
+ "reports/28_rsi15_swing_nifty50.html": "results/28_rsi15_swing_nifty50/report.html"
 }
