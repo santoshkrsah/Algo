@@ -197,11 +197,53 @@ def save(df: pd.DataFrame, kind: str, name: str):
         resample(df, rule).to_csv(q / f"{name}.csv", index=False)
 
 
+def update(only: set[str] | None) -> int:
+    """Add the new days to every saved contract of selected_contracts.csv (no new selection, one request each)."""
+    sel = pd.read_csv(SELECTED_CONTRACTS)
+    if only:
+        sel = sel[sel.under.isin(only)]
+    today, t0, done, failed = date.today(), time.time(), 0, []
+    todo = list(sel.itertuples(index=False))
+    for i, c in enumerate(todo, 1):
+        name = c.symbol.split(":")[1]
+        p = DATA / "1m" / ("futures" if c.kind == "FUT" else "options") / f"{name}.csv"
+        if not p.exists():
+            continue
+        old = pd.read_csv(p, parse_dates=["datetime"])
+        if old.empty:
+            continue
+        last = old.datetime.max().date()
+        if last >= min(today, date.fromisoformat(str(c.expiry))):
+            continue
+        try:
+            c_rows = fetch_chunk(c.symbol, last, today)
+        except Exception as e:
+            failed.append(name)
+            print(f"[{i}/{len(todo)}] FAIL {c.symbol}: {e}", flush=True)
+            continue
+        if c_rows:
+            new = pd.DataFrame(c_rows, columns=["ts", "open", "high", "low", "close", "volume"])
+            new["datetime"] = (pd.to_datetime(new["ts"], unit="s", utc=True)
+                               .dt.tz_convert("Asia/Kolkata").dt.tz_localize(None))
+            df = pd.concat([old[old.datetime.dt.date < last], new.drop(columns="ts")])
+            df = df.drop_duplicates("datetime", keep="last").sort_values("datetime")
+            save(df[["datetime", "open", "high", "low", "close", "volume"]], c.kind, name)
+            done += 1
+        if i % 250 == 0:
+            print(f"[{i}/{len(todo)}] updated={done} elapsed={(time.time() - t0) / 60:.1f}m", flush=True)
+    print(f"update done: {done} contracts got new days, {len(failed)} failed {' '.join(failed[:30])}", flush=True)
+    return 1 if failed else 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--only", nargs="*", help="limit to these underlyings")
+    ap.add_argument("--update", action="store_true",
+                    help="saved contracts only: fetch from their last saved day to today (keeps the old selection)")
     args = ap.parse_args()
+    if args.update:
+        return update(set(args.only) if args.only else None)
 
     sel = select_contracts(set(args.only) if args.only else None)
     SELECTED_CONTRACTS.parent.mkdir(parents=True, exist_ok=True)
