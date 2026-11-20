@@ -46,6 +46,7 @@ Run from the project folder with the virtual environment active.
 
 | Task | Command |
 |---|---|
+| F&O: add the new days to the saved contracts only (keeps selected_contracts.csv, one request each) | `python -m fyers_data.download_fno --update` |
 | Check the F&O contract selection (no download) | `python -m fyers_data.download_fno --dry-run` |
 | Download F&O data (resumable) | `python -m fyers_data.download_fno` |
 | Build the equity list (needs the AMFI PDF in `data/reference/amfi/`) | `python -m fyers_data.universe` |
