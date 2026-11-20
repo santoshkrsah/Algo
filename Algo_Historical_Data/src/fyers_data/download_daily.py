@@ -92,6 +92,95 @@ def stocks(start: date, end: date, only: set | None = None) -> list[str]:
     return failed
 
 
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+def update(end: date, start: date = START, only: set | None = None) -> tuple[list[str], list[str]]:
+    """Add the missing days to every saved stock CSV: one request per stock (last saved day - OVERLAP .. end).
+    The overlap days must match the saved closes (TOL); if they don't, Fyers re-adjusted the history (split / bonus
+    after the first download), so that stock's full history is downloaded again. Empty CSVs (no Fyers data) are skipped.
+    Returns (failed, re-downloaded)."""
+    out = DAILY / "equity"
+    files = sorted(p for p in out.glob("*.csv") if only is None or p.stem in only)
+    sym = {short_name(s): s for s in pd.read_csv(UNIVERSE_CSV).symbol}
+    failed, redone, added, t0 = [], [], 0, time.time()
+    print(f"update: {len(files)} saved stocks -> {end}", flush=True)
+    for n, p in enumerate(files, 1):
+        try:
+            old = pd.read_csv(p, dtype={"date": str})
+            if old.empty or old.date.max() >= str(end):
+                continue
+            a = date.fromisoformat(old.date.max()) - timedelta(days=OVERLAP)
+            s = sym.get(p.stem, f"NSE:{p.stem}-EQ")
+            rows = fetch_chunk(s, a, end, resolution="D")
+            if not rows:
+                continue
+            new = pd.DataFrame(rows, columns=["ts", "open", "high", "low", "close", "volume"])
+            new["date"] = pd.to_datetime(new.ts, unit="s", utc=True).dt.tz_convert("Asia/Kolkata").dt.strftime("%Y-%m-%d")
+            new = new.drop_duplicates("date")[COLS]
+            both = old.merge(new, on="date", suffixes=("", "_n"))
+            if len(both) and ((both.close_n / both.close - 1).abs() > TOL).any():
+                save(history(s, start, end), p)          # re-adjusted by Fyers -> fresh full history
+                redone.append(p.stem)
+            else:
+                df = pd.concat([old, new[new.date > old.date.max()]], ignore_index=True)
+                added += len(df) - len(old)
+                save(df, p)
+        except RuntimeError as e:           # fetch_chunk gave up after its retries; a rerun asks again
+            failed.append(p.stem)
+            print(f"FAILED {p.stem}: {e}", flush=True)
+        if n % 100 == 0 or n == len(files):
+            print(f"{n}/{len(files)} stocks, {(time.time() - t0) / 60:.1f} min, +{added} rows, re-downloaded {len(redone)}", flush=True)
+    return failed, redone
+=======
+def _update_file(symbol: str, path, start: date, end: date) -> str:
+    """Add the missing days to one saved CSV (one request). If Fyers' overlap prices differ from the saved ones by
+    more than 0.3% (split / bonus re-adjustment), the full history is fetched again. Returns 'new', 'full' or 'same'."""
+    old = pd.read_csv(path)
+    if old.empty:
+        return "same"
+    last = date.fromisoformat(str(old.date.max()))
+    if last >= end:
+        return "same"
+    new = history(symbol, max(start, last - timedelta(days=10)), end)
+    if new.empty:
+        return "same"
+    ov = old.merge(new, on="date", suffixes=("_o", "_n"))
+    if len(ov) and ((ov.close_n / ov.close_o - 1).abs() > 0.003).any():
+        save(history(symbol, start, end), path)
+        return "full"
+    df = pd.concat([old, new[new.date > str(last)]], ignore_index=True)[COLS]
+    save(df, path)
+    return "new"
+
+
+def update(start: date, index_start: date, end: date, only: set | None = None) -> list[str]:
+    """Existing CSVs: only the missing days (index files and every stock); stocks without a CSV get the full history."""
+    for name, sym in INDICES.items():
+        p = DAILY / "index" / f"{name}.csv"
+        r = _update_file(sym, p, index_start, end) if p.exists() else (save(history(sym, index_start, end), p) or "full")
+        print(f"{name}: {r}", flush=True)
+    out = DAILY / "equity"
+    u = pd.read_csv(UNIVERSE_CSV).sort_values("mcap_cr", ascending=False)
+    todo = [s for s in u.symbol if only is None or short_name(s) in only]
+    failed, counts, t0 = [], {}, time.time()
+    for n, s in enumerate(todo, 1):
+        p = out / f"{short_name(s)}.csv"
+        try:
+            r = _update_file(s, p, start, end) if p.exists() else (save(history(s, start, end), p) or "full")
+            counts[r] = counts.get(r, 0) + 1
+            if r == "full":
+                print(f"{short_name(s)}: full history again (re-adjusted or new)", flush=True)
+        except RuntimeError as e:
+            failed.append(short_name(s))
+            print(f"FAILED {s}: {e}", flush=True)
+        if n % 100 == 0 or n == len(todo):
+            print(f"{n}/{len(todo)} stocks, {(time.time() - t0) / 60:.1f} min, {counts}", flush=True)
+    return failed
+>>>>>>> Stashed changes
+
+
+>>>>>>> Stashed changes
 def combine() -> pd.DataFrame:
     parts = [pd.read_csv(p).assign(symbol=p.stem) for p in sorted((DAILY / "equity").glob("*.csv"))]
     df = pd.concat([p for p in parts if len(p)], ignore_index=True)[["symbol"] + COLS]
@@ -108,11 +197,23 @@ def main() -> int:
     ap.add_argument("--indices-only", action="store_true")
     ap.add_argument("--combine-only", action="store_true")
     ap.add_argument("--no-telegram", action="store_true")
+    ap.add_argument("--update", action="store_true", help="only the missing days of every saved file (~1 request per stock)")
     a = ap.parse_args()
     end = date.fromisoformat(a.end) if a.end else last_complete_day()
     t0 = time.time()
+<<<<<<< Updated upstream
     failed = []
+=======
+<<<<<<< Updated upstream
+    failed, redone = [], []
+>>>>>>> Stashed changes
     if not a.combine_only:
+=======
+    failed = []
+    if a.update:
+        failed = update(date.fromisoformat(a.start), date.fromisoformat(a.index_start), end, set(a.only) if a.only else None)
+    elif not a.combine_only:
+>>>>>>> Stashed changes
         indices(date.fromisoformat(a.index_start), end)
         if a.indices_only:
             return 0
