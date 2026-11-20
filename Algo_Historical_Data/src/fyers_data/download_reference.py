@@ -6,6 +6,7 @@
     python -m fyers_data.download_reference corp --start 2024-11-01 [--end 2026-12-31]   # NSE corporate actions -> reference/corporate_actions.csv
     python -m fyers_data.download_reference niftyday --start 2021-01-01 --end 2021-09-30   # Nifty 50 daily OHLC from NSE ind_close_all -> index/NIFTY50_daily.csv
     python -m fyers_data.download_reference symbols   # NSE symbol changes (old -> new ticker, effective date) -> reference/symbol_changes.csv
+    python -m fyers_data.download_reference ipos [--start 2010-01-01]   # NSE past IPOs (mainboard + SME: issue price, listing date) -> reference/ipo_past_issues.csv + nse_equity_list.csv
 
 The NSE price band list gives, per day: series (EQ/BE/...), circuit band (2/5/10/20%, "No Band" = stock is in F&O)
 and the GSM stage in Remarks. One file per trading day in reference/price_bands/.
@@ -151,9 +152,58 @@ def symbols():
     print(f"symbols: {len(df)} changes, {df.date.min()} -> {df.date.max()}")
 
 
+IPO_PAGE = "https://www.nseindia.com/market-data/all-upcoming-issues-ipo"
+IPO_API = "https://www.nseindia.com/api/public-past-issues?from_date={:%d-%m-%Y}&to_date={:%d-%m-%Y}&security_type=all"
+EQUITY_L = "https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv"
+
+
+def ipos(start: date, end: date):
+    """NSE past public issues (mainboard EQ + SME): symbol, company, issue price, price band, issue dates, listing date
+    -> reference/ipo_past_issues.csv, one request per calendar year (resumable: a rerun asks every year again and
+    merges, it is ~17 small requests). Also saves NSE's list of every listed equity with its NSE listing date
+    (EQUITY_L.csv) -> reference/nse_equity_list.csv."""
+    out = CORP_ACTIONS.parent / "ipo_past_issues.csv"
+    s = requests.Session()
+    head = {**NSE_UA, "Accept": "application/json, text/plain, */*", "Referer": IPO_PAGE}
+    rows, failed = [], []
+    for y in range(start.year, end.year + 1):
+        a, b = max(start, date(y, 1, 1)), min(end, date(y, 12, 31))
+        for attempt in range(4):
+            try:
+                if attempt or not s.cookies:
+                    s.get(IPO_PAGE, headers=NSE_UA, timeout=30)
+                r = s.get(IPO_API.format(a, b), headers=head, timeout=60)
+                if r.status_code == 200 and r.text.startswith("["):
+                    rows.extend(r.json())
+                    break
+            except (requests.RequestException, ValueError):
+                pass
+            time.sleep(3 * (attempt + 1))
+        else:
+            failed.append(y)
+        time.sleep(0.5)
+    df = pd.DataFrame(rows)
+    for c in ("listingDate", "ipoStartDate", "ipoEndDate"):
+        df[c] = pd.to_datetime(df[c], format="%d-%b-%Y", errors="coerce").dt.strftime("%Y-%m-%d")
+    df = df.drop(columns=["company"], errors="ignore").rename(columns={"companyName": "company", "securityType": "type", "issuePrice": "issue_price", "priceRange": "price_range",
+                            "listingDate": "listing_date", "ipoStartDate": "open_date", "ipoEndDate": "close_date"})
+    df = df[["symbol", "company", "type", "issue_price", "price_range", "open_date", "close_date", "listing_date"]]
+    if out.exists():                       # keep years a failed request did not return this time
+        df = pd.concat([pd.read_csv(out, dtype=str), df.astype(str)])
+    df = df.astype(str).drop_duplicates(["symbol", "listing_date"], keep="last").sort_values(["listing_date", "symbol"])
+    df.to_csv(out, index=False)
+    r = requests.get(EQUITY_L, headers=NSE_UA, timeout=60)
+    eq = pd.read_csv(io.StringIO(r.text))
+    eq.columns = [c.strip().lower().replace(" ", "_") for c in eq.columns]
+    eq["date_of_listing"] = pd.to_datetime(eq.date_of_listing, format="%d-%b-%Y", errors="coerce").dt.strftime("%Y-%m-%d")
+    eq.to_csv(CORP_ACTIONS.parent / "nse_equity_list.csv", index=False)
+    print(f"ipos: {len(df)} issues ({(df.type == 'EQ').sum()} mainboard, {(df.type == 'SME').sum()} SME), "
+          f"{df.listing_date.min()} -> {df.listing_date.max()}; failed years: {failed}; nse_equity_list: {len(eq)} rows")
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("what", choices=["nifty", "index", "bands", "corp", "niftyday", "symbols"])
+    ap.add_argument("what", choices=["nifty", "index", "bands", "corp", "niftyday", "symbols", "ipos"])
     ap.add_argument("args", nargs="*", help="index: Fyers symbol and file name, e.g. NSE:INDIAVIX-INDEX INDIAVIX")
     ap.add_argument("--start", default="", help="bands: only days from this date; corp: first date (YYYY-MM-DD)")
     ap.add_argument("--end", default=str(date.today()), help="corp: last date")
@@ -166,5 +216,7 @@ if __name__ == "__main__":
         nifty_daily(date.fromisoformat(a.start), date.fromisoformat(a.end))
     elif a.what == "symbols":
         symbols()
+    elif a.what == "ipos":
+        ipos(date.fromisoformat(a.start or "2010-01-01"), date.fromisoformat(a.end))
     else:
         nifty() if a.what == "nifty" else bands(a.start)
