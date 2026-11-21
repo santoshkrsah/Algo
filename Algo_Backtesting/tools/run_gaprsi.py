@@ -1,6 +1,6 @@
 """Gap + RSI(10) + 21-EMA backtest (long gap-up breakout, short gap-down reversal) on daily candles; report + Telegram.
 
-    python tools/run_gaprsi.py                 # needs results/13_gap_rsi_ema/daily.pkl (built from the 15m equity candles)
+    python tools/run_gaprsi.py                 # needs results/03_gap_rsi_ema/daily.pkl (built from the 15m equity candles)
     python tools/run_gaprsi.py --no-telegram
 """
 import argparse
@@ -165,7 +165,7 @@ def main() -> int:
             ["Data", f"Daily candle (15-min candles se bana), {ind.symbol.nunique():,} stocks, {ind.date.min()} se {ind.date.max()}; F&O universe {len(fno & set(ind.symbol))} stocks"],
             ["Pehla trade", f"Long: {first} (monthly 10-EMA ke liye 10 mahine ka data chahiye), Short: {first_s}"],
             ["Signal (long, gap 2%)", f"{len(sig_long)} gap-up din (saare filter ke baad), {sig_long.symbol.nunique()} stocks"],
-            ["Saaf kiya", "12 galat price print hataye, 13 split/bonus adjust kiye, 19 bade jump (demerger) pe signal band / forced exit (results/13_gap_rsi_ema/ me CSV)"],
+            ["Saaf kiya", "12 galat price print hataye, 13 split/bonus adjust kiye, 19 bade jump (demerger) pe signal band / forced exit (results/03_gap_rsi_ema/ me CSV)"],
             ["Nifty", "Nifty 50 index 1-min data se daily close; 200-din average ke upar / neeche = bull / bear"],
         ]
         series = series_for(ind, runs)

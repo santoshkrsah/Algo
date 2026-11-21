@@ -11,7 +11,7 @@
 3. Report = the interactive HTML dashboard in Algo_Backtesting/src/backtest/assets/ (latest: vol5l_template.html, results/07_vol5l_2021_2026/report.html): KPI cards, charts, month table, every stock and every trade, and ALWAYS a "Rules" tab (not "Rules used").
    The whole report is written in simple Hinglish (easy words), especially the Rules tab. At the bottom of the Rules tab, ALWAYS a "Formulas" card listing every formula used in that backtest (entry, qty, target, SL/trailing, exit fill, slippage, P&L, costs, win rate, profit factor, drawdown, ...).
    The Rules card and the Formulas card each have a one-click "Copy karo" button in the top-right corner that copies that card as plain text.
-   NEW LOOK for every new report (user asked 1 Nov 2026; keep the old tabs/cards, add this): start from assets/opt_r3_template.html (example: results/12_opt_r3_2024_2026/report.html),
+   NEW LOOK for every new report (user asked 1 Nov 2026; keep the old tabs/cards, add this): start from assets/opt_r3_template.html (example: results/02_opt_r3_2024_2026/report.html),
    which pulls in assets/viewer.css + viewer.js + lightweight-charts.js through backtest/viewer.py:
    - sticky header (web view) with logo, title, a "Data <first date> -> <last date>" chip (period of the data that was tested) and the Dark/Light button; on mobile the header scrolls away and the tabs stay sticky.
    - navy theme (dark and light), saved theme choice, fully responsive on mobile (no horizontal page scroll, tables scroll inside their card).
@@ -24,7 +24,7 @@
 
 ## Layout
 - Algo_Historical_Data: downloads data + builds the fast store (own .venv). Algo_Backtesting: strategies, engine, results (own .venv). Backtesting only reads ../Algo_Historical_Data/data.
-- Every report folder in Algo_Backtesting/results is numbered in the order it was made: NN_<name> (01_oct_2026 ... 09_stbt_options, next one 10_).
+- Every report folder in Algo_Backtesting/results is numbered in the order it was made: NN_<name> (01_calarb_sep_oct_2026 ... 10_straddle_risk_2021_2026, next one 11_).
   Runners get their folder from backtest.config.result_dir(name): a new name gets the next number, a rerun of an existing name reuses its folder. Never create results/<name> directly.
 
 ## Data: fast store + daily updates (use these, never re-download or loop over CSVs)
