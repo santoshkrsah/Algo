@@ -189,6 +189,16 @@
   "trades": 1807,
   "verdict": "loss"
  },
+ "11_straddle_risk_retest": {
+  "name": "Straddle + Risk Layer (2021 - 2026 retest) - 4 test: Trailing band, Stop touch (1 min), Strike adjustment (200 pt), Drawdown scaling | NIFTY + SENSEX",
+  "type": "Options",
+  "period": "Nov 2021 - Nov 2026 (NIFTY); May 2023 - Nov 2026 (SENSEX)",
+  "result": "Report 10 ka retest: Extra checks ke 4 test alag-alag poore backtest, NIFTY + SENSEX, Rs 30 L, 1/3 margin, kharcha + slippage on. NIFTY (1232 din): base Rs 80.6 L PF 2.24; trailing band 81.0 L; stop 1-min touch pe 82.3 L (PF 2.31, sabse achha); strike adjustment 80.7 L; drawdown scaling 80.6 L (kabhi laga hi nahi). NIFTY ke numbers report 10 ke Extra checks se bilkul match. SENSEX (15 May 2023 se, 784 din): base 53.4 L PF 2.14; trailing band 53.3 L; stop touch 58.3 L (PF 2.36); strike adjustment 46.0 L (PF 1.98, kharab); drawdown scaling 53.4 L. Sensex me ~8% din (zyadatar expiry din) BSE data ki wajah se chhoote; Sensex option data 15 May 2023 se pehle nahi.",
+  "net": 8060019,
+  "pf": 2.24,
+  "trades": 1232,
+  "verdict": "profit"
+ },
  "15_call_fut_intraday": {
   "name": "Call Future Hedge",
   "type": "Options",

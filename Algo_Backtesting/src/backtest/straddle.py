@@ -1,4 +1,4 @@
-"""Layered short-straddle algo on NIFTY / BANKNIFTY index options, simulated minute by minute.
+"""Layered short-straddle algo on NIFTY / BANKNIFTY / SENSEX index options, simulated minute by minute.
 
 Layers: core (sell the ATM straddle), strike adjustment, averaging, tactical buying, delta scalping (futures hedge timed by
 a MACD histogram turn), risk (leg stop, daily loss limit = kill switch, trailing profit lock, confirmed stops), drawdown
@@ -26,8 +26,10 @@ import pandas as pd
 from backtest.config import DATA, FNO
 
 R = 0.06                                   # interest rate in Black-76
-SPOT_FILE = {"NIFTY": "NIFTY50_1m.csv", "BANKNIFTY": "BANKNIFTY_1m.csv"}
-STEP = {"NIFTY": 50, "BANKNIFTY": 100}
+SPOT_FILE = {"NIFTY": "NIFTY50_1m.csv", "BANKNIFTY": "BANKNIFTY_1m.csv", "SENSEX": "SENSEX_1m.csv"}
+STEP = {"NIFTY": 50, "BANKNIFTY": 100, "SENSEX": 100}
+EXCH_OPT = {"SENSEX": 0.000325}                  # BSE: Rs 3,250 per crore of premium turnover (Sensex options, from 1 Oct 2024; kept flat); NSE default below
+STRICT_NEAREST = {"SENSEX"}                      # if the nearest expiry has no usable smile that day, do not trade (never fall forward to the next expiry)
 N = 376                                    # t = minutes after 9:15: t = 0 is the 9:15 open, t = 375 is 15:30
 CLOSE_T = 360                              # NSE close = 15:00-15:30 average, taken as the 15:15 price
 EXIT_T = 360                               # square off at 15:15
@@ -121,11 +123,11 @@ STT_SLABS = (                               # (from date, option STT %, futures 
 )
 
 
-def fill_cost(value: float, buy: bool, fut: bool, day: str) -> dict:
+def fill_cost(value: float, buy: bool, fut: bool, day: str, index: str = "NIFTY") -> dict:
     """Fyers / NSE charges for one order of Rs <value>. STT (sell side only) changed slabs over the years: STT_SLABS."""
     opt_stt, fut_stt = next((o, f) for d, o, f in reversed(STT_SLABS) if day >= d)
     brokerage = 20.0
-    exch = (0.0000173 if fut else 0.0003503) * value
+    exch = (0.0000173 if fut else EXCH_OPT.get(index, 0.0003503)) * value
     sebi = 0.000001 * value
     stt = 0.0 if buy else (fut_stt if fut else opt_stt) * value
     stamp = ((0.00002 if fut else 0.00003) * value) if buy else 0.0
@@ -162,6 +164,14 @@ def load_chain(index: str, start: str, end: str) -> pd.DataFrame:
     cols = {"TradDt": "date", "XpryDt": "expiry", "StrkPric": "strike", "OptnTp": "type", "OpnPric": "open", "ClsPric": "close",
             "TtlNbOfTxsExctd": "trades", "NewBrdLotQty": "lot", "TckrSymb": "symbol", "TtlTradgVol": "vol"}
     hist_cols = {**cols, "TtlTrfVal": "turnover"}
+    if index == "SENSEX":                                       # BSE: Algo_Historical_Data fno/bhavcopy_bse (download_bse_bhav.py), one format for all days
+        files = [p for p in sorted((FNO / "bhavcopy_bse").glob("2*.csv")) if start <= p.stem <= end]
+        c = pd.concat([pd.read_csv(p, usecols=list(cols)) for p in files], ignore_index=True)
+        c = c[c.StrkPric > 0].copy()
+        c["ClsPric"] = c.ClsPric.fillna(0.0)                    # close unknown (expiry-day rows of the old BSE format): no usable closing price
+        c = c.rename(columns=cols)
+        c["turnover"] = np.nan
+        return c[c.symbol == index].drop(columns="symbol")
     parts = []
     for folder, mapping in ((FNO / "bhavcopy_idx_hist", hist_cols), (FNO / "bhavcopy_idx", cols)):
         files = [p for p in sorted(folder.glob("*.csv")) if start <= p.stem <= end]
@@ -281,6 +291,10 @@ class Day:
                 self.smiles[e] = sm
         self.last_lot = lot
         self.expiries = sorted(self.smiles)
+        if index in STRICT_NEAREST:
+            near = min((e for e in chain.expiry.unique() if e >= date), default=None)
+            if near is not None and near not in self.smiles:
+                self.expiries = []                                    # nearest expiry unusable today -> "Contract nahi mila", no trade
         self._cache = {}
         t = np.arange(N)
         self.w = np.minimum(t, CLOSE_T) / CLOSE_T
@@ -385,7 +399,7 @@ class Sim:
         fut = ps["cp"] == "FUT"
         slip = p.slip_fut if fut else p.slip_opt
         f = px * (1 + slip) if buy else px * (1 - slip)
-        c = fill_cost(f * ps["qty"], buy, fut, d.date)
+        c = fill_cost(f * ps["qty"], buy, fut, d.date, p.index)
         rec["costs"] += c["total"]
         rec["slip"] += abs(f - px) * ps["qty"]
         rec["cost_" + ps["layer"]] += c["total"]

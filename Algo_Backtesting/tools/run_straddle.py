@@ -135,7 +135,7 @@ FORMULAS = [
 
 
 def chips_of(p: S.Params) -> list:
-    nif = p.index == "NIFTY"
+    nif = p.index in ("NIFTY", "SENSEX")
     return [["Index", f"{p.index} ({'weekly' if nif else 'monthly'} expiry)", 1], ["Expiry", "sabse paas wali" if p.expiry == "cur" else "agli wali"], ["Entry", f"{_hm(p.entry_t)} pe ATM straddle SELL", 1],
             ["Exit", "3:15 pe square-off" if p.hold == "day" else "expiry din 3:15 (raat ko hold)"],
             ["Strike adjust", "band" if p.adj_pts is None else f"{p.adj_pts:g} pt ({'ek leg' if p.adj_mode == 'leg' else 'poora straddle'}), din me max {p.adj_max}"],
@@ -163,7 +163,7 @@ def _hm(t: int) -> str:
 
 
 def sub_of(label: str, p: S.Params) -> str:
-    return (f"{label} | {p.index} {'weekly' if p.index == 'NIFTY' else 'monthly'} ATM straddle SELL {_hm(p.entry_t)} pe, " + ("3:15 pe square-off" if p.hold == "day" else "expiry tak hold")
+    return (f"{label} | {p.index} {'weekly' if p.index in ('NIFTY', 'SENSEX') else 'monthly'} ATM straddle SELL {_hm(p.entry_t)} pe, " + ("3:15 pe square-off" if p.hold == "day" else "expiry tak hold")
             + " | intraday option price model (asli 1-min index + Black-76)")
 
 
@@ -239,15 +239,16 @@ def run(args, status, cfg: dict) -> int:
     base, view, bank_view, title = cfg["base"], cfg["view"], cfg["bank_view"], cfg["title"]
     out = result_dir(cfg["name"])
     say = (lambda m: None) if args.no_telegram else send
-    say(f"Run shuru: {title}, {START} se {END} (NIFTY weekly + BANKNIFTY monthly). Folder {out.name}.")
+    second = cfg.get("second", "BANKNIFTY")                      # the other index of the report (view keys of bank_view)
+    say(cfg.get("start_msg") or f"Run shuru: {title}, {START} se {END} (NIFTY weekly + BANKNIFTY monthly). Folder {out.name}.")
     status(f"Data load + NIFTY simulation | {out.name}")
     nv = {k: v[1] for k, v in view.items()}
-    nchecks = {f"c{i}": c[1] for i, c in enumerate(cfg["checks"]) if len(c) == 2}
+    nchecks = {f"c{i}": c[1] for i, c in enumerate(cfg["checks"]) if len(c) == 2 and not isinstance(c[1], str)}   # a str = key of a view already simulated
     allp = {**nv, **nchecks}
     logs, series, prem, mk = run_market("NIFTY", allp, say, status, set(view))
-    status("BANKNIFTY simulation")
+    status(f"{second} simulation")
     bv = {k: v[1] for k, v in bank_view.items()}
-    blogs, bseries, bprem, bmk = run_market("BANKNIFTY", bv, say, status, set(bank_view))
+    blogs, bseries, bprem, bmk = run_market(second, bv, say, status, set(bank_view))
     print(f"simulations done {time.time() - t0:.0f}s", flush=True)
     series.update(bseries)
     prem.update(bprem)
@@ -261,7 +262,7 @@ def run(args, status, cfg: dict) -> int:
     runs = {k: logs[k] for k in view} | {k: blogs[k] for k in bank_view}
     labels = {k: v[0] for k, v in {**view, **bank_view}.items()}
     params = {k: v[1] for k, v in {**view, **bank_view}.items()}
-    checks = [c if len(c) == 1 else check_row(c[0], logs[f"c{i}"], base.capital, SPLIT) for i, c in enumerate(cfg["checks"])]
+    checks = [c if len(c) == 1 else check_row(c[0], logs[c[1] if isinstance(c[1], str) else f"c{i}"], base.capital, SPLIT) for i, c in enumerate(cfg["checks"])]
     checks += [c if len(c) == 1 else check_row(c[0], blogs[c[1]], base.capital, SPLIT) for c in cfg["bank_checks"]]
     m = logs["main"]
     chk = validate(mk)
@@ -272,12 +273,16 @@ def run(args, status, cfg: dict) -> int:
                  ["Lot size (data se)", "NIFTY: " + ", ".join(str(x) for x in lots)], *chk, ["Budget din", "1 Feb 2025, 1 Feb 2026 (pause)"]]
     pause_days = m[m.pause != ""]
     data_info.append(["Pause ke karan", f"{len(pause_days)} din: " + ", ".join(sorted(set(x.split(" ")[0] if x.startswith(("gap", "VIX")) else x for x in pause_days.pause)))])
+    if cfg.get("data_info_head"):
+        data_info[:2] = cfg["data_info_head"]
+    if cfg.get("data_info_extra"):
+        data_info += cfg["data_info_extra"](logs, blogs)
     chips = {k: cfg["chips_of"](p) for k, p in params.items()}
     subs = {k: sub_of(labels[k], p) for k, p in params.items()}
     invs = {k: inv_of(p) for k, p in params.items()}
     write_html(out / "report.html", runs, labels, chips, subs, invs, "main", base.capital, base.deploy, cfg["rules"], cfg["notes"], checks, cfg["formulas"], data_info, series, prem,
-               [START, END], "NSE index option bhavcopy (daily) + Fyers 1-min index / VIX; option ka din ke andar ka price model", cfg["settings"], SPLIT, cfg.get("slip_txt", "0.5% option, 0.02% futures"),
-               title=title, check_hint=cfg["check_hint"])
+               [START, END], cfg.get("data_note", "NSE index option bhavcopy (daily) + Fyers 1-min index / VIX; option ka din ke andar ka price model"), cfg["settings"], SPLIT, cfg.get("slip_txt", "0.5% option, 0.02% futures"),
+               title=title, check_hint=cfg["check_hint"], sub=cfg.get("sub", "NIFTY / BANKNIFTY options"))
     for k, f in runs.items():
         f.drop(columns=["events"]).to_csv(out / f"days_{k}.csv", index=False)
 
@@ -300,7 +305,7 @@ def run(args, status, cfg: dict) -> int:
            f"Fit (2024-25) Rs {m[m.date < SPLIT].net.sum():,.0f}, verify (2026) Rs {m[m.date >= SPLIT].net.sum():,.0f}.\n"
            f"Layer: core Rs {lay['core']:,.0f}, tactical Rs {lay['tac']:,.0f}, hedge Rs {lay['hedge']:,.0f}; slippage Rs {m.slip.sum():,.0f}, kharcha Rs {m.costs.sum():,.0f}.\n"
            + "\n".join(f"{lb}: net Rs {x['net']:,.0f}, max DD Rs {x['max_dd']:,.0f}, sabse bura din Rs {x['worst']:,.0f}." for lb, x in others))
-    if not args.no_telegram:
+    if not args.no_telegram and not cfg.get("custom_finish"):       # a runner with custom_finish sends its own finish message
         send(msg)
         send_document(out / "report.html", f"{title} report ({out.name})")
     print(f"done {time.time() - t0:.0f}s -> {out}", flush=True)

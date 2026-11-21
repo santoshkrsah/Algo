@@ -8,5 +8,6 @@
  "reports/07_straddle_risk_slip0.html": "results/07_straddle_risk_slip0/report.html",
  "reports/08_r3s3_optbuy_2024_2026.html": "results/08_r3s3_optbuy_2024_2026/report.html",
  "reports/09_gap_breakout_long.html": "results/09_gap_breakout_long/report.html",
- "reports/10_straddle_risk_2021_2026.html": "results/10_straddle_risk_2021_2026/report.html"
+ "reports/10_straddle_risk_2021_2026.html": "results/10_straddle_risk_2021_2026/report.html",
+ "reports/11_straddle_risk_retest.html": "results/11_straddle_risk_retest/report.html"
 }

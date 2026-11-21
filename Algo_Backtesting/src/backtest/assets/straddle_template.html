@@ -95,7 +95,7 @@ const sum = a => a.reduce((x, y) => x + y, 0);
 let VK = D.base, rows = [], X = [], daily = [], months = [], T = {};
 const cap = "Rs " + D.capital.toLocaleString("en-IN");
 $("#range").innerHTML = `Data <b>${D.data_range[0]}</b> &rarr; <b>${D.data_range[1]}</b>`; $("#range").title = D.data_note;
-$("#foot").textContent = "Purane result se aage ki guarantee nahi hoti. Option ka din ke andar ka price model (Black-76, asli index ke saath) se hai; entry / exit ke time ke price asli NSE prices ke paas rakhe gaye hain (Rules tab ke Data card me model ki jaanch).";
+$("#foot").textContent = "Purane result se aage ki guarantee nahi hoti. Option ka din ke andar ka price model (Black-76, asli index ke saath) se hai; entry / exit ke time ke price asli bhavcopy (NSE / BSE) prices ke paas rakhe gaye hain (Rules tab ke Data card me model ki jaanch).";
 const li = (sel, arr) => arr.forEach(r => { const e = document.createElement("li"); e.textContent = r; $(sel).appendChild(e); });
 li("#rulelist", D.rules); li("#notelist", D.notes);
 $("#fml").innerHTML = "<thead><tr><th class='l'>Kya</th><th class='l'>Formula</th></tr></thead><tbody>" + D.formulas.map(f => `<tr><td class="l">${f[0]}</td><td class="l"><code>${f[1]}</code></td></tr>`).join("") + "</tbody>";
@@ -273,7 +273,7 @@ function viewerTrades(){
          legend: [["--accent", "Sell"], ["--neg", "SL / Exit"], ["--pos", "Buy"], ["--warn", "Strike / Adj"]]},
         ps.length ? {title: "Straddle premium (CE + PE, model, 5-min)", kind: "line", intraday: true, small: true, data: ps.map(x => ({time: ut(r.date, x[0]), value: x[1]})), markers: [], lines: r.prem ? [{price: r.prem, color: "--accent", style: 3, title: "Becha"}] : [], legend: [["--accent", "Model price"]]} : null,
       ].filter(Boolean) : [],
-      note: "Index ka chart asli 1-min data se. Option ka din ke andar ka price model (Black-76) hai; entry aur exit ke time pe NSE ke asli bhavcopy prices ke hisaab se calibrate hai.",
+      note: "Index ka chart asli 1-min data se. Option ka din ke andar ka price model (Black-76) hai; entry aur exit ke time pe asli bhavcopy (NSE / BSE) prices ke hisaab se calibrate hai.",
       cost: [["Core P&L", rs2(r.pnl_core), sgn(r.pnl_core)], ["Averaging P&L", rs2(r.pnl_avg), sgn(r.pnl_avg)], ["Tactical buy P&L", rs2(r.pnl_tac), sgn(r.pnl_tac)], ["Hedge (futures) P&L", rs2(r.pnl_hedge), sgn(r.pnl_hedge)],
         ["Gross P&L (slippage ke baad)", rs2(g), sgn(g)], ["Slippage (upar ke P&L me shamil)", rs2(r.slip)], ["Brokerage (Rs 20 x " + r.orders + " order)", rs2(r.c_brokerage)], ["STT", rs2(r.c_stt)], ["Exchange + SEBI", rs2(r.c_exch)], ["Stamp", rs2(r.c_stamp)],
         ["GST 18%", rs2(r.c_gst)], ["Net P&L", rs2(r.net), sgn(r.net), true]],
