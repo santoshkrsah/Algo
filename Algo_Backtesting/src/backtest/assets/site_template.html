@@ -45,6 +45,9 @@ h1 { font: 800 clamp(26px, 4vw, 36px)/1.1 var(--f-display); margin: 0; color: va
 .reset:disabled { color: var(--muted); cursor: default; opacity: .6 }
 .controls input:focus-visible, .controls select:focus-visible, .open:focus-visible, .reset:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
 .hint { margin: 0; font-size: 13px; color: var(--muted) }
+.hd { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start; justify-content: space-between }
+.hd > div { min-width: 0 }
+#clearcache { flex: none }
 
 .list { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden }
 .head, .row { display: grid; grid-template-columns: 52px minmax(0, 1fr) 124px 56px 68px 184px 128px; gap: 14px; align-items: center; padding: 14px 18px }
@@ -95,9 +98,12 @@ footer { font-size: 12.5px; color: var(--muted) }
 </style>
 
 <div class="wrap">
-  <header>
-    <h1>Algo Backtest Reports</h1>
-    <p class="lede">Team ke saare backtest ek jagah. Khojo ya filter lagao, phir <b>Get Report</b> dabao: report nayi tab me khulegi.</p>
+  <header class="hd">
+    <div>
+      <h1>Algo Backtest Reports</h1>
+      <p class="lede">Team ke saare backtest ek jagah. Khojo ya filter lagao, phir <b>Get Report</b> dabao: report nayi tab me khulegi.</p>
+    </div>
+    <button type="button" class="reset" id="clearcache" title="Is website ka cache saaf karke page fresh load karo">Clear cache</button>
   </header>
   <div class="tally" id="tally"></div>
   <div class="controls">
@@ -184,6 +190,20 @@ function render() {
 for (const id of ["q", "type", "verdict", "sort"]) $(id).addEventListener(id === "q" ? "input" : "change", render);
 $("reset").addEventListener("click", () => { for (const k in DEFAULTS) $(k).value = DEFAULTS[k]; render(); $("q").focus() });
 render();
+
+// "Clear cache": empties this site's browser caches (Cache Storage, service workers, session data), fetches this page again
+// bypassing the HTTP cache (which also replaces the cached copy of this address) and reloads it. Cookies are left alone on
+// purpose (the host's bot-check cookie lives there) and so are the saved filters.
+$("clearcache").addEventListener("click", async () => {
+  const b = $("clearcache");
+  b.disabled = true; b.textContent = "Cache clear ho raha hai...";
+  try { if (window.caches) for (const k of await caches.keys()) await caches.delete(k) } catch (e) {}
+  try { if (navigator.serviceWorker) for (const r of await navigator.serviceWorker.getRegistrations()) await r.unregister() } catch (e) {}
+  try { sessionStorage.clear() } catch (e) {}
+  try { await fetch(location.pathname + location.search, {cache: "reload"}) } catch (e) {}
+  b.textContent = "Cache clear ho gaya ✓";
+  setTimeout(() => location.reload(), 400);
+});
 
 // A report opens on the site's own link + #report-NN (new tab), shown full screen; "Saari reports" goes back to the list.
 const BY_HASH = Object.fromEntries(R.map(r => [r.hash, r]));
