@@ -1,4 +1,4 @@
-"""Rebuild reports 01_vmu_v3 and 02_vmu_v2 in the new look (same trades / numbers, no new backtest).
+"""Rebuild reports 05_vmu_v3 and 06_vmu_v2 in the new look (same trades / numbers, no new backtest).
 
 Reads the saved trade CSVs + the data embedded in the old report (expected numbers, best combination, 243-combination
 grid, checks), adds 1-min candles from the store (adjust=False = same prices as the trades) and writes report.html with
@@ -175,10 +175,10 @@ NOTES_V3 = NOTES_V2[:1] + [
 
 
 def v2():
-    od = old_data("02_vmu_v2")
+    od = old_data("06_vmu_v2")
     E = od["expected"]
     slips = {"s0": ("0%", 0.0, "trades_slip_0pct.csv"), "s03": ("0.3%", 0.003, "trades_slip_0.3pct.csv"), "s05": ("0.5%", 0.005, "trades_slip_0.5pct.csv")}
-    T = {k: pd.read_csv(RES / "02_vmu_v2" / f) for k, (_, _, f) in slips.items()}
+    T = {k: pd.read_csv(RES / "06_vmu_v2" / f) for k, (_, _, f) in slips.items()}
     G = candles_for(T["s0"])
     exp_rows = [["Video ka daava", E["trades"], f"{E['win_pct']}%", f"Rs {E['net']:,}", "", f"Rs {E['worst_trade']:,}"]]
     for k, (lab, _, _) in slips.items():
@@ -196,13 +196,13 @@ def v2():
         data[k] = variant(T[k], sp, G, f"Slippage {lab}", V2_RULES + [costs_card(lab)], FORMULAS[:6] + [V2_SL] + FORMULAS[6:], settings, extra, None, NOTES_V2,
                           f"VMU Equity V2 - slippage {lab} (2026-01-01 se 2026-10-23)",
                           f"NSE intraday, 1-min, non-F&O stocks | volume 7x, SL 3% | capital Rs 70,000, COMPOUNDING NAHI | slippage {lab} + 0.10% kharcha | report naye design me: {datetime.now():%d %b %Y}")
-    write("02_vmu_v2", data, "VMU Equity V2")
+    write("06_vmu_v2", data, "VMU Equity V2")
 
 
 def v3():
-    od = old_data("01_vmu_v3")
+    od = old_data("05_vmu_v3")
     E, B = od["expected"], od["best"]
-    t = pd.read_csv(RES / "01_vmu_v3" / "trades_best_match.csv")
+    t = pd.read_csv(RES / "05_vmu_v3" / "trades_best_match.csv")
     G = candles_for(t)
     s = stat(t)
     exp_rows = [["Video ka daava", E["trades"], f"{E['win_pct']}%", f"Rs {E['net']:,}", f"Rs {E['avg_loss']:,}", f"Rs {E['worst_trade']:,}", E["median_hold_h"], f"{E['sl_pct']}%"],
@@ -227,7 +227,7 @@ def v3():
     data = {"best": variant(t, 0.0, G, "Best match (243 me se)", V3_RULES + [costs_card("0%")], FORMULAS[:6] + V3_SL + FORMULAS[6:], settings, extra, wtab, NOTES_V3,
                             "VMU Equity V3 - best match (2026-01-01 se 2026-10-23)",
                             f"NSE intraday, 1-min, non-F&O stocks | 243 combinations, best match: volume 5x, SL 4%, breakeven 1.5%, trail 2% | capital Rs 70,000, COMPOUNDING NAHI | slippage 0% + 0.10% kharcha | report naye design me: {datetime.now():%d %b %Y}")}
-    write("01_vmu_v3", data, "VMU Equity V3")
+    write("05_vmu_v3", data, "VMU Equity V3")
     return s
 
 

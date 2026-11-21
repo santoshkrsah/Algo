@@ -1,5 +1,35 @@
 {
- "01_vmu_v3": {
+ "01_oct_2026": {
+  "name": "Fibonacci R3 breakout (Oct 2026)",
+  "type": "Intraday",
+  "period": "Oct 2026",
+  "result": "88 trade, Rs 2 Cr har trade, win 31.8%",
+  "net": -17616126,
+  "pf": 0.38,
+  "trades": 88,
+  "verdict": "loss"
+ },
+ "02_jan_oct_2026": {
+  "name": "Fibonacci R3 breakout (Jan-Oct 2026)",
+  "type": "Intraday",
+  "period": "Jan 2026 - Oct 2026",
+  "result": "999 trade, Rs 2 Cr har trade, win 34.6%",
+  "net": -106764005,
+  "pf": 0.63,
+  "trades": 999,
+  "verdict": "loss"
+ },
+ "03_full_2021_2026": {
+  "name": "Fibonacci R3 breakout (2021-2026)",
+  "type": "Intraday",
+  "period": "Oct 2021 - Oct 2026",
+  "result": "6,078 trade, Rs 2 Cr har trade, win 33.0%",
+  "net": -578523466,
+  "pf": 0.65,
+  "trades": 6078,
+  "verdict": "loss"
+ },
+ "05_vmu_v3": {
   "name": "VMU Equity V3",
   "type": "Intraday",
   "period": "Jan 2026 - Oct 2026",
@@ -9,7 +39,7 @@
   "trades": 382,
   "verdict": "profit"
  },
- "02_vmu_v2": {
+ "06_vmu_v2": {
   "name": "VMU Equity V2",
   "type": "Intraday",
   "period": "Jan 2026 - Oct 2026",
@@ -19,7 +49,17 @@
   "trades": 382,
   "verdict": "loss"
  },
- "03_calarb_sep_oct_2026": {
+ "07_vol5l_2021_2026": {
+  "name": "Vol 5L Target 7%",
+  "type": "Intraday",
+  "period": "Oct 2021 - Oct 2026",
+  "result": "2,505 trade, win 42.8% (0% slippage)",
+  "net": -1230596,
+  "pf": 0.74,
+  "trades": 2505,
+  "verdict": "loss"
+ },
+ "08_calarb_sep_oct_2026": {
   "name": "Calendar Arbitrage Gap",
   "type": "Calendar",
   "period": "Sep 2026 - Oct 2026",
@@ -29,7 +69,7 @@
   "trades": null,
   "verdict": "study"
  },
- "04_stbt_options": {
+ "09_stbt_options": {
   "name": "Option Selling STBT",
   "type": "Options",
   "period": "Nov 2021 - Oct 2026",
@@ -39,7 +79,27 @@
   "trades": 947,
   "verdict": "profit"
  },
- "05_opt_r3_2024_2026": {
+ "10_calspread_2024_2026": {
+  "name": "Calendar Spread",
+  "type": "Calendar",
+  "period": "May 2025 - Oct 2026",
+  "result": "46 trade, win 15.2% (gap 0.75%, slippage 0.02%)",
+  "net": -157094,
+  "pf": 0.22,
+  "trades": 46,
+  "verdict": "loss"
+ },
+ "11_cpr_vwap_openlow": {
+  "name": "CPR + VWAP + Open-Low",
+  "type": "Intraday",
+  "period": "Oct 2021 - Oct 2026",
+  "result": "1,807 trade, win 25.8% (0% slippage); 2,592 settings me ek bhi profit me nahi",
+  "net": -361756,
+  "pf": 0.71,
+  "trades": 1807,
+  "verdict": "loss"
+ },
+ "12_opt_r3_2024_2026": {
   "name": "Option R3 Momentum",
   "type": "Options",
   "period": "Nov 2024 - Oct 2026",
@@ -49,7 +109,7 @@
   "trades": 793,
   "verdict": "profit"
  },
- "06_gap_rsi_ema": {
+ "13_gap_rsi_ema": {
   "name": "Gap + RSI + 21-EMA",
   "type": "Swing",
   "period": "Oct 2021 - Oct 2026",
@@ -59,7 +119,7 @@
   "trades": 242,
   "verdict": "profit"
  },
- "07_gap_rsi_ema_smallcap": {
+ "14_gap_rsi_ema_smallcap": {
   "name": "Gap + RSI + 21-EMA (Small cap)",
   "type": "Swing",
   "period": "Oct 2021 - Oct 2026",
@@ -69,7 +129,17 @@
   "trades": 438,
   "verdict": "profit"
  },
- "08_layered_straddle": {
+ "15_call_fut_intraday": {
+  "name": "Call Future Hedge",
+  "type": "Options",
+  "period": "May 2026 - Oct 2026",
+  "result": "584 trade, win 27% (roz top 5 stock, 2 lot CALL buy + 1 lot FUT sell, din ke close pe exit)",
+  "net": -773702,
+  "pf": 0.43,
+  "trades": 584,
+  "verdict": "loss"
+ },
+ "16_layered_straddle": {
   "name": "Layered Straddle Selling",
   "type": "Options",
   "period": "Dec 2024 - Oct 2026",
@@ -79,7 +149,7 @@
   "trades": 446,
   "verdict": "profit"
  },
- "09_straddle_risk_layer": {
+ "17_straddle_risk_layer": {
   "name": "Straddle + Risk Layer",
   "type": "Options",
   "period": "Dec 2024 - Oct 2026",
@@ -89,7 +159,17 @@
   "trades": 472,
   "verdict": "profit"
  },
- "10_straddle_risk_slip0": {
+ "18_breakout_put_selling": {
+  "name": "Breakout + Put Selling (Mitesh Patel)",
+  "type": "Swing",
+  "period": "Dec 2021 - Oct 2026",
+  "result": "Top-50 F&O volume breakout. A (stock long): 110 trade, win 37%, kharche ke baad loss (2024-26 me bhi loss). B (put SELL, Nov 2024 se): 14 trade, win 79%, +Rs 36k par ek trade -31k. 80% daawa: sirf 60% breakout 5 din tike",
+  "net": -82895,
+  "pf": 0.86,
+  "trades": 110,
+  "verdict": "loss"
+ },
+ "19_straddle_risk_slip0": {
   "name": "Straddle + Risk Layer (Slippage 0)",
   "type": "Options",
   "period": "Dec 2024 - Oct 2026",
@@ -99,7 +179,17 @@
   "trades": 472,
   "verdict": "profit"
  },
- "11_r3s3_optbuy_2024_2026": {
+ "20_vcp_swing": {
+  "name": "VCP Swing (Volatility Contraction)",
+  "type": "Swing",
+  "period": "Feb 2022 - Oct 2026",
+  "result": "Top 500 market cap, filter ON: 388 trade, win 31%, PF 0.75 (stop 2.5%, exit A). 720 setting me ek bhi verify (Dec 2024 - Oct 2026) me profit nahi; entry din 1-min se dekho to bhi -Rs 37k. Nifty 500 buy-hold +59%",
+  "net": -335678,
+  "pf": 0.75,
+  "trades": 388,
+  "verdict": "loss"
+ },
+ "21_r3s3_optbuy_2024_2026": {
   "name": "R3/S3 Option Buying (BTST, daily)",
   "type": "Options",
   "period": "Nov 2024 - Oct 2026",
@@ -109,7 +199,17 @@
   "trades": 688,
   "verdict": "study"
  },
- "12_gap_breakout_long": {
+ "22_pdh_pdl_nifty_2021_2026": {
+  "name": "NIFTY PDH / PDL trend (3-min intraday)",
+  "type": "Intraday",
+  "period": "Oct 2021 - Oct 2026",
+  "result": "3,360 setting, kharche ke baad in-sample me ek bhi profit me nahi. In-sample best (A breakout 9:30, S3, half 1R) 492 trade, win 28.5%, out-of-sample -Rs 2.5 L. 60-65% win rate galat (max 49.5%), PDH/PDL random level se behtar nahi, 11:00 9:30 se behtar nahi",
+  "net": -348606,
+  "pf": 0.67,
+  "trades": 492,
+  "verdict": "loss"
+ },
+ "23_gap_breakout_long": {
   "name": "Gap Breakout Long (EMA21 + RSI + monthly trend)",
   "type": "Swing",
   "period": "Sep 2011 - Nov 2026",
@@ -119,7 +219,7 @@
   "trades": 404,
   "verdict": "study"
  },
- "13_straddle_risk_2021_2026": {
+ "24_straddle_risk_2021_2026": {
   "name": "Straddle + Risk Layer (2021 - 2026 retest)",
   "type": "Options",
   "period": "Nov 2021 - Nov 2026",
@@ -129,7 +229,7 @@
   "trades": 1232,
   "verdict": "profit"
  },
- "14_stnifty_supertrend_ma": {
+ "25_stnifty_supertrend_ma": {
   "name": "NIFTY 1-ghanta Supertrend + 50 MA - This Profitable F&O Trader Takes Only 35 Trades a Year | Big Bull Series Ep 94",
   "type": "Swing",
   "period": "Feb 2018 - Nov 2026",
@@ -139,7 +239,7 @@
   "trades": 184,
   "verdict": "profit"
  },
- "15_mtst_nifty_supertrend": {
+ "26_mtst_nifty_supertrend": {
   "name": "NIFTY multi-timeframe Supertrend (daily 7x3 + 1 ghanta 7x3) - This 1 Strategy Made Me Profitable",
   "type": "Swing",
   "period": "Feb 2018 - Nov 2026",
@@ -149,7 +249,7 @@
   "trades": 293,
   "verdict": "loss"
  },
- "16_groww5_intraday": {
+ "27_groww5_intraday": {
   "name": "5 Intraday Strategies (Scalping, Momentum, Breakout, Reversal, News) - Master These 5 Intraday Strategies Before Your Next Trade",
   "type": "Intraday",
   "period": "Oct 2021 - Nov 2026 (NIFTY Feb 2018 se)",
@@ -159,7 +259,7 @@
   "trades": 25761,
   "verdict": "loss"
  },
- "17_rsi15_swing_nifty50": {
+ "28_rsi15_swing_nifty50": {
   "name": "RSI 30/70 Swing (15-min) - NIFTY 50 stocks",
   "type": "Swing",
   "period": "Jun 2023 - Jun 2026",
@@ -169,7 +269,7 @@
   "trades": 1369,
   "verdict": "loss"
  },
- "18_r1top_1month": {
+ "29_r1top_1month": {
   "name": "Rule No 1 - Top gainer + Pivot R3 breakout (long), 5-min intraday",
   "type": "Intraday",
   "period": "Oct 2026 - Nov 2026",
@@ -179,7 +279,7 @@
   "trades": 47,
   "verdict": "loss"
  },
- "19_r11_r3_buysell_2021_2026": {
+ "30_r11_r3_buysell_2021_2026": {
   "name": "Rule No 1.1 - Pivot R3: Condition 1 Buy (breakout) + Condition 2 Sell (reversal), 5-min intraday",
   "type": "Intraday",
   "period": "Oct 2021 - Nov 2026",
@@ -189,7 +289,7 @@
   "trades": 1282,
   "verdict": "loss"
  },
- "20_ipo_vcp_swing": {
+ "31_ipo_vcp_swing": {
   "name": "IPO Base / VCP Swing + ROC market cycle - My 2 Swing Trading Strategies (Financially Free podcast, Harsh Singh)",
   "type": "Swing",
   "period": "Jan 2016 - Nov 2026 (ATH VCP 2011 se, ROC allocation 2007 se)",

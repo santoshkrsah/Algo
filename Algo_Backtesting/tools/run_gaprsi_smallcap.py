@@ -1,5 +1,5 @@
 """Gap + RSI(10) + 21-EMA on SMALL CAP companies (market cap above Rs 1,000 Cr ON THAT DAY), slippage 0.5% - long side only.
-Same engine and daily data as tools/run_gaprsi.py (needs results/06_gap_rsi_ema/daily.pkl); writes its own numbered result folder.
+Same engine and daily data as tools/run_gaprsi.py (needs results/13_gap_rsi_ema/daily.pkl); writes its own numbered result folder.
 
     python tools/run_gaprsi_smallcap.py
     python tools/run_gaprsi_smallcap.py --no-telegram        # report + summary.txt only, nothing is sent
