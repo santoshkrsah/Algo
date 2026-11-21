@@ -308,5 +308,15 @@
   "pf": 2.04,
   "trades": 327,
   "verdict": "profit"
+ },
+ "12_mcx_straddle_risk_2021_2026": {
+  "name": "MCX Straddle + Risk Layer (2021 - 2026): Crude oil, Gold, Silver, Natural gas",
+  "type": "Options",
+  "period": "Nov 2021 - Nov 2026",
+  "result": "Report 10 ke rules MCX pe (9:20 ATM straddle SELL, leg SL 75%, din ka loss 1.5%, trailing 50%, 11:15 pm square-off), Rs 30 L har commodity. MCX option data nahi, isliye option price model (futures + Black-76, IV = realized vol x 1.10). Net: Crude 68.1 L (PF 1.60), Gold 51.6 L (2.19), Silver 54.5 L (1.75), NatGas 1.43 cr (1.81), 4 milake 3.18 cr. IV x0.9 pe Crude / Silver / NatGas loss - result IV ke maane hue factor pe tika hai.",
+  "net": 31755680,
+  "pf": 1.78,
+  "trades": 4885,
+  "verdict": "study"
  }
 }

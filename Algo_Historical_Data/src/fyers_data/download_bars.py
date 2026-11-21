@@ -52,7 +52,8 @@ STOCKS = ["RELIANCE", "HDFCBANK", "ICICIBANK", "INFY", "TCS", "SBIN", "ITC", "LT
 INDICES = {"NIFTY50": "NSE:NIFTY50-INDEX", "BANKNIFTY": "NSE:NIFTYBANK-INDEX", "INDIAVIX": "NSE:INDIAVIX-INDEX"}
 FUT_ROOTS = ("NIFTY", "BANKNIFTY")      # -> NIFTY_F1 / NIFTY_F2 / BANKNIFTY_F1 / BANKNIFTY_F2
 FUT_STOCKS = tuple(STOCKS)              # stock futures (positional shorts need futures): RELIANCE_F1 / RELIANCE_F2 ...
-MCX_FUT = ("GOLD",)                     # MCX futures (GOLD = 1 kg contract, bi-monthly expiry): GOLD_F1 / GOLD_F2
+MCX_FUT = ("GOLD", "SILVER", "CRUDEOIL", "NATURALGAS")   # MCX futures: GOLD_F1 / GOLD_F2 ... (GOLD = 1 kg contract, bi-monthly expiry)
+MCX_START = date(2021, 9, 1)            # SILVER / CRUDEOIL / NATURALGAS are only needed from here (straddle test 2021-2026)
 MCX_MASTER = "https://public.fyers.in/sym_details/MCX_COM.csv"
 RESAMPLE = {"3m": "3min", "5m": "5min", "60m": "60min"}
 CHUNK_DAYS = {"1": 99, "D": 365}        # Fyers: 100 days per 1m request, 366 per daily request
@@ -249,7 +250,9 @@ def series_list() -> tuple[list, dict]:
         f = mcx[(mcx[13].astype(str) == root) & mcx[9].astype(str).str.endswith("FUT") & (mcx["exp"] >= today)].sort_values("exp")
         if len(f) >= 2:
             syms = f[9].tolist()
-            out += [(f"{root}_F1", syms[0], "1", DAILY_START, INTRADAY_START), (f"{root}_F2", syms[1], "1", DAILY_START, INTRADAY_START)]
+            d0 = DAILY_START if root == "GOLD" else MCX_START
+            i0 = INTRADAY_START if root == "GOLD" else MCX_START
+            out += [(f"{root}_F1", syms[0], "1", d0, i0), (f"{root}_F2", syms[1], "1", d0, i0)]
     return out, near
 
 

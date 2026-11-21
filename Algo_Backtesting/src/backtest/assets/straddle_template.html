@@ -90,12 +90,13 @@ const sgn = v => v > 0 ? "pos" : v < 0 ? "neg" : "";
 const rs = (v, plus) => v === null || v === undefined || isNaN(v) ? "n/a" : (v < 0 ? "-" : plus && v > 0 ? "+" : "") + "Rs " + Math.round(Math.abs(v)).toLocaleString("en-IN");
 const f2 = v => v === null || v === undefined || isNaN(v) ? "n/a" : Number(v).toFixed(2);
 const pct = v => v === null || v === undefined || isNaN(v) ? "n/a" : f2(v) + "%";
-const hm = m => { const t = 555 + Math.round(m); return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); };
+const T0 = D.t0 || 555;   // minutes after midnight of t = 0 (NSE 9:15 = 555, MCX 9:00 = 540)
+const hm = m => { const t = T0 + Math.round(m); return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); };
 const sum = a => a.reduce((x, y) => x + y, 0);
 let VK = D.base, rows = [], X = [], daily = [], months = [], T = {};
 const cap = "Rs " + D.capital.toLocaleString("en-IN");
 $("#range").innerHTML = `Data <b>${D.data_range[0]}</b> &rarr; <b>${D.data_range[1]}</b>`; $("#range").title = D.data_note;
-$("#foot").textContent = "Purane result se aage ki guarantee nahi hoti. Option ka din ke andar ka price model (Black-76, asli index ke saath) se hai; entry / exit ke time ke price asli bhavcopy (NSE / BSE) prices ke paas rakhe gaye hain (Rules tab ke Data card me model ki jaanch).";
+$("#foot").textContent = D.foot || "Purane result se aage ki guarantee nahi hoti. Option ka din ke andar ka price model (Black-76, asli index ke saath) se hai; entry / exit ke time ke price asli bhavcopy (NSE / BSE) prices ke paas rakhe gaye hain (Rules tab ke Data card me model ki jaanch).";
 const li = (sel, arr) => arr.forEach(r => { const e = document.createElement("li"); e.textContent = r; $(sel).appendChild(e); });
 li("#rulelist", D.rules); li("#notelist", D.notes);
 $("#fml").innerHTML = "<thead><tr><th class='l'>Kya</th><th class='l'>Formula</th></tr></thead><tbody>" + D.formulas.map(f => `<tr><td class="l">${f[0]}</td><td class="l"><code>${f[1]}</code></td></tr>`).join("") + "</tbody>";
@@ -239,7 +240,7 @@ function render(){
   drawCharts();
 }
 const rs2 = v => (v < 0 ? "-" : "") + "Rs " + Math.abs(v).toFixed(2);
-const ut = (date, m) => { const [y, mo, d] = date.split("-").map(Number); return Date.UTC(y, mo - 1, d, 9, 15 + m) / 1000; };
+const ut = (date, m) => { const [y, mo, d] = date.split("-").map(Number); return Date.UTC(y, mo - 1, d, 0, T0 + m) / 1000; };
 function markers(r){
   const out = [], seen = new Set();
   const add = (t, pos, shape, color, text) => { const k = t + text; if (seen.has(k)) return; seen.add(k); out.push({time: ut(r.date, Math.floor(t / 5) * 5), position: pos, shape: shape, color: color, text: text}); };
@@ -269,11 +270,11 @@ function viewerTrades(){
         ["Adj / SL / Buy / Hedge", `${r.adj} / ${r.sl} / ${r.tac + r.avg_done} / ${r.hedges}`], ["Sabse zyada net delta / lot", f2(r.net_delta_max)], ["Din ki kahani", ev || "-"],
         ["Net P&L", `${rs2(r.net)} (${pct(r.net / D.capital * 100)} capital pe)`, sgn(r.net)]],
       charts: ser.length ? [
-        {title: `${r.index} (5-min candle, asli)`, kind: "candle", intraday: true, data: ser.map(x => ({time: ut(r.date, x[0]), open: x[1], high: x[2], low: x[3], close: x[4]})), markers: mk, lines: lines,
+        {title: `${r.index} (candle, asli)`, kind: "candle", intraday: true, data: ser.map(x => ({time: ut(r.date, x[0]), open: x[1], high: x[2], low: x[3], close: x[4]})), markers: mk, lines: lines,
          legend: [["--accent", "Sell"], ["--neg", "SL / Exit"], ["--pos", "Buy"], ["--warn", "Strike / Adj"]]},
-        ps.length ? {title: "Straddle premium (CE + PE, model, 5-min)", kind: "line", intraday: true, small: true, data: ps.map(x => ({time: ut(r.date, x[0]), value: x[1]})), markers: [], lines: r.prem ? [{price: r.prem, color: "--accent", style: 3, title: "Becha"}] : [], legend: [["--accent", "Model price"]]} : null,
+        ps.length ? {title: "Straddle premium (CE + PE, model)", kind: "line", intraday: true, small: true, data: ps.map(x => ({time: ut(r.date, x[0]), value: x[1]})), markers: [], lines: r.prem ? [{price: r.prem, color: "--accent", style: 3, title: "Becha"}] : [], legend: [["--accent", "Model price"]]} : null,
       ].filter(Boolean) : [],
-      note: "Index ka chart asli 1-min data se. Option ka din ke andar ka price model (Black-76) hai; entry aur exit ke time pe asli bhavcopy (NSE / BSE) prices ke hisaab se calibrate hai.",
+      note: D.note || "Index ka chart asli 1-min data se. Option ka din ke andar ka price model (Black-76) hai; entry aur exit ke time pe asli bhavcopy (NSE / BSE) prices ke hisaab se calibrate hai.",
       cost: [["Core P&L", rs2(r.pnl_core), sgn(r.pnl_core)], ["Averaging P&L", rs2(r.pnl_avg), sgn(r.pnl_avg)], ["Tactical buy P&L", rs2(r.pnl_tac), sgn(r.pnl_tac)], ["Hedge (futures) P&L", rs2(r.pnl_hedge), sgn(r.pnl_hedge)],
         ["Gross P&L (slippage ke baad)", rs2(g), sgn(g)], ["Slippage (upar ke P&L me shamil)", rs2(r.slip)], ["Brokerage (Rs 20 x " + r.orders + " order)", rs2(r.c_brokerage)], ["STT", rs2(r.c_stt)], ["Exchange + SEBI", rs2(r.c_exch)], ["Stamp", rs2(r.c_stamp)],
         ["GST 18%", rs2(r.c_gst)], ["Net P&L", rs2(r.net), sgn(r.net), true]],
