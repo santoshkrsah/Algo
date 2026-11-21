@@ -7,9 +7,30 @@ Backtesting on the NSE equity data downloaded by the sibling project `Algo_Histo
     src/backtest/data.py     load_equity(symbol, timeframe, start, end)
     src/backtest/notify.py   Telegram messages
     tools/send_telegram.py   send a custom Telegram message
+    tools/telegram_bot.py    Telegram bot that answers: tag it and Claude Code replies / does the work
     results/                 backtest output (git-ignored)
 
 Setup: copy `.env.example` to `.env`, then `pip install -r requirements.txt`.
+
+## Telegram bot (ask it anything)
+Tag @algo_assistants_bot in the group (or reply to any of its messages, or write to it in a private chat) and
+headless Claude Code on this PC answers in the same thread. It runs in C:\Algo, so CLAUDE.md, memory and every file apply.
+Reply to a bot answer = the same conversation continues; a new tag = a new conversation.
+Quick commands without Claude: `/status` (bot jobs + Python programs running on the PC), `/stop N`, `/id`, `/help`.
+
+    python tools/telegram_bot.py --install     # start hidden at every Windows logon + start now (Startup folder shortcut)
+    python tools/telegram_bot.py --stop        # stop it
+    python tools/telegram_bot.py --uninstall   # stop it and remove the logon shortcut
+    python tools/telegram_bot.py               # run in a terminal instead (Ctrl+C stops)
+
+- Only people in `TELEGRAM_ALLOWED_USERS` (.env: numeric ids and/or @usernames, a @username is pinned to its id on
+  first use) plus the owner (`TELEGRAM_CHAT_ID`). Others are ignored (in the group they get their id to be added).
+- Full control by default (`BOT_PERMISSION_MODE=auto`: Claude Code's auto mode with its safety check, no prompts).
+  `plan` = only read and answer. The bot never places live orders; secrets from the .env / credentials files are
+  masked in everything it sends, and secret files are never attached.
+- The PC must be on. Only ONE program may read this bot's messages: never run two copies and never call
+  `getUpdates` for this bot anywhere else. State, log and downloaded files: `.telegram_bot/` (git-ignored).
+- Each conversation is a normal Claude Code session named "Telegram #N: ..." (open it later with `claude --resume`).
 
 ## Fast data access (backtest.fast)
 Reads the Parquet store built by `python -m fyers_data.store build` (Algo_Historical_Data); falls back to the CSVs if it is missing.
