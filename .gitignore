@@ -19,3 +19,5 @@ Firstock_Credentials.txt
 # Firstock login details - never on GitHub
 Algo_Live_Trading/AWS_VM/Firstock_Credentials.txt
 **/Firstock_Credentials.txt
+
+Algo_Live_Trading/**/*_Credentials.txt

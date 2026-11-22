@@ -48,9 +48,9 @@ STATE_FILE = HOME / "state.json"
 INBOX = HOME / "inbox"
 BRIDGE_FILE = HOME / "bridge_prompt.md"
 SECRET_FILES = [PROJECT / ".env", ROOT / "Algo_Historical_Data" / ".env",
-                ROOT / "Algo_Live_Trading" / "Firstock_Credentials.txt",
-                ROOT / "Algo_Live_Trading" / "AWS_VM" / "Firstock_Credentials.txt"]
-JKEY_DIRS = [ROOT / "Algo_Live_Trading", ROOT / "Algo_Live_Trading" / "AWS_VM"]
+                ROOT / "Algo_Live_Trading" / "Firstock" / "Firstock_Credentials.txt",
+                ROOT / "Algo_Live_Trading" / "Firstock" / "AWS_VM" / "Firstock_Credentials.txt"]
+JKEY_DIRS = [ROOT / "Algo_Live_Trading" / "Firstock", ROOT / "Algo_Live_Trading" / "Firstock" / "AWS_VM"]
 NOT_SECRET = {"TELEGRAM_CHAT_ID", "TELEGRAM_GROUP_CHAT_ID", "TELEGRAM_CHAT_IDS", "TELEGRAM_ALLOWED_USERS", "SITE_URL",
               "SITE_PROTOCOL", "SITE_FTP_PORT", "FYERS_REDIRECT_URI", "HISTORICAL_DATA_DIR", "CLAUDE_BIN"}
 STARTUP_LNK = Path(os.environ.get("APPDATA", str(Path.home()))) / \

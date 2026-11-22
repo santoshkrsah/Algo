@@ -8,7 +8,7 @@ publishes every result as an interactive HTML report, and has a starting layer f
 Algo/
 ├── Algo_Historical_Data/   download Fyers data + build the fast Parquet store      (own .venv)
 ├── Algo_Backtesting/       strategies, backtest engines, HTML reports, results     (own .venv)
-├── Algo_Live_Trading/      Firstock broker utilities for live order placement
+├── Algo_Live_Trading/      Live trading, one folder per broker (Firstock, Angel_One, Beyond_Trading)
 └── CLAUDE.md               working rules for every backtest (notifications, report format, honest testing)
 ```
 
