@@ -4,6 +4,20 @@ from AngelOne_Config import *
 
 BASE = "https://apiconnect.angelone.in"
 
+# Fresh Windows VMs miss some public root certificates -> "CERTIFICATE_VERIFY_FAILED".
+# If certifi is installed (py -m pip install certifi) its root list is used in addition to Windows' own.
+import ssl
+_CTX = ssl.create_default_context()
+try:
+    import certifi
+    _CTX.load_verify_locations(cafile=certifi.where())
+except ImportError:
+    pass
+
+
+def _open(req, timeout):
+    return urllib.request.urlopen(req, timeout=timeout, context=_CTX)
+
 
 def totp(secret, step=30, digits=6):
     key = base64.b32decode(secret.upper() + "=" * (-len(secret) % 8))
@@ -13,7 +27,7 @@ def totp(secret, step=30, digits=6):
 
 
 def public_ip():
-    return urllib.request.urlopen("https://api.ipify.org", timeout=10).read().decode()
+    return _open("https://api.ipify.org", 10).read().decode()
 
 
 def call(path, body=None, token=None, ip=""):
@@ -26,7 +40,7 @@ def call(path, body=None, token=None, ip=""):
     req = urllib.request.Request(BASE + path, data=json.dumps(body).encode() if body is not None else None,
                                  headers=h, method="POST" if body is not None else "GET")
     try:
-        return json.loads(urllib.request.urlopen(req, timeout=20).read())
+        return json.loads(_open(req, 20).read())
     except urllib.error.HTTPError as e:
         return {"status": False, "message": f"HTTP {e.code}", "body": e.read().decode()[:300]}
 
