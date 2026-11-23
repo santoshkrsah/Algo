@@ -97,7 +97,7 @@ let VK = D.base, rows = [], X = [], daily = [], months = [], T = {};
 const cap = "Rs " + D.capital.toLocaleString("en-IN");
 $("#range").innerHTML = `Data <b>${D.data_range[0]}</b> &rarr; <b>${D.data_range[1]}</b>`; $("#range").title = D.data_note;
 $("#foot").textContent = D.foot || "Purane result se aage ki guarantee nahi hoti. Option ka din ke andar ka price model (Black-76, asli index ke saath) se hai; entry / exit ke time ke price asli bhavcopy (NSE / BSE) prices ke paas rakhe gaye hain (Rules tab ke Data card me model ki jaanch).";
-const li = (sel, arr) => arr.forEach(r => { const e = document.createElement("li"); e.textContent = r; $(sel).appendChild(e); });
+const li = (sel, arr) => arr.forEach(r => { const e = document.createElement("li"); if (r.startsWith("## ")) { e.textContent = r.slice(3); e.style.cssText = "list-style:none;font-weight:700;margin:14px 0 2px -20px"; } else e.textContent = r; $(sel).appendChild(e); });
 li("#rulelist", D.rules); li("#notelist", D.notes);
 $("#fml").innerHTML = "<thead><tr><th class='l'>Kya</th><th class='l'>Formula</th></tr></thead><tbody>" + D.formulas.map(f => `<tr><td class="l">${f[0]}</td><td class="l"><code>${f[1]}</code></td></tr>`).join("") + "</tbody>";
 $("#dinfo").innerHTML = "<tbody>" + D.data_info.map(r => `<tr><td class="l">${r[0]}</td><td class="l">${r[1]}</td></tr>`).join("") + "</tbody>";
@@ -105,7 +105,7 @@ $("#chk").innerHTML = "<thead><tr><th class='l'>Kya badla</th><th>Din</th><th>Wi
   + D.checks.map(c => c.length === 1 ? `<tr><td class="l" colspan="10"><b>${c[0]}</b></td></tr>` : `<tr><td class="l">${c[0]}</td><td>${c[1].toLocaleString("en-IN")}</td><td>${pct(c[2])}</td><td class="${sgn(c[3])}">${rs(c[3], true)}</td><td>${f2(c[4])}</td><td>${rs(c[5])}</td><td>${rs(c[6])}</td><td class="${sgn(c[7])}">${rs(c[7], true)}</td><td class="${sgn(c[8])}">${rs(c[8], true)}</td><td class="${sgn(c[9])}">${rs(c[9], true)}</td></tr>`).join("") + "</tbody>";
 $("#chkhint").textContent = D.check_hint;
 const copyText = {
-  rules: () => "Rules - " + D.title + "\n" + D.rules.map((r, i) => (i + 1) + ". " + r).join("\n"),
+  rules: () => "Rules - " + D.title + "\n" + (D.rules.some(r => r.startsWith("## ")) ? D.rules.map(r => r.startsWith("## ") ? "\n" + r.slice(3) : "- " + r).join("\n") : D.rules.map((r, i) => (i + 1) + ". " + r).join("\n")),
   formulas: () => "Formulas - " + D.title + "\n" + D.formulas.map(f => f[0] + ": " + f[1]).join("\n"),
 };
 function copyOld(txt){ const ta = document.createElement("textarea"); ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; }

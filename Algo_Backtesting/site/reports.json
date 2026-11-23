@@ -318,5 +318,25 @@
   "pf": 1.78,
   "trades": 4885,
   "verdict": "study"
+ },
+ "13_stock_straddle_risk_2021_2026": {
+  "name": "Stock Straddle + Risk Layer (2021 - 2026): 10 stocks",
+  "type": "Options",
+  "period": "Nov 2021 - Nov 2026",
+  "result": "Report 10 ke rules 10 stocks pe (RELIANCE, SBIN, HDFCBANK, ICICIBANK, TATASTEEL, MARUTI, APOLLOHOSP, ITC, BSE, LT), Rs 30 L har stock, option price model. Net sab milake Rs 7.05 cr (PF 1.58). Best TATASTEEL 1.20 cr (PF 1.86), HDFCBANK 88.7 L (1.76), ITC 91.4 L (1.82); sabse kamzor BSE 25.9 L (1.32, DD -11.2 L). Sab stocks profit, par option data nahi hai - model IV pe tika hai.",
+  "net": 70460243,
+  "pf": 1.58,
+  "trades": 11341,
+  "verdict": "study"
+ },
+ "14_stock_straddle_live_rule1_1month": {
+  "name": "Stock Straddle - Live Rule No 1 (pichhla 1 mahina)",
+  "type": "Options",
+  "period": "21 Oct - 20 Nov 2026",
+  "result": "Live Rule No 1 ke rules 10 stocks ke options pe, pichhle 1 mahine me (Rs 30 L har stock). Net sab milake Rs 6.14 L (PF 1.53, max DD -5.6 L). Best HDFCBANK 2.04 L, RELIANCE 1.92 L; loss: APOLLOHOSP -2.48 L, MARUTI -81 K. Chhota sample, option price model pe tika.",
+  "net": 613596,
+  "pf": 1.53,
+  "trades": 215,
+  "verdict": "profit"
  }
 }

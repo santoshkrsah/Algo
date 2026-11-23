@@ -1,0 +1,11 @@
+RELIANCE: 1217 din, win 60%, net Rs 7,234,428 (241.1%), PF 1.65, max DD Rs -257,951, sabse bura din Rs -72,797 | fit Rs 2,929,712, verify Rs 4,304,716
+SBIN: 1204 din, win 58%, net Rs 6,409,724 (213.7%), PF 1.52, max DD Rs -353,393, sabse bura din Rs -73,925 | fit Rs 3,813,944, verify Rs 2,595,780
+HDFCBANK: 1214 din, win 61%, net Rs 8,865,781 (295.5%), PF 1.76, max DD Rs -374,693, sabse bura din Rs -79,413 | fit Rs 5,088,200, verify Rs 3,777,582
+ICICIBANK: 1208 din, win 57%, net Rs 4,765,174 (158.8%), PF 1.40, max DD Rs -339,811, sabse bura din Rs -63,590 | fit Rs 3,078,620, verify Rs 1,686,554
+TATASTEEL: 1181 din, win 60%, net Rs 11,976,758 (399.2%), PF 1.86, max DD Rs -406,089, sabse bura din Rs -107,786 | fit Rs 7,346,514, verify Rs 4,630,244
+MARUTI: 1223 din, win 60%, net Rs 5,135,983 (171.2%), PF 1.37, max DD Rs -430,801, sabse bura din Rs -69,073 | fit Rs 2,845,681, verify Rs 2,290,301
+APOLLOHOSP: 1221 din, win 59%, net Rs 9,587,240 (319.6%), PF 1.65, max DD Rs -510,953, sabse bura din Rs -135,029 | fit Rs 7,270,805, verify Rs 2,316,435
+ITC: 1196 din, win 61%, net Rs 9,137,221 (304.6%), PF 1.82, max DD Rs -334,736, sabse bura din Rs -121,047 | fit Rs 5,611,319, verify Rs 3,525,901
+BSE: 464 din, win 53%, net Rs 2,588,262 (86.3%), PF 1.32, max DD Rs -1,120,241, sabse bura din Rs -83,774 | fit Rs 0, verify Rs 2,588,262
+LT: 1213 din, win 57%, net Rs 4,759,672 (158.7%), PF 1.35, max DD Rs -526,739, sabse bura din Rs -67,907 | fit Rs 2,058,126, verify Rs 2,701,546
+SAB: net Rs 70,460,243 (234.9%), PF 2.79, max DD Rs -1,332,520
