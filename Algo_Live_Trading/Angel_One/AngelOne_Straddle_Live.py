@@ -230,6 +230,17 @@ class LiveBroker:
         v = self.ltp(leg)
         return (v, "ltp") if v else (None, "none")
 
+    def net_qty(self, leg):
+        """Net position of this contract in the account (short = negative). None when it cannot be read."""
+        r = self.api.call(SEC + "getPosition")
+        if r is None or not r.get("status"):
+            return None
+        n = 0
+        for o in r.get("data") or []:
+            if o.get("tradingsymbol") == leg["symbol"] and str(o.get("producttype", "")).upper() in ("INTRADAY", "MIS"):
+                n += int(self._num(o.get("netqty")))
+        return n
+
     # ---- orders
     def _orders(self):
         r = self.api.call(SEC + "getOrderBook")
@@ -347,6 +358,9 @@ class ReplayBroker:
     def ltp(self, leg):
         return None
 
+    def net_qty(self, leg):
+        return None
+
     def trade(self, leg, side, qty, ref, why):
         return qty, ref * (1 - self.slip) if side == "SELL" else ref * (1 + self.slip)
 
@@ -359,6 +373,9 @@ class Strat:
                   "day_cnt": 0, "done": False, "reason": "", "max_target": 0.0, "orders": 0, "events": []}
 
     # ---- persistence
+    def stop_requested(self):
+        return bool(self.path) and os.path.exists(self.path.replace("straddle_state_", "straddle_stop_").replace(".json", ".flag"))
+
     def save(self):
         if self.path:
             self.s["saved"] = now().isoformat()
@@ -438,11 +455,58 @@ class Strat:
         notify("\n".join(lines))
 
     # ---- exits
+    def mark_manual(self, leg, t, qty_gone):
+        """This leg was closed outside the script (app / terminal): book it at the last price, estimate only."""
+        px = leg["last"]
+        self.s["realised"] += (leg["px0"] - px) * qty_gone
+        leg["qty_open"] -= qty_gone
+        if leg["qty_open"] <= 0:
+            leg["exit_px"], leg["want_close"] = px, ""
+        self.ev(t, f"MANUAL EXIT {leg['symbol']} {qty_gone} (app se band, P&L andaza @ {px:.2f})")
+        notify(f"✋ {leg['symbol']}: {qty_gone} qty script ke bahar (app se) band hui dikhi. Script ise band maan raha hai "
+               f"(P&L andaza last price {px:.2f} se, asli P&L app me dekho). Ab koi order nahi bhejega is leg ke liye.")
+        self.save()
+
+    def sync_manual(self, b, t):
+        """Live only: compare the script's open legs with the real account position. Two checks in a row before acting."""
+        if not b.live:
+            return
+        for leg in list(self.open_legs()):
+            n = b.net_qty(leg)
+            if n is None:
+                continue
+            want = -leg["qty_open"]
+            if n == want:
+                leg["flat_cnt"] = 0
+            elif n > want:                               # less short than the script thinks (or flat / long)
+                leg["flat_cnt"] = leg.get("flat_cnt", 0) + 1
+                if n > 0:
+                    err(f"{leg['symbol']}: account me LONG {n} dikh raha hai (script short maanta tha) - app me check karo")
+                if leg["flat_cnt"] >= 2:
+                    self.mark_manual(leg, t, leg["qty_open"] if n >= 0 else leg["qty_open"] + n)
+                    leg["flat_cnt"] = 0
+            else:                                        # more short than expected
+                if leg.get("flat_cnt", 0) == 0:
+                    err(f"{leg['symbol']}: account me {-n} short hai, script {leg['qty_open']} maanta hai - app me check karo")
+                leg["flat_cnt"] = 1
+
     def close_leg(self, b, leg, t, why):
         """Buy back what is still open of this leg. If not fully filled the rest stays open and is retried every minute."""
         qty = leg["qty_open"]
         if qty <= 0:
             return
+        if b.live:                                        # never BUY back something that is not short any more (would open a long)
+            for _ in range(3):
+                n = b.net_qty(leg)
+                if n is None or n < 0:
+                    break
+                time.sleep(2)
+            else:
+                self.mark_manual(leg, t, qty)
+                return
+            if n is not None and n < 0 and -n < qty:
+                self.mark_manual(leg, t, qty + n)
+                qty = leg["qty_open"]
         ref = b.ltp(leg) if b.live else leg["last"]
         ref = ref or leg["last"]
         try:
@@ -472,6 +536,10 @@ class Strat:
     # ---- one minute (t >= 6)
     def minute(self, b, t):
         s = self.s
+        self.sync_manual(b, t)
+        if self.stop_requested():
+            self.close_all(b, t, "Manual exit (stop file)")
+            return self._after(t)
         # a close that did not fill earlier is retried first
         for leg in list(self.open_legs()):
             if leg["want_close"]:
@@ -644,6 +712,11 @@ def run_live(api, a):
     except Fatal as e:
         err(f"RUK GAYA: {e}\n{st.summary('STOPPED')}")
         return 1
+    except KeyboardInterrupt:
+        open_ = [(l["symbol"], l["qty_open"]) for l in st.open_legs()]
+        notify(f"⏹ Script Ctrl+C se band hui. Khuli position: {open_ or 'koi nahi'}. "
+               f"{'Unhe app se band karo, ya  py AngelOne_Straddle_Live.py --exit-now' if open_ else ''}", TAG_ERROR)
+        return 1
     except Exception as e:                                           # never die silently with a position open
         import traceback
         err(f"Script error: {type(e).__name__}: {e}\n{traceback.format_exc()[-800:]}\nOpen legs: "
@@ -658,9 +731,39 @@ def run_live(api, a):
     return 0
 
 
+def run_exit_now(a):
+    """Safe manual exit. Script running -> it is told to close everything at its next minute. Not running -> closes from the state file."""
+    day = now().date()
+    path = os.path.join(HERE, f"straddle_state_{day:%Y-%m-%d}.json")
+    lock = os.path.join(HERE, f"straddle_{day:%Y-%m-%d}.lock")
+    flag = path.replace("straddle_state_", "straddle_stop_").replace(".json", ".flag")
+    if not os.path.exists(path):
+        sys.exit("Aaj ki koi state file nahi - script ne aaj koi position nahi li (ya woh dusre folder me hai).")
+    if os.path.exists(lock) and time.time() - os.path.getmtime(lock) < 150:
+        open(flag, "w").write(now().isoformat())
+        print("Chalti hui script ko bata diya: wo agle minute (1 minute ke andar) saari khuli position band karke ruk jaayegi. Telegram dekho.")
+        return 0
+    st = Strat(1, a.day_loss, path)
+    st.load()
+    if not st.open_legs():
+        sys.exit("State file me koi khula leg nahi hai - kuch band karne ko nahi.")
+    ip, _ = T.public_ip()
+    api = API(ip)
+    api.login()
+    b = LiveBroker(api, day)
+    t = max(ENTRY_T + 1, min(EXIT_T, t_now(day)))
+    notify("✋ Manual exit shuru (--exit-now)")
+    st.close_all(b, t, "Manual exit (--exit-now)")
+    st.s["done"] = not st.open_legs()
+    st.save()
+    notify(st.summary("MANUAL EXIT"), TAG_RESULT)
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description="Report 10 straddle + risk layer, live on Angel One")
-    ap.add_argument("--lots", type=int, required=True, help="number of NIFTY lots to sell (no default)")
+    ap.add_argument("--lots", type=int, help="number of NIFTY lots to sell (no default; not needed with --exit-now)")
+    ap.add_argument("--exit-now", action="store_true", help="close today's open legs and stop (safe manual exit)")
     ap.add_argument("--day-loss", type=float, default=DAY_LOSS_RS, help="day loss limit in Rs (report: 45000)")
     ap.add_argument("--live", action="store_true", help="send real orders")
     ap.add_argument("--yes", action="store_true", help="do not ask YES (unattended)")
@@ -668,13 +771,15 @@ def main():
     ap.add_argument("--slip", type=float, default=0.005, help="replay slippage (report: 0.5%%)")
     ap.add_argument("--no-telegram", action="store_true")
     a = ap.parse_args()
-    if a.lots < 1:
-        sys.exit("--lots must be at least 1")
+    if not a.exit_now and (a.lots is None or a.lots < 1):
+        sys.exit("--lots N is required (at least 1)")
     T.SEND_TELEGRAM = not a.no_telegram
     T.C.update(T.read_creds(os.path.join(HERE, T.CRED_FILE)))
     missing = [k for k in ("CLIENT_CODE", "PIN", "TOTP_KEY", "API_KEY") if not T.C.get(k)]
     if missing:
         sys.exit(f"Missing in {T.CRED_FILE}: {', '.join(missing)}")
+    if a.exit_now:
+        return run_exit_now(a)
     if not a.live and not a.replay:
         print(__doc__.split("HOW THE SIZE")[0])
         print(f"PLAN: NIFTY, {a.lots} lot, day loss limit Rs {a.day_loss:,.0f}.\nNothing is sent. Add --live for real orders, or --replay YYYY-MM-DD to test on a past day.")
