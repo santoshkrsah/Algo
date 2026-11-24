@@ -19,3 +19,7 @@ tokens_logs/
 # Firstock login details - never on GitHub
 Algo_Live_Trading/AWS_VM/Firstock_Credentials.txt
 **/Firstock_Credentials.txt
+**/BeyondTrading_Credentials.txt
+**/AngelOne_Credentials.txt
+*.txt
+**.telegram_bot
