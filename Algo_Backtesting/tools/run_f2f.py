@@ -28,6 +28,14 @@ from backtest.vmu_report import _clean  # noqa: E402
 TAG_TRADING, TAG_TECH = "@ayushanand440", "@albert_max"
 NAME = "kadam_f2f_The_Intraday_Options_Strategies_Pro_Traders_Actually_Use_Face2Face_Abhishek_Kadam"
 CAPITAL = 400_000
+<<<<<<< Updated upstream
+=======
+VIDEO_ID = "Ib9u18tXTJc"
+VIDEO_URL = "https://www.youtube.com/watch?v=" + VIDEO_ID
+VIDEO_TITLE = "The Intraday Options Strategies Pro Traders Actually Use !! #Face2Face with Mr. Abhishek Kadam"
+TITLE = "Abhishek Kadam F2F Option Selling - " + VIDEO_TITLE
+PERIODS = [["2021 - 2022", "2021-01-01", "2022-12-31"], ["2023", "2023-01-01", "2023-12-31"], ["2024 - ab tak", "2024-01-01", "2099-12-31"]]
+>>>>>>> Stashed changes
 SLIPS = {"0.5%": 0.005, "1%": 0.01, "0%": 0.0}
 HEDGES = [["nohedge", "Hedge nahi"], ["hedge", "Hedge ke saath"]]
 STRATS = [["S1", "S1 Sensex 9:50 strangle"], ["S2N", "S2 Nifty STBT"], ["S2S", "S2 Sensex STBT"]]
@@ -37,21 +45,36 @@ COLS = ["date", "symbol", "side", "strike", "hedge", "expiry", "dte", "entry_tim
 RULES = [
     ["Common (dono strategy)", [
         "Video: Abhishek Kadam (Capita Engineers) Face2Face, Elearnmarkets / Vivek Bajaj. Speaker khud bolta hai: strategy mat chalao, backtest khud karo.",
+<<<<<<< Updated upstream
         "Har strategy me <b>1 lot</b> (Sensex lot 10, Jan 2025 se 20; Nifty lot 50 / 25 / 75 / 65 us waqt ke hisaab se), capital <b>Rs 4,00,000</b> har strategy (video: Rs 3 lakh margin + Rs 1 lakh buffer). Profit dobara invest nahi hota.",
         "Do tarah ke test: <b>bina hedge</b> (jaisa video me bola) aur <b>hedge ke saath</b> (Ayush ne dono maange). Slippage 0.5% (main), 1% aur 0% (sirf dekhne ke liye).",
+=======
+        "Har strategy me <b>1 lot</b> (Sensex lot 10, Jan 2025 se 20; Nifty lot 75 / 50 / 25 / 75 / 65 us waqt ke hisaab se), capital <b>Rs 4,00,000</b> har strategy (video: Rs 3 lakh margin + Rs 1 lakh buffer). Profit dobara invest nahi hota.",
+        "Do tarah ke test: <b>bina hedge</b> (sirf sold option) aur <b>hedge ke saath</b> (video: har trade hedged, par doori nahi batayi). Slippage 0.5% (main), 1% aur 0% (sirf dekhne ke liye).",
+>>>>>>> Stashed changes
         "Option price asli nahi, <b>model</b> se (Black-76), jo asli BSE / NSE ke roz ke close prices se check kiya hai. Rules tab me model check dekho.",
     ]],
     ["S1: Sensex 9:50 strangle (intraday)", [
         "Instrument: <b>Sensex weekly options</b>. Sensex me weekly options 15 May 2023 se hain, isliye test 15 May 2023 se.",
+<<<<<<< Updated upstream
         "Din: <b>Monday se Thursday</b>. Sirf wo din jab nearest weekly expiry <b>0 se 3 din</b> door ho (DTE 0-3). Isse door ho to us din trade nahi.",
         "Entry: <b>9:50</b> baje CALL aur PUT dono <b>sell</b>. Har side me wo strike jiska premium <b>Rs 60</b> ke sabse paas ho (CALL index ke upar, PUT neeche).",
         "Stop loss: har leg alag, premium <b>50% badh jaye</b> (Rs 60 pe bechi to Rs 90 pe SL).",
+=======
+        "Din: sirf wo din jab nearest weekly expiry <b>0 se 3 trading din</b> door ho (0DTE se 3DTE). Abhi ki Thursday expiry me ye <b>Monday se Thursday</b> hi hai (jaisa video me); purane Friday / Tuesday expiry me din alag.",
+        "Entry: <b>9:50</b> baje CALL aur PUT dono <b>sell</b>. Har side me wo strike jiska premium <b>Rs 60</b> ke sabse paas ho (CALL index ke upar, PUT neeche).",
+        "Stop loss: har leg alag, premium <b>50% badh jaye</b> (Rs 60 pe bechi to Rs 90 pe SL). Entry wali candle se hi check.",
+>>>>>>> Stashed changes
         "Re-entry: SL lagne ke baad, <b>14:30 se pehle</b>, agar usi option ka price wapas apni <b>entry price tak gir jaye</b> to <b>ek baar</b> dobara sell (naya SL = naye entry price ka +50%). Sirf ek re-entry.",
         "Exit: SL na lage to <b>15:15</b> baje dono leg band.",
         "Hedge wala version: har sold leg ke saath ek door ka option <b>buy</b> (premium lagbhag Rs 10), same qty; leg band hone pe hedge bhi band; re-entry pe hedge dobara.",
     ]],
     ["S2: STBT (positional) range breakout", [
+<<<<<<< Updated upstream
         "Index: <b>Nifty</b> (2021-10 se) aur <b>Sensex</b> (2023-05 se), dono alag. Video me index nahi bataya tha; example 22,000 Nifty jaisa tha.",
+=======
+        "Index: <b>Nifty</b> (Jan 2021 se) aur <b>Sensex</b> (15 May 2023 se), dono alag. Video me index nahi bataya tha; example 22,000 Nifty jaisa tha.",
+>>>>>>> Stashed changes
         "Range: <b>9:15 se 11:15</b> ka High aur Low. 11:15 ke baad 15:15 tak koi 1 min candle High ke upar <b>close</b> ho to <b>ITM PUT sell</b>, Low ke neeche close ho to <b>ITM CALL sell</b>. Din me sirf pehla breakout.",
         "Strike: <b>1 strike ITM</b> (PUT ke liye index ke upar wala pehla strike, CALL ke liye neeche wala).",
         "Stop loss: index entry se <b>0.5%</b> ulta chala jaye (PUT sell pe 0.5% neeche, CALL sell pe 0.5% upar).",
@@ -61,6 +84,7 @@ RULES = [
     ]],
 ]
 NOTES = [
+<<<<<<< Updated upstream
     "Ayush ke jawab (24 Nov 2026): DTE 0-3 + Mon-Thu = nearest weekly expiry, 0-3 DTE wale din; re-entry = jaisa best lage; S2 index aur ITM = jaisa best lage; hedge dono tarah (ke saath aur bina).",
     "Sensex ka weekly expiry din BSE bhavcopy se nikala: Friday (May 2023 - Dec 2024), Tuesday (Jan 2025 - Aug 2025), Thursday (Sep 2025 se). Isliye 0-3 DTE rule ka matlab alag saalon me alag din hai: Thursday expiry me Mon-Thu = 3,2,1,0 DTE. Tuesday era me sirf Mon (1 DTE) aur Tue (0 DTE) trade hue; Friday era me Tue-Thu (3,2,1 DTE).",
     "'Re-entry' video me saaf nahi tha. Hamne: SL ke baad (14:30 se pehle) option price wapas pehli entry price tak aaye to ek baar dobara sell.",
@@ -77,6 +101,24 @@ NOTES = [
 ]
 FORMULAS = [
     ["Expiry / DTE", "Expiry = nearest weekly expiry (BSE bhavcopy);  DTE = (expiry date - aaj ki date) calendar din"],
+=======
+    "S2 ka profit zyadatar index ki direction se aaya: 0.65 delta wala andaza (index points x qty) Nifty me lagbhag Rs 8.1 L (net Rs 8.9 L), Sensex me Rs 4.0 L (net Rs 4.8 L). Ye overnight move se hai: usi din 15:15 exit karne pe dono me loss (Extra checks). Raat me IV badalna model me nahi hai, aur overnight gap se ek trade me bada loss ho sakta hai.",
+    "Default assumptions pe test chala (chat me OK mila, 25 Nov 2026). Trading sawaal Ayush ko Telegram pe bheje the.",
+    "Source: transcript (Hindi auto-captions), description aur pinned comment padhe. Pinned comment sirf course ka promo hai. Comments me VaR / hedge / kharche ke sawaal ka koi rule wala jawab nahi mila.",
+    "S1 me '9:15 ya 9:50' ka confusion tha; 9:50 liya. 'Re-entry' video me saaf nahi: SL ke baad (14:30 se pehle) option price wapas pehli entry price tak aaye to ek baar dobara sell. Exit time bhi nahi bataya: 15:15.",
+    "Sensex ka weekly expiry din BSE bhavcopy se: Friday (May 2023 - Dec 2024), Tuesday (Jan - Aug 2025), Thursday (Sep 2025 se). Holiday pe din badalta hai.",
+    "S2 me index video me nahi bataya (22,000 ka example Nifty jaisa). ITM = 1 strike. Hedge = 2% OTM option. S1 hedge = lagbhag Rs 10 premium wala door ka option.",
+    "Option price asli nahi: expired option ka 1 min data nahi milta (PC me sirf Aug-Nov 2026 ke kuch strike). Black-76 model. S1 IV = pichhle din ke close pe isi expiry ke OTM options (Rs 20-200) ka asli implied vol x scale; S2 IV = k x 20 din ki realised vol.",
+    "Model ke k aur m poore period ke asli close se fit kiye (thoda aage ka data use hua). Strategy ke rules pe koi tuning nahi ki; saal-wise hisse sirf dekhne ke liye hain (2021-22, 2023, 2024 se ab tak).",
+    "Model me ek din me IV sthir hai aur skew nahi. Door ka hedge option asli me mehenga hoga, yaani asli hedge ka kharcha zyada hoga. Asli bid-ask bhi model nahi pakadta: 1% slippage wala result bhi dekho.",
+    "S2 ka result accha dikh sakta hai kyunki sold ITM option ka delta ~0.6-0.7 hai (index ki direction pakadta hai).",
+    "Kharcha: Rs 20 har order, STT 0.1% (sell premium pe), exchange 0.0325% (Sensex) / 0.035% (Nifty), SEBI, stamp 0.003% (buy), GST 18%. 2026 ke rate poore samay ke liye (Oct 2024 se pehle STT kam tha). Margin alag se check nahi kiya.",
+    "Din / mahine ka loss limit aur '2x drawdown pe band' video me bataya, par in dono strategy ke liye number nahi diya, isliye nahi lagaya. 79 / 20 / 1 portfolio aur option buying test nahi hue.",
+    "Video ke claim: S1 max drawdown ~1-1.3%, S2 saal-wise 46% / 26% / 44%. Speaker khud kehta hai backtest return 50% kam aur drawdown double maano.",
+]
+FORMULAS = [
+    ["Expiry / DTE", "Expiry = nearest weekly expiry;  DTE = aaj ke baad se expiry din tak ke trading din (expiry din = 0);  S1 trade sirf DTE <= 3"],
+>>>>>>> Stashed changes
     ["Time (T)", "T = expiry din 15:30 tak bacha samay / 365 din"],
     ["Forward (F)", "F = Spot x e^((r - q) x T),  r = 6.5%, q = 1.2%"],
     ["d1, d2", "d1 = [ln(F / K) + IV^2 x T / 2] / (IV x root(T));   d2 = d1 - IV x root(T)"],
@@ -87,6 +129,10 @@ FORMULAS = [
     ["S1: SL level", "SL = entry premium x 1.5;  SL laga jab 1 min candle ke worst index pe (CALL: High, PUT: Low) model premium >= SL"],
     ["S1: SL fill", "Fill = SL;  agar candle ke open pe hi premium >= SL (gap) to open wala premium"],
     ["S1: re-entry", "SL ke baad 14:30 se pehle, candle close pe premium <= pehli entry price  ->  dobara sell, naya SL = naye entry price x 1.5"],
+<<<<<<< Updated upstream
+=======
+    ["Qty", "Qty = 1 lot (risk ke hisaab se size nahi);  position = lot x premium"],
+>>>>>>> Stashed changes
     ["S1: hedge", "Hedge strike = sold strike se door wala jiska |model premium - 10| sabse kam; leg ke saath hi band"],
     ["S2: range", "H = 9:15-11:14 ka sabse bada High;  L = sabse chhota Low"],
     ["S2: breakout", "11:15-15:14 candle: Close > H -> SELL PE;  Close < L -> SELL CE   (pehla breakout)"],
@@ -110,12 +156,22 @@ def stat_row(label, t):
 
 
 def candles(under: pd.DataFrame, days: set) -> dict:
+<<<<<<< Updated upstream
     u = under[under.day.isin(days)].copy()
     u["b"] = u.m // 5 * 5
     g = u.groupby(["day", "b"]).agg(o=("open", "first"), h=("high", "max"), l=("low", "min"), c=("close", "last")).reset_index()
     out = {}
     for day, x in g.groupby("day"):
         out[day] = [[int(r.b), round(r.o, 1), round(r.h, 1), round(r.l, 1), round(r.c, 1)] for r in x.itertuples()]
+=======
+    """day -> flat ints per 1-min candle: minute step, open - last close, high - open, open - low, close - open (price x 10)."""
+    out = {}
+    for day, g in under[under.day.isin(days)].groupby("day"):
+        m = g.m.values.astype(int)
+        o, h, l, c = (np.rint(g[k].values * 10).astype(int) for k in ("open", "high", "low", "close"))
+        prev = np.concatenate([[0], c[:-1]])
+        out[day] = np.column_stack([np.diff(m, prepend=0), o - prev, h - o, o - l, c - o]).ravel().tolist()
+>>>>>>> Stashed changes
     return out
 
 
@@ -160,8 +216,14 @@ def main() -> int:
 
         def s2(name, hedge, slip, **kw):
             p = stbt.Params(iv_mult=cal["k"][name], slip=slip, capital=CAPITAL, month_stop=None, hedge_pct=0.02 if hedge else None, lot_fn=f2f.lot_on)
+<<<<<<< Updated upstream
             t = stbt.simulate(name, unders[name], stbt.with_params(p, **kw), start=(f2f.SENSEX_FROM if name == "SENSEX" else None))
             t["dte"] = (pd.to_datetime(t.expiry) - pd.to_datetime(t.date)).dt.days
+=======
+            t = stbt.simulate(name, unders[name], stbt.with_params(p, **kw), start=(f2f.SENSEX_FROM if name == "SENSEX" else f2f.START))
+            days = sorted(unders[name].day.unique())
+            t["dte"] = [f2f.trading_dte(days, d, e) for d, e in zip(t.date, t.expiry)]
+>>>>>>> Stashed changes
             return t
 
         def s1(hedge, slip, **kw):
@@ -178,7 +240,11 @@ def main() -> int:
             t.to_csv(out / ("trades_" + k.replace("|", "_").replace("%", "pct") + ".csv"), index=False)
         checks = [["S1 Sensex strangle (bina hedge)"], stat_row("Jaisa rules me hai", runs["S1|nohedge|0.5%"])]
         for lab, kw in [("Re-entry nahi", {"reentry": False}), ("SL 30% (50% ki jagah)", {"sl": 0.3}), ("SL 80%", {"sl": 0.8}), ("Premium Rs 40 (60 ki jagah)", {"prem": 40.0}),
+<<<<<<< Updated upstream
                         ("Premium Rs 100", {"prem": 100.0}), ("Mon-Fri, har DTE (<= 5 din)", {"weekdays": (0, 1, 2, 3, 4), "max_dte": 5}), ("Entry 9:20 (9:50 ki jagah)", {"entry_m": 560}),
+=======
+                        ("Premium Rs 100", {"prem": 100.0}), ("Har din (DTE <= 5)", {"max_dte": 5}), ("Sirf Mon-Thu + 0-3 calendar din", {"weekdays": (0, 1, 2, 3), "dte_calendar": True}), ("Entry 9:20 (9:50 ki jagah)", {"entry_m": 560}),
+>>>>>>> Stashed changes
                         ("Exit 14:30 (15:15 ki jagah)", {"exit_m": 870}), ("IV 20% kam", {"iv_mult": cal["m"] * 0.8}), ("IV 20% zyada", {"iv_mult": cal["m"] * 1.2})]:
             checks.append(stat_row(lab, s1(False, 0.005, **kw)))
         tell(f"Kadam F2F: S1 checks done ({(time.time() - t0) / 60:.1f} min). S2 checks chal rahe hain.")
@@ -196,9 +262,15 @@ def main() -> int:
                     days |= set(t.date) | set(t.exit_date)
             series[sym] = candles(unders[sym], days)
         info = {}
+<<<<<<< Updated upstream
         base_inv = [["Capital", f"Rs {CAPITAL:,} (har strategy, fixed, compounding nahi)"], ["Qty", "1 lot har trade (Sensex 10 / 20, Nifty 25-75 us waqt ke hisaab se)"]]
         specs = [
             ("S1", [["Index", "Sensex"], ["Entry", "9:50 CALL + PUT sell", 1], ["Premium", "Rs 60", 1], ["SL", "50% premium", 1], ["Re-entry", "1"], ["Din / DTE", "Mon-Thu, DTE 0-3", 1], ["Exit", "15:15"],
+=======
+        base_inv = [["Capital", f"Rs {CAPITAL:,} (har strategy, fixed, compounding nahi)"], ["Qty", "1 lot har trade (Sensex 10 / 20, Nifty 25-75 us waqt ke hisaab se)"], ["Risk per trade", "Fixed rupaye nahi: 1 lot; nuksaan SL se tay (S1 premium +50%, S2 index 0.5%; gap me zyada)"], ["Max per stock", "Lagu nahi (sirf index options)"]]
+        specs = [
+            ("S1", [["Index", "Sensex"], ["Entry", "9:50 CALL + PUT sell", 1], ["Premium", "Rs 60", 1], ["SL", "50% premium", 1], ["Re-entry", "1"], ["Din / DTE", "0-3 trading din expiry tak", 1], ["Exit", "15:15"],
+>>>>>>> Stashed changes
                     ["Hedge version", "Rs 10 premium wala option"]], [["Ek din me max positions", "2 leg (hedge ke saath 4 option)"]]),
             ("S2N", [["Index", "Nifty"], ["Range", "9:15-11:15", 1], ["Strike", "1 ITM", 1], ["SL", "0.5% index", 1], ["Re-entry", "1"], ["Exit", "agle din 9:35", 1], ["Hedge version", "2% OTM option"]],
              [["Ek time me max positions", "1 (hedge ke saath 2 option)"]]),
@@ -209,16 +281,24 @@ def main() -> int:
             t = runs[f"{key}|nohedge|0.5%"]
             info[key] = {"first": str(t.date.min()), "last": str(t.exit_date.max()), "settings": set_, "invest": base_inv + inv}
         settings = [["Universe", "Index options (stock filter nahi)"], ["Option price", "Model (Black-76), asli close se calibrated", 1], ["Slippage", "0.5% premium (main), 1%, 0%", 1],
+<<<<<<< Updated upstream
                     ["Kharcha", "Rs 20/order, STT 0.1%, charges", 1], ["Capital", "Rs 4,00,000 har strategy, compounding nahi", 1], ["Qty", "1 lot", 1], ["Position limit", "S1: 2 leg, S2: 1"], ["Hedge", "Dono: ke saath + bina"]]
         data = {"rules": RULES, "notes": NOTES, "formulas": FORMULAS, "checks": checks, "calib": calib, "capital": CAPITAL, "strats": STRATS, "hedges": HEDGES,
                 "slips": list(SLIPS), "slipv": SLIPS, "base": ["S1", "nohedge", "0.5%"], "cols": COLS, "info": info, "settings": settings,
                 "data_range": ["2021-10-01", "2026-11-20"], "data_note": "S1 + S2 Sensex: 15 May 2023 se. S2 Nifty: Oct 2021 se.", "series": series,
+=======
+                    ["Kharcha", "Rs 20/order, STT 0.1%, charges", 1], ["Capital", "Rs 4,00,000 har strategy, compounding nahi", 1], ["Qty", "1 lot", 1], ["Position limit", "S1: 2 leg, S2: 1"], ["Period", "Nifty 2021 se, Sensex May 2023 se"], ["Filter / indicator", "Koi nahi"], ["Hedge", "Dono: ke saath + bina"]]
+        data = {"title": TITLE, "source": {"title": VIDEO_TITLE, "url": VIDEO_URL, "id": VIDEO_ID}, "periods": PERIODS, "rules": RULES, "notes": NOTES, "formulas": FORMULAS, "checks": checks, "calib": calib, "capital": CAPITAL, "strats": STRATS, "hedges": HEDGES,
+                "slips": list(SLIPS), "slipv": SLIPS, "base": ["S1", "nohedge", "0.5%"], "cols": COLS, "info": info, "settings": settings,
+                "data_range": [f2f.START, f2f.END], "data_note": "S1 + S2 Sensex: 15 May 2023 se. S2 Nifty: Jan 2021 se.", "series": series,
+>>>>>>> Stashed changes
                 "generated": datetime.now().strftime("%d %b %Y %H:%M"),
                 "runs": {k: t[COLS].astype(object).where(t[COLS].notna(), None).values.tolist() for k, t in runs.items()}}
         css = re.search(r"<style>.*?</style>", (ASSETS / "report_template.html").read_text(encoding="utf-8"), re.S).group(0)
         tpl = viewer_assets.apply((ASSETS / "f2f_template.html").read_text(encoding="utf-8")).replace("__CSS__", css)
         js = (ASSETS / "chart.umd.min.js").read_text(encoding="utf-8")
         blob = json.dumps(data, separators=(",", ":"), default=lambda o: o.item() if hasattr(o, "item") else _clean(o)).replace("</", "<\\/")
+<<<<<<< Updated upstream
         (out / "report.html").write_text(tpl.replace("__CHARTJS__", js).replace("__DATA__", blob), encoding="utf-8")
     except Exception:
         tell(f"{TAG_TECH} Kadam F2F backtest FAILED:\n{traceback.format_exc()[-1500:]}")
@@ -232,6 +312,26 @@ def main() -> int:
     tell(msg)
     print(msg)
     print("done ->", out)
+=======
+        (out / "report.html").write_text(tpl.replace("__TITLE__", TITLE).replace("__VURL__", VIDEO_URL).replace("__VID__", VIDEO_ID).replace("__VTITLE__", VIDEO_TITLE).replace("__CHARTJS__", js).replace("__DATA__", blob), encoding="utf-8")
+    except Exception:
+        tell(f"{TAG_TECH} Kadam F2F backtest FAILED:\n{traceback.format_exc()[-1500:]}")
+        raise
+    lines, summ = [], {}
+    for key, lab in STRATS:
+        for hk, hn in HEDGES:
+            t = runs[f"{key}|{hk}|0.5%"]
+            s = totals(t, CAPITAL)
+            per = {n: round(float(t.net_pnl[(t.date >= a_) & (t.date <= b_)].sum())) for n, a_, b_ in PERIODS}
+            summ[f"{key}|{hk}"] = {"first": t.date.min(), "last": t.exit_date.max(), "trades": s["trades"], "win": round(s["win_pct"], 1), "net": round(s["net"]),
+                                   "pf": s["profit_factor"], "dd": round(s["max_dd"]), "slip1": round(float(runs[f"{key}|{hk}|1%"].net_pnl.sum())),
+                                   "slip0": round(float(runs[f"{key}|{hk}|0%"].net_pnl.sum())), "periods": per}
+            lines.append(f"{lab} | {hn}: {s['trades']} trade, win {s['win_pct']:.0f}%, net Rs {s['net']:,.0f} ({s['ret_pct']:.0f}% on 4L), PF {s['profit_factor'] or 0:.2f}, max DD Rs {s['max_dd']:,.0f}")
+    (out / "summary.json").write_text(json.dumps({"runs": summ, "calib": calib, "checks": checks, "skipped_S1": runs["S1|nohedge|0.5%"].attrs.get("skipped")}, indent=1, default=float), encoding="utf-8")
+    print("\n".join(lines))
+    print(f"done in {(time.time() - t0) / 60:.1f} min ->", out)
+    tell(f"Kadam F2F: backtest run + report ban gaya ({(time.time() - t0) / 60:.1f} min). Ab check karke website upload.")
+>>>>>>> Stashed changes
     return 0
 
 

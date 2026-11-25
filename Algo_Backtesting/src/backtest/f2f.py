@@ -1,6 +1,10 @@
 """Abhishek Kadam F2F strategies on index options (prices MODELLED, calibrated on real daily bhavcopy closes).
 
+<<<<<<< Updated upstream
 S1: Sensex 9:50 short strangle, closest premium Rs 60 CE + PE, SL 50% of premium per leg, 1 re-entry, Mon-Thu, 0-3 DTE, exit 15:15.
+=======
+S1: Sensex 9:50 short strangle, closest premium Rs 60 CE + PE, SL 50% of premium per leg, 1 re-entry, 0-3 trading days to expiry, exit 15:15.
+>>>>>>> Stashed changes
 S2: Nifty / Sensex STBT range breakout (stbt.py) with 1 lot.
 """
 import math
@@ -16,6 +20,12 @@ from backtest.config import DATA
 FNO = DATA / "fno"
 SENSEX_1M = DATA / "index" / "SENSEX_1m.csv"
 NIFTY_1M = DATA / "index" / "NIFTY50_1m.csv"
+<<<<<<< Updated upstream
+=======
+NIFTY_OLD_1M = DATA / "index" / "NIFTY50_FROM2020_1m.csv"   # only the days before NIFTY_1M starts
+START, END = "2021-01-01", "2026-11-23"                    # last complete trading day
+WARMUP = "2020-11-01"                                       # for the 20-day volatility of Jan 2021
+>>>>>>> Stashed changes
 SENSEX_FROM = "2023-05-15"          # first day of Sensex weekly options in the BSE bhavcopy
 # Sensex lot: 10 until 2024-12-31, 20 after (BSE bhavcopy). Nifty: stma config table.
 NIFTY_LOTS = [("2015-10-29", 75), ("2021-07-30", 50), ("2024-04-26", 25), ("2025-01-31", 75), ("2025-12-31", 65)]
@@ -32,6 +42,7 @@ def lot_on(name: str, day: str) -> int:
 def load_under(name: str) -> pd.DataFrame:
     path = NIFTY_1M if name == "NIFTY" else SENSEX_1M
     stbt.SOURCES[name], stbt.SPOT[name] = path, True
+<<<<<<< Updated upstream
     return stbt.load_under(name)
 
 
@@ -62,6 +73,52 @@ def Path_cache():
 def sensex_expiries() -> list[date]:
     d = pd.read_parquet(Path_cache() / "sensex_bhav.parquet")
     return sorted({date.fromisoformat(x) for x in d.XpryDt.unique()})
+=======
+    d = stbt.load_under(name)
+    if name == "NIFTY":
+        stbt.SOURCES[name] = NIFTY_OLD_1M
+        old = stbt.load_under(name)
+        stbt.SOURCES[name] = path
+        old = old[(old.day >= WARMUP) & (old.day < d.day.min())]
+        d = pd.concat([old, d], ignore_index=True)
+    return d[d.day <= END].sort_values("datetime").reset_index(drop=True)
+
+
+BHAV_COLS = ("TradDt", "TckrSymb", "XpryDt", "StrkPric", "OptnTp", "ClsPric", "UndrlygPric", "TtlTradgVol")
+_BHAV: dict = {}
+
+
+def bhav(name: str) -> pd.DataFrame:
+    """Real daily option closes (index options): columns day, exp, K, cp, close, und, vol."""
+    if name not in _BHAV:
+        parts = []
+        for sub in (("bhavcopy_bse",) if name == "SENSEX" else ("bhavcopy_idx_hist", "bhavcopy_idx")):
+            for f in sorted((FNO / sub).glob("20*.csv")):
+                if f.stem > END:
+                    continue
+                x = pd.read_csv(f, usecols=lambda c: c in BHAV_COLS)
+                x = x[(x.TckrSymb == name) & x.OptnTp.isin(["CE", "PE"])]
+                if len(x):
+                    parts.append(x)
+        d = pd.concat(parts).rename(columns={"TradDt": "day", "XpryDt": "exp", "StrkPric": "K", "OptnTp": "cp", "ClsPric": "close",
+                                              "UndrlygPric": "und", "TtlTradgVol": "vol"})
+        _BHAV[name] = d[["day", "exp", "K", "cp", "close", "und", "vol"]].reset_index(drop=True)
+    return _BHAV[name]
+
+
+def sensex_expiries() -> list[date]:
+    return sorted({date.fromisoformat(x) for x in bhav("SENSEX").exp.unique()})
+
+
+def trading_dte(days: list[str], day: str, exp: str) -> int:
+    """Trading days after `day` up to and including `exp` (0 = expiry day). Past the data: weekdays."""
+    n = sum(1 for d in days if day < d <= exp)
+    x = date.fromisoformat(max(days[-1], day)) + timedelta(days=1)
+    while x.isoformat() <= exp:
+        n += x.weekday() < 5
+        x += timedelta(days=1)
+    return n
+>>>>>>> Stashed changes
 
 
 # ---------------------------------------------------------------- vector pricing
@@ -93,6 +150,10 @@ def calibration_rows(name: str, under: pd.DataFrame) -> pd.DataFrame:
     rv = stbt.realised_vol(under)
     b = b[(b.close >= 5) & (b.vol > 0)].copy()
     b["rv"] = b.day.map(rv)
+<<<<<<< Updated upstream
+=======
+    b["und"] = b.und.fillna(b.day.map(under.groupby("day").close.last()))      # old NSE files have no underlying price
+>>>>>>> Stashed changes
     b = b.dropna(subset=["rv", "und"])
     e = pd.to_datetime(b.exp) + pd.Timedelta(hours=15, minutes=30)
     t = pd.to_datetime(b.day) + pd.Timedelta(hours=15, minutes=30)
@@ -170,8 +231,14 @@ class S1:
     entry_m: int = 590              # 9:50
     exit_m: int = 915               # 15:15
     reentry_cut: int = 870          # no re-entry from 14:30
+<<<<<<< Updated upstream
     max_dte: int = 3
     weekdays: tuple = (0, 1, 2, 3)
+=======
+    max_dte: int = 3                # trading days to expiry
+    dte_calendar: bool = False      # True: count calendar days instead
+    weekdays: tuple = (0, 1, 2, 3, 4)
+>>>>>>> Stashed changes
     iv_mult: float = 1.0            # x previous-close wing IV
     capital: float = 400_000.0
 
@@ -200,6 +267,10 @@ def _prev_iv(lk: dict, exp: str, cp: str, day: str):
 
 def simulate_s1(under: pd.DataFrame, lk: dict, exps: list[date], p: S1, start: str = SENSEX_FROM, end: str | None = None) -> pd.DataFrame:
     A = _day_arrays(under)
+<<<<<<< Updated upstream
+=======
+    all_days = sorted(A)
+>>>>>>> Stashed changes
     rows, skipped = [], {"no_iv": 0, "dte": 0, "bars": 0}
     step = 100
     for day in sorted(A):
@@ -211,7 +282,11 @@ def simulate_s1(under: pd.DataFrame, lk: dict, exps: list[date], p: S1, start: s
             skipped["bars"] += 1
             continue
         exp = next((e for e in exps if e >= wd), None)
+<<<<<<< Updated upstream
         dte = (exp - wd).days if exp else 99
+=======
+        dte = 99 if not exp else ((exp - wd).days if p.dte_calendar else trading_dte(all_days, day, exp.isoformat()))
+>>>>>>> Stashed changes
         if dte > p.max_dte:
             skipped["dte"] += 1
             continue
@@ -247,7 +322,11 @@ def simulate_s1(under: pd.DataFrame, lk: dict, exps: list[date], p: S1, start: s
                 e = pr(K, spot_in, i_start)                       # quote at entry
                 eh = prh(spot_in, i_start)
                 slp = e * (1 + p.sl)
+<<<<<<< Updated upstream
                 js = np.arange(i_start + 1, ix)
+=======
+                js = np.arange(i_start + (1 if reent else 0), ix)  # first entry is at the open, so its own candle counts
+>>>>>>> Stashed changes
                 pw = price_v(fwd(worst[js], Tm[js]), K, cp, Tm[js], iv) if len(js) else np.array([])
                 hit = np.where(pw >= slp)[0]
                 if len(hit):
@@ -255,7 +334,18 @@ def simulate_s1(under: pd.DataFrame, lk: dict, exps: list[date], p: S1, start: s
                     po = pr(K, o[k], k)
                     gap = po >= slp
                     xq = po if gap else slp
+<<<<<<< Updated upstream
                     sx = float(o[k] if gap else worst[k])
+=======
+                    if gap:
+                        sx = float(o[k])
+                    else:                                              # index level where the premium reaches the SL
+                        lo_x, hi_x = float(o[k]), float(worst[k])
+                        for _ in range(40):
+                            mid = (lo_x + hi_x) / 2
+                            lo_x, hi_x = (lo_x, mid) if pr(K, mid, k) >= slp else (mid, hi_x)
+                        sx = hi_x
+>>>>>>> Stashed changes
                     xh = prh(sx, k)
                     why, xm = "SL", int(m[k])
                 else:
@@ -280,7 +370,11 @@ def simulate_s1(under: pd.DataFrame, lk: dict, exps: list[date], p: S1, start: s
                     break
                 e0 = rows[-1]["opt_entry"]
                 nxt = None
+<<<<<<< Updated upstream
                 for j in range(k + 1, ix):
+=======
+                for j in range(k + 1, ix - 1):
+>>>>>>> Stashed changes
                     if m[j] >= p.reentry_cut:
                         break
                     if pr(K, c[j], j) <= e0:

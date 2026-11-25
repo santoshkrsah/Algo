@@ -4,7 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script>try { const t = localStorage.getItem("bt_theme"); if (t) document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
+<<<<<<< Updated upstream
 <title>Abhishek Kadam F2F - Index option selling</title>
+=======
+<title>__TITLE__</title>
+>>>>>>> Stashed changes
 __CSS__
 <style>
 .seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:0 10px 10px 0}
@@ -16,6 +20,16 @@ __CSS__
 .card.cp{position:relative}
 .card.cp h3{padding-right:120px}
 .copy{position:absolute;top:14px;right:14px}
+<<<<<<< Updated upstream
+=======
+.brand h1{overflow-wrap:anywhere}
+.src{margin:12px 0 0;font-size:13px;overflow-wrap:anywhere}
+.src a{color:var(--accent);font-weight:600}
+.vbox{position:relative;width:100%;max-width:880px;aspect-ratio:16/9;margin:10px auto}
+.vbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:8px}
+#srcvideo{margin-top:16px}
+#srcvideo a.btn{color:var(--accent);font-weight:650;text-decoration:none}
+>>>>>>> Stashed changes
 </style>
 <style>__VIEWER_CSS__</style>
 </head>
@@ -23,7 +37,11 @@ __CSS__
 <div class="top">
   <div class="brand">
     <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 17l5-6 4 3 8-9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+<<<<<<< Updated upstream
     <div><h1>Abhishek Kadam F2F - index option selling</h1><div class="sub">S1 Sensex 9:50 strangle &middot; S2 STBT range breakout &middot; backtest &amp; trade audit</div></div>
+=======
+    <div><h1 style="font-size:15px;line-height:1.3">__TITLE__</h1><div class="sub">S1 Sensex 9:50 strangle &middot; S2 STBT range breakout &middot; backtest &amp; trade audit</div></div>
+>>>>>>> Stashed changes
   </div>
   <div class="actions"><span class="chip" id="range"></span><button class="btn" id="theme">Dark / Light</button></div>
 </div>
@@ -31,6 +49,10 @@ __CSS__
 <div class="sub" id="subtitle" style="margin:14px 0 0"></div>
 <div class="verdict" id="verdict"></div>
 <div class="setrow" id="settings"></div>
+<<<<<<< Updated upstream
+=======
+<div class="src">Source video: <a href="__VURL__" target="_blank" rel="noopener">__VTITLE__ &#8599;</a></div>
+>>>>>>> Stashed changes
 <div class="segrow"><div class="sg"><span class="seglbl">Strategy:</span><div class="seg" id="seg_s"></div></div>
   <div class="sg"><span class="seglbl">Hedge:</span><div class="seg" id="seg_h"></div></div>
   <div class="sg"><span class="seglbl">Slippage:</span><div class="seg" id="seg_l"></div></div></div>
@@ -48,7 +70,11 @@ __CSS__
   <div class="card"><h3>Equity curve (kul profit)</h3><div class="hint">Net profit (Rs), kharcha aur slippage kaat ke. Profit dobara invest nahi hota (compounding nahi): har trade me 1 lot.</div><div class="ch tall"><canvas id="c_eq"></canvas></div></div>
   <div class="card"><h3>Trade kaise band hue</h3><div class="scroll" style="max-height:none"><table id="exits"></table></div></div>
   <div class="card"><h3>CALL sell vs PUT sell</h3><div class="scroll" style="max-height:none"><table id="sides"></table></div></div>
+<<<<<<< Updated upstream
   <div class="card"><h3>Expiry kitne din door thi (DTE)</h3><div class="hint">Trade ke din se expiry tak calendar din.</div><div class="scroll" style="max-height:none"><table id="dte"></table></div></div>
+=======
+  <div class="card"><h3>Expiry kitne din door thi (DTE)</h3><div class="hint">Trade ke din se expiry tak trading din (0 = expiry wala din).</div><div class="scroll" style="max-height:none"><table id="dte"></table></div></div>
+>>>>>>> Stashed changes
   <div class="card"><h3>Saare numbers</h3><div class="kv" id="kv"></div></div>
   <div class="card"><h3>Paisa kaise lagaya (investment)</h3><div class="hint">Return % hamesha shuruaati capital pe hai. Profit dobara invest nahi kiya (compounding nahi).</div><div class="kv" id="inv"></div></div>
 </section>
@@ -60,6 +86,10 @@ __CSS__
 
 <section class="panel" id="months">
   <div class="card"><h3>Har mahine ka net profit</h3><div class="ch"><canvas id="c_m"></canvas></div></div>
+<<<<<<< Updated upstream
+=======
+  <div class="card"><h3>Alag-alag samay ka result</h3><div class="hint">Rules pe koi tuning nahi ki. 2021-22 = pehla hissa, 2023 = beech wala (validation), 2024 se ab tak = latest. Sensex 15 May 2023 se.</div><div class="scroll" style="max-height:none"><table id="ptable"></table></div></div>
+>>>>>>> Stashed changes
   <div class="card"><h3>Saal ke hisaab se</h3><div class="scroll" style="max-height:none"><table id="ytable"></table></div></div>
   <div class="card"><h3>Mahine ki table</h3><div class="scroll" style="max-height:none"><table id="mtable"></table></div></div>
 </section>
@@ -74,6 +104,10 @@ __CSS__
 </section>
 
 <section class="panel" id="rules">
+<<<<<<< Updated upstream
+=======
+  <div class="src" style="margin:0 0 12px">Ye rules is video se: <a href="__VURL__" target="_blank" rel="noopener">__VTITLE__ &#8599;</a></div>
+>>>>>>> Stashed changes
   <div class="card cp"><button class="btn copy" data-copy="rules">Copy karo</button><h3>Rules</h3><div id="rulebox"></div></div>
   <div class="card"><h3>Jo baat rules me clear nahi thi, wahan hamne kya maana</h3><ul class="rules" id="notelist"></ul></div>
   <div class="card"><h3>Option price model kitna sahi hai</h3><div class="hint">Asli expired option ka 1-min data nahi milta. Isliye BSE / NSE ke asli roz ke close prices se model check kiya.</div>
@@ -84,6 +118,12 @@ __CSS__
     <div class="scroll" style="max-height:none"><table id="fml" class="chk"></table></div></div>
 </section>
 <footer id="foot"></footer>
+<<<<<<< Updated upstream
+=======
+<div class="card" id="srcvideo"><h3>Source video</h3><div class="hint">__VTITLE__</div>
+  <div class="vbox"><iframe src="https://www.youtube.com/embed/__VID__" title="__VTITLE__" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>
+  <p style="text-align:center;margin:8px 0 0"><a class="btn" href="__VURL__" target="_blank" rel="noopener">YouTube pe dekho &#8599;</a></p></div>
+>>>>>>> Stashed changes
 </div>
 <script>__CHARTJS__</script>
 <script>__LWC__</script>
@@ -110,8 +150,13 @@ $("#calib").innerHTML = "<thead><tr><th class='l'>Kya check kiya</th><th>Options
 $("#chk").innerHTML = "<thead><tr><th class='l'>Kya badla</th><th>Trade</th><th>Win %</th><th>Net</th><th>Profit factor</th><th>Max DD</th></tr></thead><tbody>"
   + D.checks.map(c => c.length == 1 ? `<tr><td class="l" colspan="6"><b>${c[0]}</b></td></tr>` : `<tr><td class="l">${c[0]}</td><td>${c[1]}</td><td>${pct(c[2])}</td><td class="${sgn(c[3])}">${rs(c[3], true)}</td><td>${f2(c[4])}</td><td>${rs(c[5])}</td></tr>`).join("") + "</tbody>";
 const copyText = {
+<<<<<<< Updated upstream
   rules: () => "Rules - Abhishek Kadam F2F\n" + D.rules.map(g => g[0] + "\n" + g[1].map((r, i) => (i + 1) + ". " + r.replace(/<[^>]+>/g, "")).join("\n")).join("\n\n"),
   formulas: () => "Formulas - Abhishek Kadam F2F\n" + D.formulas.map(f => f[0] + ": " + f[1]).join("\n"),
+=======
+  rules: () => "Rules - " + D.title + "\nSource: " + D.source.url + "\n" + D.rules.map(g => g[0] + "\n" + g[1].map((r, i) => (i + 1) + ". " + r.replace(/<[^>]+>/g, "")).join("\n")).join("\n\n"),
+  formulas: () => "Formulas - " + D.title + "\n" + D.formulas.map(f => f[0] + ": " + f[1]).join("\n"),
+>>>>>>> Stashed changes
 };
 function copyOld(txt){ const ta = document.createElement("textarea"); ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; }
 document.querySelectorAll(".copy").forEach(b => b.onclick = async () => {
@@ -207,7 +252,11 @@ function render(){
   const prem = rows.map(r => r[C.qty] * r[C.opt_entry]);
   const perDay = Object.values(byDay).map(a => a.length);
   $("#inv").innerHTML = info.invest.concat([["Average position (bechna wala premium)", rs(prem.reduce((a, b) => a + b, 0) / Math.max(1, prem.length))], ["Sabse bada position (premium)", rs(Math.max(...prem))],
+<<<<<<< Updated upstream
     ["Ek din me max trade", Math.max(...perDay)], ["Margin", "Alag se nahi joda; capital Rs 4,00,000 = video wala (Rs 3 lakh margin + Rs 1 lakh buffer)"]])
+=======
+    ["Ek din me max trade", Math.max(...perDay)], ["Peak money deployed (ek din ka bechne wala premium)", rs(Math.max(...Object.values(byDay).map(a => a.reduce((s, r) => s + r[C.qty] * r[C.opt_entry], 0))))], ["Margin", "Alag se nahi joda; capital Rs 4,00,000 = video wala (Rs 3 lakh margin + Rs 1 lakh buffer)"]])
+>>>>>>> Stashed changes
     .map(r => `<div><span>${r[0]}</span><span><b>${r[1]}</b></span></div>`).join("");
   const sumT = arr => { const s = stats(arr); return [s.n, s.win, s.net, s.avg]; };
   const trow = (k, s) => `<tr><td class="l">${k}</td><td>${s[0]}</td><td>${pct(s[1])}</td><td class="${sgn(s[2])}">${rs(s[2], true)}</td><td class="${sgn(s[3])}">${rs(s[3], true)}</td></tr>`;
@@ -218,6 +267,11 @@ function render(){
   $("#sides").innerHTML = head("Side") + Object.keys(bys).sort().map(k => trow(k, sumT(bys[k]))).join("") + "</tbody>";
   const byd = group(rows, r => r[C.dte] + " din");
   $("#dte").innerHTML = head("Expiry tak") + Object.keys(byd).sort((a, b) => parseInt(a) - parseInt(b)).map(k => trow(k, sumT(byd[k]))).join("") + "</tbody>";
+<<<<<<< Updated upstream
+=======
+  $("#ptable").innerHTML = "<thead><tr><th class='l'>Samay</th><th>Trade</th><th>Win %</th><th>Net</th><th>Return %</th><th>Profit factor</th><th>Max drawdown</th></tr></thead><tbody>"
+    + D.periods.map(p => { const a = rows.filter(r => r[C.date] >= p[1] && r[C.date] <= p[2]), x = stats(a); return `<tr><td class="l">${p[0]}</td><td>${x.n}</td><td>${pct(x.win)}</td><td class="${sgn(x.net)}">${a.length ? rs(x.net, true) : "-"}</td><td class="${sgn(x.net)}">${a.length ? pct(x.net / D.capital * 100) : "-"}</td><td>${f2(x.pf)}</td><td>${a.length ? rs(x.dd) : "-"}</td></tr>`; }).join("") + "</tbody>";
+>>>>>>> Stashed changes
   const byy = group(rows, r => r[C.date].slice(0, 4));
   $("#ytable").innerHTML = "<thead><tr><th class='l'>Saal</th><th>Trade</th><th>Win %</th><th>Net</th><th>Return %</th><th>Average</th><th>Max drawdown</th></tr></thead><tbody>"
     + Object.keys(byy).sort().map(k => { const s = sumT(byy[k]); return `<tr><td class="l">${k}</td><td>${s[0]}</td><td>${pct(s[1])}</td><td class="${sgn(s[2])}">${rs(s[2], true)}</td><td class="${sgn(s[2])}">${pct(s[2] / D.capital * 100)}</td><td class="${sgn(s[3])}">${rs(s[3], true)}</td><td>${rs(ddOf(byy[k].map(r => r[NET])))}</td></tr>`; }).join("") + "</tbody>";
@@ -244,8 +298,13 @@ function viewerTrades(rows){
     const sym = g("symbol"), cp = g("side").slice(5), hasH = g("hedge") !== "-";
     const days = [g("date")].concat(g("exit_date") !== g("date") ? [g("exit_date")] : []);
     const ser = [];
+<<<<<<< Updated upstream
     days.forEach(d => ((D.series[sym] || {})[d] || []).forEach(x => ser.push({time: secs(d, x[0]), open: x[1], high: x[2], low: x[3], close: x[4]})));
     const em = hm(g("entry_time")), xm = hm(g("exit_time")), fl = v => Math.floor(v / 5) * 5;
+=======
+    days.forEach(d => { const v = (D.series[sym] || {})[d] || []; let m = 0, c = 0; for (let i = 0; i < v.length; i += 5) { m += v[i]; const o = c + v[i + 1]; c = o + v[i + 4]; ser.push({time: secs(d, m), open: o / 10, high: (o + v[i + 2]) / 10, low: (o - v[i + 3]) / 10, close: c / 10}); } });
+    const em = hm(g("entry_time")), xm = hm(g("exit_time")), fl = v => v;
+>>>>>>> Stashed changes
     const mk = [{time: secs(g("date"), fl(em)), position: "aboveBar", shape: "arrowDown", color: "--neg", text: "Sell " + g("strike") + " " + cp + " @" + g("opt_entry").toFixed(1)},
       {time: secs(g("exit_date"), fl(xm)), position: "belowBar", shape: "arrowUp", color: "--pos", text: g("exit_reason") + " @" + g("opt_exit").toFixed(1)}];
     const lines = [{price: g("und_entry"), color: "--accent", style: 3, title: "Index entry"}];
@@ -258,8 +317,13 @@ function viewerTrades(rows){
       meta: [["Index / side", `${sym} SELL ${cp}`], ["Strike / hedge", `${g("strike")} / ${g("hedge")}`], ["Expiry", `${g("expiry")} (${g("dte")} din)`], ["Entry", `${g("date")} ${g("entry_time")}`],
         ["Exit", `${g("exit_date")} ${g("exit_time")} · ${g("exit_reason")}`], ["Index entry / exit", `${g("und_entry")} / ${g("und_exit")}`], ["IV (model)", g("iv_pct") + "%"],
         ["Option bechna / wapas", `${g("opt_entry").toFixed(2)} / ${g("opt_exit").toFixed(2)}`], ["Qty (lot)", lot], ["Re-entry", g("reentry")], ["Net P&L", rs2(net), sgn(net)]],
+<<<<<<< Updated upstream
       charts: ser.length ? [{title: `${sym} index (5 min candle)`, kind: "candle", intraday: true, data: ser, markers: mk, lines: lines, legend: [["--neg", "Sell"], ["--pos", "Exit"], ["--accent", "Index entry"]]}] : [],
       note: "Chart index ka hai (5 min candle, report halka rakhne ke liye). Option ka price model se hai, uska chart nahi. S1 me SL option premium pe hai, S2 me index pe.",
+=======
+      charts: ser.length ? [{title: `${sym} index (1 min candle)`, kind: "candle", intraday: true, data: ser, markers: mk, lines: lines, legend: [["--neg", "Sell"], ["--pos", "Exit"], ["--accent", "Index entry"]]}] : [],
+      note: "Chart index ka hai (1 min candle). Option ka price model se hai, uska chart nahi. S1 me SL option premium pe hai, S2 me index pe.",
+>>>>>>> Stashed changes
       cost: [["Sold option: bechna → wapas", `${g("opt_entry").toFixed(2)} → ${g("opt_exit").toFixed(2)}`]].concat(hasH ? [["Hedge: kharida → becha", `${g("hedge_entry").toFixed(2)} → ${g("hedge_exit").toFixed(2)}`]] : [])
         .concat([["Qty", lot], ["Slippage (" + L + ")", rs2(sl_cost)], ["Gross P&L (slippage ke baad)", rs2(gross), sgn(gross)], ["Brokerage + STT + charges", rs2(cs)], ["Net P&L", rs2(net), sgn(net), true]]),
     };
