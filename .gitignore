@@ -22,3 +22,7 @@ Algo_Live_Trading/AWS_VM/Firstock_Credentials.txt
 
 Algo_Live_Trading/**/*_Credentials.txt
 Algo_Live_Trading/**/*_session_*.json
+**/BeyondTrading_Credentials.txt
+**/AngelOne_Credentials.txt
+*.txt
+**.telegram_bot

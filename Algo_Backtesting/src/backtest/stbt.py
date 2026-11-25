@@ -42,6 +42,7 @@ class Params:
     capital: float = 200_000.0
     month_stop: float | None = 0.03  # stop new trades for the month after a loss of this share of capital
     slip: float = 0.0               # slippage, share of premium, each fill
+    lot_fn: object = None           # callable(name, day) -> fixed quantity (lot size); None = size by risk
 
 
 # ---------------------------------------------------------------- data
@@ -204,6 +205,8 @@ def _trade(name, p: Params, iv, day, m_in, E, side, exp, path, reentry: bool) ->
     s0, h0 = price(name, E, K, cp, T0, iv), (price(name, E, H, cp, T0, iv) if H else 0.0)
     loss_unit = (price(name, sl, K, cp, T0, iv) - s0) - ((price(name, sl, H, cp, T0, iv) - h0) if H else 0.0)
     qty = p.risk / loss_unit if loss_unit > 0 else 0.0
+    if p.lot_fn is not None:
+        qty = float(p.lot_fn(name, day))
     x_day, x_m, X, why, k_hit = None, None, None, None, None
     for i, (d, m, o, hi, lo, c) in enumerate(path[:-1]):
         if (side == 1 and lo <= sl) or (side == -1 and hi >= sl):

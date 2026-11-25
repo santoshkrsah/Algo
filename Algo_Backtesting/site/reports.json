@@ -329,14 +329,26 @@
   "trades": 11341,
   "verdict": "study"
  },
- "14_stock_straddle_live_rule1_1month": {
-  "name": "Stock Straddle - Live Rule No 1 (pichhla 1 mahina)",
+ "14_kadam_f2f_The_Intraday_Options_Strategies_Pro_Traders_Actually_Use_Face2Face_Abhishek_Kadam": {
+  "name": "Abhishek Kadam F2F Option Selling - The Intraday Options Strategies Pro Traders Actually Use !! #Face2Face with Mr. Abhishek Kadam",
   "type": "Options",
-  "period": "21 Oct - 20 Nov 2026",
-  "result": "Live Rule No 1 ke rules 10 stocks ke options pe, pichhle 1 mahine me (Rs 30 L har stock). Net sab milake Rs 6.14 L (PF 1.53, max DD -5.6 L). Best HDFCBANK 2.04 L, RELIANCE 1.92 L; loss: APOLLOHOSP -2.48 L, MARUTI -81 K. Chhota sample, option price model pe tika.",
-  "net": 613596,
-  "pf": 1.53,
-  "trades": 215,
-  "verdict": "profit"
+  "period": "Jan 2021 - Nov 2026 (S1 + S2 Sensex: May 2023 se)",
+  "result": "Video ki 2 strategy, bina hedge, 0.5% slippage, Rs 4L har strategy. S1 Sensex 9:50 strangle: LOSS net -1.50 L (PF 0.71, 1830 trade). S2 Nifty STBT: net +8.94 L (PF 1.57, 1270 trade, DD -38 K). S2 Sensex STBT: net +4.81 L (PF 1.55, 740 trade). Hedge ke saath bhi report me. Option price model se, S1 pe zyada bharosa mat karo.",
+  "net": 1225759,
+  "pf": 1.41,
+  "trades": 3840,
+  "verdict": "study",
+  "source": "https://www.youtube.com/watch?v=Ib9u18tXTJc"
+ },
+ "15_manish_strangle_After_10_Years_I_finally_found_this_strategy": {
+  "name": "Manish Chandra Wait & Trade Strangle - After 10 Years I finally found this strategy",
+  "type": "Options",
+  "period": "Jan 2021 - Nov 2026",
+  "result": "NIFTY next week Rs 100 strangle, wait & trade, STBT, 1 lot, Rs 10L, 0.5% slippage. Video ke rules (lot 2 pe hedge): LOSS net -2.06 L (PF 0.90, DD -2.31 L, 4452 lot). Bina hedge: +3.53 L (PF 1.12, DD -68 K), par IV 20% kam maano to -1.09 L. Option price model se hai, asli data nahi: pakka faisla mat lo.",
+  "net": -206082,
+  "pf": 0.9,
+  "trades": 4452,
+  "verdict": "study",
+  "source": "https://www.youtube.com/watch?v=YvmsB1KIcyg"
  }
 }

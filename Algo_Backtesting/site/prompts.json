@@ -47,6 +47,9 @@
    "- Period: {period}.",
    "- Capital / risk: {capital}.",
    "- Costs + slippage on. CLAUDE.md ke saare rules: Telegram start / progress / finish, naya look HTML report (Rules + Formulas Hinglish me, Test ki settings strip, Trade viewer), reports.json + website upload, finish pe report link.",
+   "- Report ka naam (results folder, reports.json / website me name, report ka title) ke LAST me is video / link ka title jodo, jaise \"<strategy naam> - <video title>\". Link YouTube ka ho to video ka asli title lo (page / oEmbed se); blog / PDF ho to uska title. Title na mile to Telegram pe batao.",
+   "- Report me kisi jagah (Rules tab ke upar / Test ki settings ke paas) us video / link ka clickable source link bhi do (naye tab me khule), video title ke saath. Website ki list me report ke entry me bhi ye link ho sake to reports.json me \"source\" field me daalo.",
+   "- Link YouTube ka ho to report ke EKDAM LAST me (sabse neeche, har tab pe dikhe) wo video EMBED karo: heading \"Source video\" + video ka title, 16:9 responsive player (iframe src https://www.youtube.com/embed/<VIDEO_ID>, referrerpolicy=\"strict-origin-when-cross-origin\", allowfullscreen, loading=\"lazy\"; mobile pe card ke andar rahe), aur uske neeche \"YouTube pe dekho\" link (naye tab me) taaki player na chale to bhi video khul sake. Ek se zyada YouTube link ho to sab embed karo; blog / PDF ho to sirf source link. Upload ke baad website pe report khol ke check karo ki video chal raha hai.",
    "- {mode}{extra}"
   ]
  },
