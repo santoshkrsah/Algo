@@ -1,0 +1,22 @@
+{
+ "label": "BANKNIFTY: straddle + risk layer",
+ "title": "Straddle + Risk Layer (2021 - 2026 retest) - BANKNIFTY: straddle + risk layer",
+ "stats": {
+  "BANKNIFTY": {
+   "days": 1245,
+   "net": 8797717.707218315,
+   "ret_pct": 293.2572569072772,
+   "win_pct": 66.66666666666666,
+   "profit_factor": 2.132865731830516,
+   "max_dd": -230615.27220387477,
+   "worst": -74147.4835905204,
+   "best": 134000.47815806992,
+   "avg_win": 19956.16136088946,
+   "avg_loss": -18713.002945349246,
+   "fit": 6251221.564471798,
+   "verify": 2546496.142746518,
+   "first": "2021-11-01",
+   "last": "2026-11-23"
+  }
+ }
+}
