@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-AngelOne_Straddle_Live.py - LIVE trading of report "10 · Straddle + Risk Layer (2021 - 2026 retest)" on Angel One.
+AngelOne_Straddle_Live_Nifty_Sensex.py - LIVE trading of report "10 · Straddle + Risk Layer (2021 - 2026 retest)" on Angel One.
 
 RULES (exactly report 10, Rules tab; every number below is the same as the backtest engine, backtest/straddle.py):
-  Index   NIFTY, nearest weekly expiry (the expiry day itself is traded too), intraday only
-  Entry   every trading day at 9:20: SELL ATM straddle (CE + PE, same strike = round(index/50)*50). No day is skipped.
+  Index   --index NIFTY (default) or SENSEX; nearest expiry (the expiry day itself is traded too), intraday only
+          (report 10 is NIFTY; SENSEX with the same rules was tested in report 11)
+  Entry   every trading day at 9:20: SELL ATM straddle (CE + PE, same strike = round(index/step)*step, step NIFTY 50,
+          SENSEX 100). No day is skipped.
   Exit    15:15: everything still open is bought back.
   Leg SL  a leg's option price >= entry price x 1.75 for 2 consecutive 1-min closes -> only that leg is bought back
           (the other leg keeps running to 15:15 or its own stop). A stopped leg is never sold again.
@@ -33,10 +35,14 @@ SAFETY:
   * If a buy-back cannot be filled even at 12% away, Telegram says MANUAL ACTION and the script keeps trying every minute.
   * Telegram: start, entry, every stop / exit, status every 15 minutes, errors, final result.
 
-  py AngelOne_Straddle_Live.py --lots 1                       show the plan only (nothing is sent)
-  py AngelOne_Straddle_Live.py --lots 1 --live                real orders (asks YES)
-  py AngelOne_Straddle_Live.py --lots 1 --live --yes          real orders, no question (unattended / task scheduler)
-  py AngelOne_Straddle_Live.py --lots 1 --replay 2026-11-20   replay a past day through the SAME rules, no orders at all
+  py AngelOne_Straddle_Live_Nifty_Sensex.py --lots 1                       show the plan only (nothing is sent)
+  py AngelOne_Straddle_Live_Nifty_Sensex.py --lots 1 --live                real orders (asks YES)
+  py AngelOne_Straddle_Live_Nifty_Sensex.py --lots 1 --live --yes          real orders, no question (unattended / task scheduler)
+  py AngelOne_Straddle_Live_Nifty_Sensex.py --lots 1 --replay 2026-11-20   replay a past day through the SAME rules, no orders at all
+  py AngelOne_Straddle_Live_Nifty_Sensex.py --index SENSEX --lots 1 --live   SENSEX (lot size from Angel One's instrument list)
+  py AngelOne_Straddle_Live_Nifty_Sensex.py --exit-now                     close today's open legs of BOTH indices (or add --index)
+NIFTY and SENSEX together: two terminals, start the second one about 1 minute after the first. Each index has its own
+state file, lock, stop flag and day loss limit (there is no combined limit).
 Run it on the AWS VM (registered static IP), start it before 9:15 and leave the window open until it says it is finished.
 Needs AngelOne_Test_Order.py and AngelOne_Credentials.txt in the same folder (python standard library only).
 """
@@ -59,7 +65,6 @@ MASTER_HOST, MASTER_PATH = "margincalculator.angelbroking.com", "/OpenAPI_File/f
 # ---- report 10 rules --------------------------------------------------------------------------------------------
 OPEN_MIN = 9 * 60 + 15                 # t = minutes after 9:15
 ENTRY_T, EXIT_T = 5, 360               # 9:20 entry, 15:15 square-off
-STEP = 50                              # NIFTY strike step
 LEG_SL, TRAIL, CONFIRM = 0.75, 0.5, 2
 DAY_LOSS_RS = 45000.0                  # 1.5% x Rs 30,00,000
 # ---- order handling (live) --------------------------------------------------------------------------------------
@@ -67,7 +72,13 @@ SELL_BUF = (0.01, 0.02, 0.03, 0.05)
 BUY_BUF = (0.01, 0.02, 0.03, 0.05, 0.08, 0.12)
 WAIT_FILL_S = 5
 ENTRY_LATE_MIN = 2                     # no entry later than 9:22
-INDEX = {"exchange": "NSE", "tradingsymbol": "Nifty 50", "symboltoken": "99926000"}
+MARKETS = {      # name = instrument-master name, seg = option exchange, step = strike step, spot = the index quote, lag = seconds
+    "NIFTY": {"name": "NIFTY", "seg": "NFO", "step": 50, "lag": 0.0,
+              "spot": {"exchange": "NSE", "tradingsymbol": "Nifty 50", "symboltoken": "99926000"}},
+    "SENSEX": {"name": "SENSEX", "seg": "BFO", "step": 100, "lag": 2.0,      # 2 s after NIFTY: both share Angel's rate limits
+               "spot": {"exchange": "BSE", "tradingsymbol": "SENSEX", "symboltoken": "99919000"}},
+}
+MKT = MARKETS["NIFTY"]                 # the index of THIS run, set by select()
 TAG_RESULT, TAG_ERROR = "@ayushanand440", "@albert_max"
 
 
@@ -96,9 +107,22 @@ def tick_up(p, tick=0.05):
     return round(math.ceil(p / tick - 1e-9) * tick, 2)
 
 
+def select(index):
+    global MKT
+    MKT = MARKETS[index]
+
+
+def files_for(day):
+    """(state, lock, stop flag) of the selected index for that day. NIFTY keeps the old names."""
+    tag = "" if MKT["name"] == "NIFTY" else MKT["name"] + "_"
+    return (os.path.join(HERE, f"straddle_state_{tag}{day:%Y-%m-%d}.json"),
+            os.path.join(HERE, f"straddle_{tag}{day:%Y-%m-%d}.lock"),
+            os.path.join(HERE, f"straddle_stop_{tag}{day:%Y-%m-%d}.flag"))
+
+
 def notify(text, tag=""):
     say(text)
-    T.telegram(f"[STRADDLE_LIVE] {text}" + (f"\n{tag}" if tag else ""))
+    T.telegram(f"[STRADDLE_LIVE][{MKT['name']}] {text}" + (f"\n{tag}" if tag else ""))
 
 
 def err(text):
@@ -121,9 +145,14 @@ class API(T.Angel):
                 say("[api] session refused - logging in again")
                 self.login()
                 r = T.Angel.call(self, path, body)
-            elif read and ("rate" in msg and "access" in msg or "exceeding" in msg):
-                time.sleep(1.5)
-                r = T.Angel.call(self, path, body)
+        for i in range(3):
+            if not (read and r and not r.get("status")):
+                break
+            msg = f"{r.get('message', '')} {r.get('raw', '')}".lower()
+            if not ("exceeding" in msg or "access rate" in msg):
+                break
+            time.sleep(1.2 + i)
+            r = T.Angel.call(self, path, body)
         return r
 
 
@@ -159,7 +188,13 @@ def load_master(day):
             st, data = T.https("GET", MASTER_HOST, MASTER_PATH, timeout=300)
             if st == 200 and isinstance(data, list) and len(data) > 10000:
                 os.makedirs(os.path.dirname(cache), exist_ok=True)
-                json.dump(data, open(cache, "w", encoding="utf-8"))
+                try:
+                    tmp = f"{cache}.{os.getpid()}.tmp"
+                    with open(tmp, "w", encoding="utf-8") as f:
+                        json.dump(data, f)
+                    os.replace(tmp, cache)
+                except OSError as e:
+                    say(f"[master] cache not written ({e})")
                 return data
             last = f"HTTP {st}, {type(data).__name__}"
         except Exception as e:
@@ -172,7 +207,7 @@ def load_master(day):
 def nearest_expiry(master, day):
     exps = set()
     for r in master:
-        if r.get("name") == "NIFTY" and r.get("exch_seg") == "NFO" and r.get("instrumenttype") == "OPTIDX":
+        if r.get("name") == MKT["name"] and r.get("exch_seg") == MKT["seg"] and r.get("instrumenttype") == "OPTIDX":
             try:
                 e = datetime.strptime(r["expiry"], "%d%b%Y").date()
             except Exception:
@@ -180,19 +215,19 @@ def nearest_expiry(master, day):
             if e >= day:
                 exps.add(e)
     if not exps:
-        raise Fatal("no NIFTY expiry found in the instrument master")
+        raise Fatal(f"no {MKT['name']} expiry found in the instrument master")
     return min(exps)
 
 
 def find_contract(master, expiry, strike, cp):
     want = expiry.strftime("%d%b%Y").upper()
     for r in master:
-        if (r.get("name") == "NIFTY" and r.get("exch_seg") == "NFO" and r.get("instrumenttype") == "OPTIDX"
+        if (r.get("name") == MKT["name"] and r.get("exch_seg") == MKT["seg"] and r.get("instrumenttype") == "OPTIDX"
                 and r.get("expiry", "").upper() == want and str(r.get("symbol", "")).endswith(cp)
                 and abs(float(r.get("strike") or 0) / 100 - strike) < 0.01):
             return {"symbol": r["symbol"], "token": str(r["token"]), "lot": int(r["lotsize"]),
                     "freeze": int(float(r.get("freeze_qty") or 0)), "tick": float(r.get("tick_size") or 5) / 100}
-    raise Fatal(f"contract NIFTY {expiry} {strike:g} {cp} not found in the instrument master")
+    raise Fatal(f"contract {MKT['name']} {expiry} {strike:g} {cp} not found in the instrument master")
 
 
 # ================================================================ brokers
@@ -204,14 +239,14 @@ class LiveBroker:
         self.api, self.day, self.open = api, day, day_open(day)
 
     def spot(self, t):
-        r = self.api.call(SEC + "getLtpData", INDEX)
+        r = self.api.call(SEC + "getLtpData", MKT["spot"])
         try:
             return float(r["data"]["ltp"])
         except Exception:
-            raise Fatal(f"NIFTY index price not available ({str(r)[:150]})")
+            raise Fatal(f"{MKT['name']} index price not available ({str(r)[:150]})")
 
     def ltp(self, leg):
-        r = self.api.call(SEC + "getLtpData", {"exchange": "NFO", "tradingsymbol": leg["symbol"], "symboltoken": leg["token"]})
+        r = self.api.call(SEC + "getLtpData", {"exchange": MKT["seg"], "tradingsymbol": leg["symbol"], "symboltoken": leg["token"]})
         try:
             v = float(r["data"]["ltp"])
             return v if v > 0 else None
@@ -222,7 +257,7 @@ class LiveBroker:
         """Close of the 1-minute candle that ended at minute t (label 9:15 + t - 1). Waits up to ~20 s for it; else last price."""
         label = self.open + timedelta(minutes=t - 1)
         for _ in range(10):
-            rows = candles(self.api, "NFO", leg["token"], label - timedelta(minutes=2), label)   # a little wider: single-minute queries sometimes come back empty
+            rows = candles(self.api, MKT["seg"], leg["token"], label - timedelta(minutes=2), label)   # a little wider: single-minute queries sometimes come back empty
             for c in rows or []:
                 if c[0].replace(tzinfo=None) == label.replace(tzinfo=None):
                     return c[4], "candle"
@@ -262,7 +297,7 @@ class LiveBroker:
     def _place(self, leg, side, qty, price):
         known = {str(o.get("orderid")) for o in (self._orders() or [])}
         body = {"variety": "NORMAL", "tradingsymbol": leg["symbol"], "symboltoken": leg["token"], "transactiontype": side,
-                "exchange": "NFO", "ordertype": "LIMIT", "producttype": "INTRADAY", "duration": "DAY",
+                "exchange": MKT["seg"], "ordertype": "LIMIT", "producttype": "INTRADAY", "duration": "DAY",
                 "price": f"{price:.2f}", "squareoff": "0", "stoploss": "0", "quantity": str(qty)}
         r = self.api.call(SEC + "placeOrder", body, read=False)      # sent once; never blindly repeated
         say(f"[placeOrder] {side} {qty} {leg['symbol']} @ {price:.2f} -> {str(r)[:200]}")
@@ -347,11 +382,11 @@ class ReplayBroker:
         return self.cache[k]
 
     def spot(self, t):
-        s = self._series(INDEX["exchange"], INDEX["symboltoken"])
+        s = self._series(MKT["spot"]["exchange"], MKT["spot"]["symboltoken"])
         return s[(self.open + timedelta(minutes=t - 1)).replace(tzinfo=None)]
 
     def price(self, leg, t):
-        s = self._series("NFO", leg["token"])
+        s = self._series(MKT["seg"], leg["token"])
         v = s.get((self.open + timedelta(minutes=t - 1)).replace(tzinfo=None))
         return (v, "candle") if v else (None, "none")
 
@@ -411,14 +446,14 @@ class Strat:
         s["entry_started"] = True
         self.save()
         spot = b.spot(t)
-        K = round(spot / STEP) * STEP
+        K = round(spot / MKT["step"]) * MKT["step"]
         parts = {cp: find_contract(master, expiry, K, cp) for cp in ("CE", "PE")}
         lot = parts["CE"]["lot"]
         qty = self.lots * lot
         cap = min(p["freeze"] - 1 for p in parts.values()) if b.live and all(p["freeze"] for p in parts.values()) else 10 ** 9
         if qty > cap:
             raise Fatal(f"{self.lots} lots = {qty} qty is above the exchange freeze limit {cap} per order - use fewer lots")
-        notify(f"Entry shuru: NIFTY {spot:.2f} -> strike {K:g}, expiry {expiry:%d-%b-%Y}, {self.lots} lot x {lot} = {qty} qty")
+        notify(f"Entry shuru: {MKT['name']} {spot:.2f} -> strike {K:g}, expiry {expiry:%d-%b-%Y}, {self.lots} lot x {lot} = {qty} qty")
         done = []
         try:
             for cp in ("CE", "PE"):
@@ -447,7 +482,7 @@ class Strat:
             return
         s["max_target"] = sum(l["px0"] * l["qty"] for l in self.legs)
         self.save()
-        lines = [f"✅ ENTRY {hhmm(t)}  NIFTY {spot:.2f}  strike {K:g}  {self.lots} lot ({qty} qty)"]
+        lines = [f"✅ ENTRY {hhmm(t)}  {MKT['name']} {spot:.2f}  strike {K:g}  {self.lots} lot ({qty} qty)"]
         for l in self.legs:
             lines.append(f"SELL {l['symbol']}  fill {l['px0']:.2f}  (leg SL {l['ref'] * (1 + LEG_SL):.2f})")
         lines.append(f"Premium becha: Rs {f2(s['max_target'])}  | trailing chalu hoga profit Rs {f2(TRAIL * s['max_target'])} par"
@@ -648,8 +683,7 @@ def run_replay(api, a):
 
 def run_live(api, a):
     day = now().date()
-    path = os.path.join(HERE, f"straddle_state_{day:%Y-%m-%d}.json")
-    lock = os.path.join(HERE, f"straddle_{day:%Y-%m-%d}.lock")
+    path, lock, _ = files_for(day)
     if os.path.exists(lock) and time.time() - os.path.getmtime(lock) < 150:
         sys.exit("Another copy of this script is running (lock file is fresh). Close it first.")
     st = Strat(a.lots, a.day_loss, path)
@@ -665,12 +699,12 @@ def run_live(api, a):
     if resumed and st.s["legs"]:
         notify(f"♻️ Script dobara chala - aaj ke khule legs se aage badh raha hoon (lots {a.lots})")
     else:
-        notify(f"▶️ Straddle live shuru ({now():%d-%b-%Y %H:%M}): NIFTY expiry {expiry:%d-%b-%Y}, {a.lots} lot, "
+        notify(f"▶️ Straddle live shuru ({now():%d-%b-%Y %H:%M}): {MKT['name']} expiry {expiry:%d-%b-%Y}, {a.lots} lot, "
                f"din ka loss limit Rs {a.day_loss:,.0f}, available cash Rs {funds.get('availablecash')}. Entry 9:20 pe.")
     if not a.yes:
         if not sys.stdin or not sys.stdin.isatty():
             sys.exit("Needs a terminal to type YES (or use --yes).")
-        if input("Ye ASLI orders bhejega (NIFTY straddle sell). Type YES to start: ").strip() != "YES":
+        if input(f"Ye ASLI orders bhejega ({MKT['name']} straddle sell). Type YES to start: ").strip() != "YES":
             sys.exit("Cancelled (you did not type YES).")
 
     def beat():
@@ -680,7 +714,7 @@ def run_live(api, a):
         if not st.s["legs"]:
             if st.s["entry_started"]:
                 raise Fatal("entry was started earlier today but no leg is saved - check the Angel One app, then delete the state file")
-            wait_for(day, ENTRY_T, 0.5)
+            wait_for(day, ENTRY_T, 0.5 + MKT["lag"])
             if t_now(day) > ENTRY_T + ENTRY_LATE_MIN:
                 st.s["done"], st.s["reason"] = True, "late start (after 9:22), no trade today"
                 st.save()
@@ -688,20 +722,20 @@ def run_live(api, a):
                 return 0
             first = None
             for _ in range(4):                                       # any candle of the day so far (a trading day always has 9:15-9:19 by 9:20)
-                first = candles(api, INDEX["exchange"], INDEX["symboltoken"], day_open(day), day_open(day) + timedelta(minutes=10))
+                first = candles(api, MKT["spot"]["exchange"], MKT["spot"]["symboltoken"], day_open(day), day_open(day) + timedelta(minutes=10))
                 if first:
                     break
                 time.sleep(5)
             if not first:
-                st.s["done"], st.s["reason"] = True, "no NIFTY 9:15 candle today (holiday or data problem)"
+                st.s["done"], st.s["reason"] = True, f"no {MKT['name']} 9:15 candle today (holiday or data problem)"
                 st.save()
-                err("Aaj NIFTY ki 9:15 ki candle nahi mili - holiday hai ya data problem. Trade NAHI hua. Agar aaj market khula hai toh app me dekho.")
+                err(f"Aaj {MKT['name']} ki 9:15 ki candle nahi mili - holiday hai ya data problem. Trade NAHI hua. Agar aaj market khula hai toh app me dekho.")
                 return 0
             st.enter(b, master, expiry, ENTRY_T)
             beat()
         t = max(ENTRY_T + 1, t_now(day) + 1) if resumed else ENTRY_T + 1
         while t <= EXIT_T + 10 and not st.s["done"]:
-            wait_for(day, t, 3.0)
+            wait_for(day, t, 3.0 + MKT["lag"])
             st.minute(b, min(t, EXIT_T) if t <= EXIT_T else EXIT_T)
             beat()
             if t % 15 == 0 and not st.s["done"]:
@@ -715,7 +749,7 @@ def run_live(api, a):
     except KeyboardInterrupt:
         open_ = [(l["symbol"], l["qty_open"]) for l in st.open_legs()]
         notify(f"⏹ Script Ctrl+C se band hui. Khuli position: {open_ or 'koi nahi'}. "
-               f"{'Unhe app se band karo, ya  py AngelOne_Straddle_Live.py --exit-now' if open_ else ''}", TAG_ERROR)
+               f"{'Unhe app se band karo, ya  py AngelOne_Straddle_Live_Nifty_Sensex.py --exit-now' if open_ else ''}", TAG_ERROR)
         return 1
     except Exception as e:                                           # never die silently with a position open
         import traceback
@@ -734,19 +768,37 @@ def run_live(api, a):
 def run_exit_now(a):
     """Safe manual exit. Script running -> it is told to close everything at its next minute. Not running -> closes from the state file."""
     day = now().date()
-    path = os.path.join(HERE, f"straddle_state_{day:%Y-%m-%d}.json")
-    lock = os.path.join(HERE, f"straddle_{day:%Y-%m-%d}.lock")
-    flag = path.replace("straddle_state_", "straddle_stop_").replace(".json", ".flag")
-    if not os.path.exists(path):
-        sys.exit("Aaj ki koi state file nahi - script ne aaj koi position nahi li (ya woh dusre folder me hai).")
+    names = [a.index] if a.index else list(MARKETS)
+    found = []
+    for name in names:
+        select(name)
+        if os.path.exists(files_for(day)[0]):
+            found.append(name)
+    if not found:
+        sys.exit(f"Aaj ki koi state file nahi ({', '.join(names)}) - script ne aaj koi position nahi li (ya woh dusre folder me hai).")
+    code = 0
+    for name in found:
+        select(name)
+        say(f"--- {name} ---")
+        try:
+            code = max(code, exit_one(a, day))
+        except Exception as e:                       # one index failing must not stop the exit of the other
+            err(f"Manual exit {name} fail: {type(e).__name__}: {e} - app me check karo")
+            code = 1
+    return code
+
+
+def exit_one(a, day):
+    path, lock, flag = files_for(day)
     if os.path.exists(lock) and time.time() - os.path.getmtime(lock) < 150:
         open(flag, "w").write(now().isoformat())
-        print("Chalti hui script ko bata diya: wo agle minute (1 minute ke andar) saari khuli position band karke ruk jaayegi. Telegram dekho.")
+        print(f"Chalti hui {MKT['name']} script ko bata diya: wo agle minute (1 minute ke andar) saari khuli position band karke ruk jaayegi. Telegram dekho.")
         return 0
     st = Strat(1, a.day_loss, path)
     st.load()
     if not st.open_legs():
-        sys.exit("State file me koi khula leg nahi hai - kuch band karne ko nahi.")
+        say("State file me koi khula leg nahi hai - kuch band karne ko nahi.")
+        return 0
     ip, _ = T.public_ip()
     api = API(ip)
     api.login()
@@ -762,7 +814,8 @@ def run_exit_now(a):
 
 def main():
     ap = argparse.ArgumentParser(description="Report 10 straddle + risk layer, live on Angel One")
-    ap.add_argument("--lots", type=int, help="number of NIFTY lots to sell (no default; not needed with --exit-now)")
+    ap.add_argument("--lots", type=int, help="number of lots to sell (no default; not needed with --exit-now)")
+    ap.add_argument("--index", choices=list(MARKETS), type=str.upper, help="NIFTY (default) or SENSEX")
     ap.add_argument("--exit-now", action="store_true", help="close today's open legs and stop (safe manual exit)")
     ap.add_argument("--day-loss", type=float, default=DAY_LOSS_RS, help="day loss limit in Rs (report: 45000)")
     ap.add_argument("--live", action="store_true", help="send real orders")
@@ -780,9 +833,10 @@ def main():
         sys.exit(f"Missing in {T.CRED_FILE}: {', '.join(missing)}")
     if a.exit_now:
         return run_exit_now(a)
+    select(a.index or "NIFTY")
     if not a.live and not a.replay:
         print(__doc__.split("HOW THE SIZE")[0])
-        print(f"PLAN: NIFTY, {a.lots} lot, day loss limit Rs {a.day_loss:,.0f}.\nNothing is sent. Add --live for real orders, or --replay YYYY-MM-DD to test on a past day.")
+        print(f"PLAN: {MKT['name']}, {a.lots} lot, day loss limit Rs {a.day_loss:,.0f}.\nNothing is sent. Add --live for real orders, or --replay YYYY-MM-DD to test on a past day.")
         return 0
     ip, why = T.public_ip()
     expected = T.C.get("STATIC_IP", "")

@@ -21,3 +21,7 @@ Algo_Live_Trading/AWS_VM/Firstock_Credentials.txt
 **/Firstock_Credentials.txt
 
 Algo_Live_Trading/**/*_Credentials.txt
+Algo_Live_Trading/**/.cache/
+Algo_Live_Trading/**/straddle_*.json
+Algo_Live_Trading/**/straddle_*.lock
+Algo_Live_Trading/**/straddle_*.flag
